@@ -20,7 +20,7 @@ Les fonctionnalités que je veuc mettre en oeuvre dans cet maquette sont
         * Mortalité _influencé par l'âge de l'agent_
             * Exprimé par une probabilité
         * Reproduction
-            * _Mytose_
+            * _Mitose_
             * Exprimé par une probabilité
         * Identifiant
             * Couleur _noir_
@@ -30,5 +30,5 @@ Les fonctionnalités que je veuc mettre en oeuvre dans cet maquette sont
         * Exprimé selon une probabilité
         * Influe sur un gène en le modifiant dans une certaine intervalle de variation (dépendante du gène)
     * Normalisation
-        * Tentative de normaliser chaque gène pour l'encodé sur une intervalle décimale `[-1;1]`
+        * Tentative de normaliser chaque gène pour l'encodé sur une intervalle décimale `[-1,1]`
 
