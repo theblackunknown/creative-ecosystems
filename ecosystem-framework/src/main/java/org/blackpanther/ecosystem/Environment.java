@@ -20,7 +20,7 @@ import static org.blackpanther.ecosystem.Configuration.Configuration;
  * </ul>
  *
  * @author MACHIZAUD Andréa
- * @version ${{version}} - ${{date}}
+ * @version 0.2 - Sun Apr 24 02:41:42 CEST 2011
  */
 public abstract class Environment
         implements Serializable {
@@ -171,7 +171,7 @@ public abstract class Environment
      * </p>
      *
      * @author MACHIZAUD Andréa
-     * @version ${{version}} - ${{date}}
+     * @version 0.2 - Sun Apr 24 02:41:42 CEST 2011
      */
     protected static class Case
             implements Serializable, AreaListener {
