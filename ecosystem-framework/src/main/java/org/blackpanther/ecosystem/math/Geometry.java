@@ -6,7 +6,7 @@ import java.awt.geom.Point2D;
  * Helper to use mathematical data
  *
  * @author MACHIZAUD Andréa
- * @version ${{version}} - ${{date}}
+ * @version v0.2.1 - Sun Apr 24 18:01:06 CEST 2011
  */
 public final class Geometry {
 

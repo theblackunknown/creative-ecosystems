@@ -9,7 +9,7 @@ package org.blackpanther.ecosystem;
  * </p>
  *
  * @author MACHIZAUD Andréa
- * @version 0.2 - Sun Apr 24 02:41:42 CEST 2011
+ * @version v0.2.1 - Sun Apr 24 18:01:06 CEST 2011
  */
 public interface BehaviorManager {
 
