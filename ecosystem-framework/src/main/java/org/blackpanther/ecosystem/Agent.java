@@ -14,7 +14,7 @@ import static org.blackpanther.ecosystem.Helper.require;
  * </p>
  *
  * @author MACHIZAUD Andréa
- * @version ${{version}} - ${{date}}
+ * @version 0.2 - Sun Apr 24 02:41:42 CEST 2011
  */
 public abstract class Agent
         implements Serializable {
