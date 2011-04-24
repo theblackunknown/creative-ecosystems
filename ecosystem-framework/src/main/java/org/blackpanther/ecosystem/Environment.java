@@ -5,8 +5,8 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.blackpanther.ecosystem.Helper.require;
 import static org.blackpanther.ecosystem.Configuration.Configuration;
+import static org.blackpanther.ecosystem.Helper.require;
 
 /**
  * <p>
@@ -20,7 +20,7 @@ import static org.blackpanther.ecosystem.Configuration.Configuration;
  * </ul>
  *
  * @author MACHIZAUD Andréa
- * @version 0.2 - Sun Apr 24 02:41:42 CEST 2011
+ * @version v0.2.1 - Sun Apr 24 18:01:06 CEST 2011
  */
 public abstract class Environment
         implements Serializable {
@@ -43,12 +43,12 @@ public abstract class Environment
     /**
      * Default constructor which specified space bounds
      *
-     * @param width  - space's width
-     * @param height - space's height
+     * @param width  space's width
+     * @param height space's height
      */
     public Environment(
-            int width,
-            int height
+            final int width,
+            final int height
     ) {
         //Check preconditions
         require(width > 0, "Width must be positive and non-zero");
@@ -56,9 +56,11 @@ public abstract class Environment
 
         //initialize space
         space = new Case[width][height];
-        for (int row = 0; row < width; row++)
-            for (int column = 0; column < height; column++)
-                space[row][column] = new Case(row,column);
+        for (int row = 0; row < width; row++) {
+            for (int column = 0; column < height; column++) {
+                space[row][column] = new Case(row, column);
+            }
+        }
 
         //initalize timeline
         timetracker = 0;
@@ -70,22 +72,27 @@ public abstract class Environment
     /**
      * Constructor for a square-shape space
      *
-     * @param size - space's width & height
+     * @param size space's width & height
      */
-    public Environment(int size) {
+    public Environment(final int size) {
         this(size, size);
     }
 
     /**
      * Add an agent to the environment at given position
      *
-     * @param agent - the agent
-     * @param x     - abscissa
-     * @param y     - ordinate
+     * @param agent the agent
+     * @param x     abscissa
+     * @param y     ordinate
      */
-    public void addAgent(Agent agent, int x, int y) {
-        require(0 <= x && x < space.length, "You can't add an agent out of space's bounds");
-        require(0 <= y && y < space[0].length, "You can't add an agent out of space's bounds");
+    public final void addAgent(
+            final Agent agent,
+            final int x,
+            final int y) {
+        require(0 <= x && x < space.length,
+                "You can't add an agent out of space's bounds");
+        require(0 <= y && y < space[0].length,
+                "You can't add an agent out of space's bounds");
         //Put it, in the pool
         pool.add(agent);
         //And at given position
@@ -94,9 +101,11 @@ public abstract class Environment
 
     /**
      * Add an agent at a random position
-     * @param agent - the agent
+     *
+     * @param agent the agent
      */
-    public void addAgent(Agent agent) {
+    public final void addAgent(
+            final Agent agent) {
         addAgent(
                 agent,
                 Configuration.getRandom().nextInt() % space.length,
@@ -109,7 +118,7 @@ public abstract class Environment
      *
      * @return space's state
      */
-    public Case[][] dumpSpace() {
+    public final Case[][] dumpSpace() {
         return space.clone();
     }
 
@@ -118,7 +127,7 @@ public abstract class Environment
      *
      * @return number of cycles since evolution's beginning
      */
-    public int getTime() {
+    public final int getTime() {
         return timetracker;
     }
 
@@ -127,14 +136,14 @@ public abstract class Environment
      *
      * @return copy of agent's pool
      */
-    public Set<Agent> getPool() {
+    public final Set<Agent> getPool() {
         return new HashSet<Agent>(pool);
     }
 
     /**
      * Iterate over one cycle
      */
-    public void runNextCycle() {
+    public final void runNextCycle() {
         //update environment state
         updatePool();
 
@@ -153,15 +162,16 @@ public abstract class Environment
         //if they die, they are simply not kept in the next pool
         for (Agent agent : pool) {
             agent.update(this);
-            if( !agent.isNowhere() )
-                 nextPool.add(agent);
+            if (!agent.isNowhere()) {
+                nextPool.add(agent);
+            }
         }
 
         //clean the old pool
         pool.clear();
 
         //then update it
-        pool.addAll( nextPool );
+        pool.addAll(nextPool);
     }
 
     /**
@@ -171,26 +181,28 @@ public abstract class Environment
      * </p>
      *
      * @author MACHIZAUD Andréa
-     * @version 0.2 - Sun Apr 24 02:41:42 CEST 2011
+     * @version v0.2.1 - Sun Apr 24 18:01:06 CEST 2011
      */
     protected static class Case
             implements Serializable, AreaListener {
 
         private static final Long serialVersionUID = 1L;
 
-        protected Set<Agent> subpopulation;
-        protected Point coordinates;
+        private Set<Agent> subpopulation;
+        private Point coordinates;
 
-        public Case(int x, int y) {
+        public Case(
+                final int x,
+                final int y) {
             coordinates = new Point(x, y);
         }
 
-        public void addAgent(Agent agent) {
+        public final void addAgent(final Agent agent) {
             subpopulation.add(agent);
             agent.setAreaListener(this);
         }
 
-        public void removeAgent(Agent agent) {
+        public final void removeAgent(final Agent agent) {
             subpopulation.remove(agent);
             agent.unsetAreaListener();
         }

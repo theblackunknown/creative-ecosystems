@@ -20,12 +20,14 @@ import static org.blackpanther.ecosystem.Helper.require;
  * </p>
  *
  * @author MACHIZAUD Andréa
- * @version 1.0 - 4/24/11
+ * @version v0.2.1 - Sun Apr 24 18:01:06 CEST 2011
  */
 public enum Configuration {
     Configuration;
 
-    private static final Logger logger = Logger.getLogger(Configuration.class.getCanonicalName());
+    /** Class logger */
+    private static final Logger logger =
+            Logger.getLogger(Configuration.class.getCanonicalName());
 
     /**
      * Random application parameters
@@ -39,6 +41,7 @@ public enum Configuration {
 
     /**
      * Get application's random generator
+     * @return application's random source
      */
     public Random getRandom() {
         return randomSource;
@@ -46,19 +49,23 @@ public enum Configuration {
 
     /**
      * Change the seed of the generator
+     * @param randomSeed
+     *          new seed for the random generator
      */
-    public void setRandomSeed(long randomSeed) {
+    public void setRandomSeed(final long randomSeed) {
         randomSource.setSeed(randomSeed);
     }
 
     /**
      * Load properties from a configuration file
      *
-     * @param propertyFile - configuration file
+     * @param propertyFile configuration file
      */
-    public void loadConfiguration(File propertyFile) {
-        require(propertyFile.exists(), "Given property file doesn't exist");
-        require(!propertyFile.isDirectory(), "Given property file is a directory");
+    public void loadConfiguration(final File propertyFile) {
+        require(propertyFile.exists(),
+                "Given property file doesn't exist");
+        require(!propertyFile.isDirectory(),
+                "Given property file is a directory");
 
         //Kept old properties for a rollback
         Map<String, Object> oldProperties = new HashMap<String, Object>();
@@ -77,43 +84,55 @@ public enum Configuration {
                         Long.parseLong(
                                 properties.getProperty(RANDOM)));
             } catch (NumberFormatException e) {
-                logger.log(Level.WARNING, "Couldn't parse random parameter", e);
+                logger.log(Level.WARNING,
+                        "Couldn't parse random parameter", e);
             }
 
         //Handle exceptions and rollback properties
         } catch (FileNotFoundException e) {
-            logger.log(Level.SEVERE, "Severe error : file not found and it ought not happen !", e);
+            logger.log(Level.SEVERE,
+                    "Severe error : file not found and it ought not happen !",
+                    e);
             rollbackProperties(oldProperties);
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "IO Exception on '" + propertyFile.getAbsolutePath() + "'", e);
+            logger.log(Level.SEVERE,
+                    "IO Exception on '" + propertyFile.getAbsolutePath() + "'",
+                    e);
             rollbackProperties(oldProperties);
         } finally {
-            if (reader != null)
+            if (reader != null) {
                 try {
                     reader.close();
                 } catch (IOException e) {
-                    logger.log(Level.SEVERE, "Couldn't close reader for '" + propertyFile.getAbsolutePath() + "' file", e);
+                    logger.log(Level.SEVERE,
+                            "Couldn't close reader for '"
+                                    + propertyFile.getAbsolutePath()
+                                    + "' file",
+                            e);
                 }
+            }
         }
     }
 
     /**
-     * Rollback application parameter if an exception occurred while trying to load a configuration file
+     * Rollback application parameter if an exception occurred
+     * while trying to load a configuration file
      *
-     * @param oldProperties - backup parameters
+     * @param oldProperties backup parameters
      */
-    private void rollbackProperties(Map<String, Object> oldProperties) {
+    private void rollbackProperties(final Map<String, Object> oldProperties) {
         Random randomParameter = (Random) oldProperties.get(RANDOM);
-        if (randomParameter != null)
+        if (randomParameter != null) {
             randomSource = randomParameter;
+        }
     }
 
     /**
      * Load properties from a configuration file
      *
-     * @param propertyFile - configuration file's filepath
+     * @param filepath configuration file's filepath
      */
-    public void loadConfiguration(String filepath) {
+    public void loadConfiguration(final String filepath) {
         loadConfiguration(new File(filepath));
     }
 }

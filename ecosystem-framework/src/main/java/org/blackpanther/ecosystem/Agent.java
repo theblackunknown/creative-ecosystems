@@ -2,7 +2,7 @@ package org.blackpanther.ecosystem;
 
 import org.blackpanther.ecosystem.math.Geometry;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.Serializable;
 
 import static org.blackpanther.ecosystem.Helper.require;
@@ -10,15 +10,17 @@ import static org.blackpanther.ecosystem.Helper.require;
 /**
  * <p>
  * Component which represent an agent within an ecosystem.
- * It implements all basic features for an agent, specific behaviour are left to subclasses
+ * It implements all basic features for an agent,
+ * specific behaviour are left to subclasses
  * </p>
  *
  * @author MACHIZAUD Andréa
- * @version 0.2 - Sun Apr 24 02:41:42 CEST 2011
+ * @version v0.2.1 - Sun Apr 24 18:01:06 CEST 2011
  */
 public abstract class Agent
         implements Serializable {
 
+    /** Serializable identifier */
     private static final Long serialVersionUID = 1L;
 
     /**
@@ -62,53 +64,63 @@ public abstract class Agent
     /**
      * Create an agent
      *
-     * @param direction - its initial movement direction
-     * @param speed     - initial speed
-     * @param mortality - initial mortality rate
-     * @param fecundity - initial fecundity rate
-     * @param manager   - Behaviour Strategy to use for this agent
+     * @param initialDirection
+     *      its initial movement direction
+     * @param initialSpeed
+     *      initial speed
+     * @param initialMortality
+     *      initial mortality rate
+     * @param initialFecundity
+     *      initial fecundity rate
+     * @param manager
+     *      Behaviour Strategy to use for this agent
      */
     public Agent(
-            final Geometry.Vector2D direction,
-            final double speed,
-            final double mortality,
-            final double fecundity,
+            final Geometry.Vector2D initialDirection,
+            final double initialSpeed,
+            final double initialMortality,
+            final double initialFecundity,
             final BehaviorManager manager
     ) {
-        require(speed >= 0, "Speed must be positive");
-        require(0.0 <= mortality && mortality <= 1.0,"A probability is expressed in [0.0,1.0] interval");
-        require(0.0 <= fecundity && fecundity <= 1.0,"A probability is expressed in [0.0,1.0] interval");
+        require(initialSpeed >= 0, "Speed must be positive");
+        require(0.0 <= initialMortality && initialMortality <= 1.0,
+                "A probability is expressed in [0.0,1.0] interval");
+        require(0.0 <= initialFecundity && initialFecundity <= 1.0,
+                "A probability is expressed in [0.0,1.0] interval");
 
-        this.direction = direction;
-        this.speed = speed;
-        this.mortalityRate = mortality;
-        this.fecondityRate = fecundity;
+        this.direction = initialDirection;
+        this.speed = initialSpeed;
+        this.mortalityRate = initialMortality;
+        this.fecondityRate = initialFecundity;
         this.behaviorManager = manager;
     }
 
     /**
      * Update agent state according to given environment and agent behaviour manager
-     * @param env - given environment in which the agent evolves
+     *
+     * @param env
+     *      given environment in which the agent evolves
      */
-    public void update(Environment env) {
-        behaviorManager.update(env,this);
+    public final void update(final Environment env) {
+        behaviorManager.update(env, this);
     }
 
     /**
      * Check if this agent has been set in any environment
-     * @return <code>true</code> if the agent has been set in an {@link Environment}, <code>false</code> otherwise
+     *
+     * @return <code>true</code> if the agent has been set in an {@link Environment},
+     *  <code>false</code> otherwise
      */
-    public boolean isNowhere() {
+    public final boolean isNowhere() {
         return areaListener == null;
     }
 
-    void setAreaListener(AreaListener listener) {
+    final void setAreaListener(final AreaListener listener) {
         areaListener = listener;
     }
 
-    void unsetAreaListener() {
+    final void unsetAreaListener() {
         areaListener = null;
     }
-
 
 }

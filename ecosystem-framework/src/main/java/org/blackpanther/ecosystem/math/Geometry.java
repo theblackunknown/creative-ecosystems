@@ -6,31 +6,84 @@ import java.awt.geom.Point2D;
  * Helper to use mathematical data
  *
  * @author MACHIZAUD Andréa
- * @version 1.0 - 4/23/11
+ * @version v0.2.1 - Sun Apr 24 18:01:06 CEST 2011
  */
 public final class Geometry {
+
+    private Geometry() {
+    }
 
     /**
      * A math vector designed to be used in a 2D-space
      */
     public class Vector2D {
+        /**
+         * Start point of this vector
+         */
         private Point2D start;
+        /**
+         * End point of this vector
+         */
         private Point2D destination;
 
-        public Vector2D(double x1, double y1, double x2, double y2) {
+        /**
+         * Default constructor which define a vector
+         * with a start point and a destination point
+         *
+         * @param x1 start abscissa
+         * @param y1 start ordinate
+         * @param x2 destination abscissa
+         * @param y2 destination ordinate
+         */
+        public Vector2D(
+                final double x1,
+                final double y1,
+                final double x2,
+                final double y2) {
             start = new ImmutablePoint(x1, y1);
             destination = new ImmutablePoint(x2, y2);
         }
 
-        public Vector2D(Point2D start, Point2D destination) {
-            this(start.getX(), start.getY(), destination.getX(), destination.getY());
+        /**
+         * Constructor with {@link Point2D} instead of abscissa and ordinate
+         *
+         * @param startPoint       start
+         * @param destinationPoint destination
+         */
+        public Vector2D(
+                final Point2D startPoint,
+                final Point2D destinationPoint) {
+            this(startPoint.getX(), startPoint.getY(),
+                    destinationPoint.getX(), destinationPoint.getY());
         }
 
-        public Point2D getStart() {
+        /**
+         * Constructor which set a vector from <pre>(0.0,0.0)</pre>
+         * to given destination point
+         *
+         * @param destinationPoint destination
+         */
+        public Vector2D(
+                final Point2D destinationPoint
+        ) {
+            this(0.0, 0.0, destinationPoint.getX(), destinationPoint.getY());
+        }
+
+        /**
+         * Give the start point of this vector
+         *
+         * @return start point
+         */
+        public final Point2D getStart() {
             return start;
         }
 
-        public Point2D getDestination() {
+        /**
+         * Give the end point of this vector
+         *
+         * @return end point
+         */
+        public final Point2D getDestination() {
             return destination;
         }
     }
@@ -40,30 +93,35 @@ public final class Geometry {
      */
     private class ImmutablePoint extends Point2D {
 
-        private java.lang.Double x;
-        private java.lang.Double y;
+        private java.lang.Double abscissa;
+        private java.lang.Double ordinate;
 
-        public ImmutablePoint(double x, double y) {
-            this.x = x;
-            this.y = y;
+        public ImmutablePoint(
+                final double x,
+                final double y) {
+            this.abscissa = x;
+            this.ordinate = y;
         }
 
-        public ImmutablePoint(Point2D p) {
+        public ImmutablePoint(
+                final Point2D p) {
             this(p.getX(), p.getY());
         }
 
         @Override
         public double getX() {
-            return x;
+            return abscissa;
         }
 
         @Override
         public double getY() {
-            return y;
+            return ordinate;
         }
 
         @Override
-        public void setLocation(double x, double y) {
+        public void setLocation(
+                final double x,
+                final double y) {
             throw new UnsupportedOperationException("Immutable Point's location can be changed");
         }
     }
