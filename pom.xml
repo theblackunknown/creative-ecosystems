@@ -8,6 +8,7 @@
 
     <modules>
         <module>ecosystem-framework</module>
+        <module>draughtsman-ecosystem</module>
     </modules>
 
     <packaging>pom</packaging>
@@ -128,12 +129,4 @@
         </plugins>
     </build>
 
-    <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 </project>
