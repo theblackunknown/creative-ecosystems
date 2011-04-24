@@ -8,28 +8,36 @@ package org.blackpanther.ecosystem;
  */
 final class Helper {
 
+    private Helper() {
+    }
+
     /**
      * Check if given predicate is verified
-     * @param predicate - predicate which must be verified
-     * @param errorMessage - error message to display if predicate is not verified
-     * @throws IllegalArgumentException if the given predicate is not true
+     *
+     * @param predicate    predicate which must be verified
+     * @param errorMessage error message to display if predicate is not verified
+     * @throws IllegalArgumentException if the given predicate is not satisfied
      */
-    static void require(boolean predicate, String errorMessage) {
-        if (!predicate)
-            throw new IllegalArgumentException("Condition unsastified" +
-                    (
-                            (errorMessage != null && !errorMessage.equals("")) ?
-                                    " : " + errorMessage
-                                    : "")
+    static void require(
+            final boolean predicate,
+            final String errorMessage) {
+        if (!predicate) {
+            throw new IllegalArgumentException("Condition unsastified"
+                    + ((errorMessage != null && !errorMessage.equals(""))
+                    ? " : " + errorMessage
+                    : "")
             );
+        }
     }
 
     /**
      * Check if given predicate is verified with no error message
-     * @param predicate - predicate which must be verified
-     * @throws IllegalArgumentException if the given predicate is not true
+     *
+     * @param predicate predicate which must be verified
+     * @throws IllegalArgumentException if the given predicate is not satisfied
      */
-    static void require(boolean predicate) {
+    static void require(
+            final boolean predicate) {
         require(predicate, null);
     }
 }
