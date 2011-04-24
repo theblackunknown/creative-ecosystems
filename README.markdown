@@ -1,34 +1,33 @@
 # About
 
-Commencement d'une maquette ayant pour but de construire une applciation reproduisant un modèle d'éco-système artistique simple comme celui décrit par McCormackBown
+Starting a sample application like McCormackBown's one which draw a picture by an bio ecosystem-like.
+Goals have been kept easy for the first version but, incrementally, more and more features will be include.
 
-# Features list in this sample
-
-Les fonctionnalités que je veuc mettre en oeuvre dans cet maquette sont
+# Features included in this sample
 
 * Environnement
-    * Carte en deux dimensions
-    * Borné et taille fixe
-    * Pas de gestion des ressources
-    * Pas de conditions
-    * Unité temporelle : nombre de cycles
+    * 2D map
+    * Fixed-size & bounded
+    * No resources management
+    * No conditions management
+    * Temporal Unit : number of evolution cycle
 * Agent
-    * Génome
-        * Deplacement
-            * Vecteur directionnelle
-            * Vitesse
-        * Mortalité _influencé par l'âge de l'agent_
-            * Exprimé par une probabilité
+    * Genome
+        * Moving
+            * directional vector
+            * speed
+        * Death _affected by its age_
+            * Representated as a probability
         * Reproduction
-            * _Mitose_
-            * Exprimé par une probabilité
+            * _Mitosis_
+            * Representated as a probability
         * Identifiant
-            * Couleur _noir_
-            * Tracé unicolore
-* Règles générales
+            * Color _black_
+            * Plain trail
+* Genral rules
     * Mutation
-        * Exprimé selon une probabilité
-        * Influe sur un gène en le modifiant dans une certaine intervalle de variation (dépendante du gène)
+        * Representated as a probability
+        * Affect a gene by setting a new value within a certain range (dependant on the gene)
     * Normalisation
         * Tentative de normaliser chaque gène pour l'encodé sur une intervalle décimale `[-1,1]`
 
