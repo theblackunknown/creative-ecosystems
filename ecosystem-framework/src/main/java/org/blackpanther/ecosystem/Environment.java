@@ -204,6 +204,10 @@ public abstract class Environment
             subpopulation.remove(agent);
             agent.unsetAreaListener();
         }
+
+        public final Set<Agent> getSubpopulation() {
+            return new HashSet<Agent>(subpopulation);
+        }
     }
 
 }
