@@ -56,11 +56,7 @@ public abstract class Environment
 
         //initialize space
         space = new Case[width][height];
-        for (int row = 0; row < width; row++) {
-            for (int column = 0; column < height; column++) {
-                space[row][column] = new Case(row, column);
-            }
-        }
+        initializeSpace();
 
         //initalize timeline
         timetracker = 0;
@@ -68,6 +64,8 @@ public abstract class Environment
         //initialize pool
         pool = new HashSet<Agent>();
     }
+
+    protected abstract void initializeSpace();
 
     /**
      * Constructor for a square-shape space
@@ -183,12 +181,12 @@ public abstract class Environment
      * @author MACHIZAUD Andréa
      * @version v0.2.1 - Sun Apr 24 18:01:06 CEST 2011
      */
-    protected static class Case
+    public abstract static class Case
             implements Serializable, AreaListener {
 
         private static final Long serialVersionUID = 1L;
 
-        private Set<Agent> subpopulation;
+        private Set<Agent> subpopulation = new HashSet<Agent>();
         private Point coordinates;
 
         public Case(

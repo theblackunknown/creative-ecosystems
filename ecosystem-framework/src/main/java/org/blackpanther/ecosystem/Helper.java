@@ -40,4 +40,15 @@ final class Helper {
             final boolean predicate) {
         require(predicate, null);
     }
+
+    /**
+     * check if a user input is valid or not,
+     * based on non-null and non-empty input
+     *
+     * @param input user input
+     * @return <code>true</code> if the given input is valid, <code>false</code> otherwise
+     */
+    static boolean isValid(String input) {
+        return input != null && !input.trim().equals("");
+    }
 }

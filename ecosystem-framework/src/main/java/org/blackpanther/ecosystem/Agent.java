@@ -80,6 +80,7 @@ public abstract class Agent
             final double initialSpeed,
             final double initialMortality,
             final double initialFecundity,
+            final double initialMutation,
             final BehaviorManager manager
     ) {
         require(initialSpeed >= 0, "Speed must be positive");
@@ -92,6 +93,7 @@ public abstract class Agent
         this.speed = initialSpeed;
         this.mortalityRate = initialMortality;
         this.fecondityRate = initialFecundity;
+        this.mutationRate = initialMutation;
         this.behaviorManager = manager;
     }
 
@@ -123,4 +125,59 @@ public abstract class Agent
         areaListener = null;
     }
 
+    public Geometry.Vector2D getDirection() {
+        return direction;
+    }
+
+    public Double getSpeed() {
+        return speed;
+    }
+
+    public Double getMortalityRate() {
+        return mortalityRate;
+    }
+
+    public Double getFecondityRate() {
+        return fecondityRate;
+    }
+
+    public Double getMutationRate() {
+        return mutationRate;
+    }
+
+    public Color getIdentifiant() {
+        return identifiant;
+    }
+
+    void setDirection(Geometry.Vector2D direction) {
+        this.direction = direction;
+    }
+
+    void setSpeed(Double speed) {
+        this.speed = speed;
+    }
+
+    void setMortalityRate(Double mortalityRate) {
+        this.mortalityRate = mortalityRate;
+    }
+
+    void setFecondityRate(Double fecondityRate) {
+        this.fecondityRate = fecondityRate;
+    }
+
+    void setMutationRate(Double mutationRate) {
+        this.mutationRate = mutationRate;
+    }
+
+    void setAge(int age) {
+        this.age = age;
+    }
+
+    void setIdentifiant(Color identifiant) {
+        this.identifiant = identifiant;
+    }
+
+    void setBehaviorManager(BehaviorManager behaviorManager) {
+        this.behaviorManager = behaviorManager;
+    }
 }

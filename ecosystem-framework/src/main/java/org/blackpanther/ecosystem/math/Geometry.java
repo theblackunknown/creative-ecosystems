@@ -16,7 +16,7 @@ public final class Geometry {
     /**
      * A math vector designed to be used in a 2D-space
      */
-    public class Vector2D {
+    public static class Vector2D {
         /**
          * Start point of this vector
          */
@@ -91,7 +91,7 @@ public final class Geometry {
     /**
      * Implement Point2D class in order to have an immutable geometric point
      */
-    private class ImmutablePoint extends Point2D {
+    private static class ImmutablePoint extends Point2D {
 
         private java.lang.Double abscissa;
         private java.lang.Double ordinate;
