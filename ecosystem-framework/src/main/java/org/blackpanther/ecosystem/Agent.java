@@ -38,7 +38,7 @@ public abstract class Agent
     /**
      * Probability that the agent spawn a child
      */
-    private Double fecondityRate;
+    private Double fecundityRate;
     /**
      * Probability that a mutation happens
      */
@@ -48,12 +48,13 @@ public abstract class Agent
      */
     private int age = 0;
     /**
-     * Agent's identifiant. Design choice is to implement it as a {@link Color}
+     * Agent's identifier. Design choice is to implement it as a {@link Color}
      */
-    private Color identifiant = Color.BLACK;
+    private Color identifier = Color.BLACK;
 
     /**
-     * Agent's behavior manager
+     * Agent's behavior manager.
+     * Responsible for agent's interaction
      */
     private BehaviorManager behaviorManager;
     /**
@@ -83,16 +84,20 @@ public abstract class Agent
             final double initialMutation,
             final BehaviorManager manager
     ) {
+        //TODO Normalize range
         require(initialSpeed >= 0, "Speed must be positive");
         require(0.0 <= initialMortality && initialMortality <= 1.0,
                 "A probability is expressed in [0.0,1.0] interval");
         require(0.0 <= initialFecundity && initialFecundity <= 1.0,
                 "A probability is expressed in [0.0,1.0] interval");
+        require(0.0 <= initialMutation && initialMutation <= 1.0,
+                "A probability is expressed in [0.0,1.0] interval");
+        require(manager != null,"You must provide a BehaviourManager");
 
         this.direction = initialDirection;
         this.speed = initialSpeed;
         this.mortalityRate = initialMortality;
-        this.fecondityRate = initialFecundity;
+        this.fecundityRate = initialFecundity;
         this.mutationRate = initialMutation;
         this.behaviorManager = manager;
     }
@@ -117,66 +122,167 @@ public abstract class Agent
         return areaListener == null;
     }
 
+    /**
+     * Set the arealistener
+     * @param listener 
+     *      the new area listener
+     */
     final void setAreaListener(final AreaListener listener) {
         areaListener = listener;
     }
 
+    /**
+     * Unset the current area listener if any
+     */
     final void unsetAreaListener() {
         areaListener = null;
     }
 
+    /**
+     * Get the current agent's direction
+     * @return
+     *      current direction
+     */
     public Geometry.Vector2D getDirection() {
         return direction;
     }
 
+    /**
+     * Get the current agent's speed
+     * @return 
+     *      current speed
+     */
     public Double getSpeed() {
         return speed;
     }
 
+    /**
+     * Get the current agent's mortality rate
+     * @return 
+     *      current mortality rate
+     */
     public Double getMortalityRate() {
         return mortalityRate;
     }
 
-    public Double getFecondityRate() {
-        return fecondityRate;
+    /**
+     * Get the current agent's fecundity rate
+     * @return 
+     *      current fecundity rate
+     */
+    public Double getfecundityRate() {
+        return fecundityRate;
     }
 
+    /**
+     * Get the current agent's mutation rate
+     * @return 
+     *      current mutation rate
+     */
     public Double getMutationRate() {
         return mutationRate;
     }
 
-    public Color getIdentifiant() {
-        return identifiant;
+    /**
+     * Get the agent's age
+     * @return 
+     *      actual age of the agent
+     */
+    public Integer void getAge() {
+        return age;
     }
 
+    /**
+     * Get the agent's identifier
+     * @return 
+     *      agent's color identifier
+     */
+    public Color getIdentifier() {
+        return identifier;
+    }
+    
+    /*=========================================================================
+     * Setter Part
+     * Visibility is set to package because
+     * they are meant to be modified by nothing except the behaviour manager
+     *=========================================================================
+     */
+
+    /**
+     * Setter for the agent's direction
+     * @param direction
+     *      the new direction
+     */
     void setDirection(Geometry.Vector2D direction) {
         this.direction = direction;
     }
 
+
+    /**
+     * Setter for the agent's speed
+     * @param speed
+     *      the new speed
+     */
     void setSpeed(Double speed) {
         this.speed = speed;
     }
 
+
+    /**
+     * Setter for the agent's mortality rate
+     * @param mortalityRate
+     *      the new mortality rate
+     */
     void setMortalityRate(Double mortalityRate) {
         this.mortalityRate = mortalityRate;
     }
 
-    void setFecondityRate(Double fecondityRate) {
-        this.fecondityRate = fecondityRate;
+
+    /**
+     * Setter for the agent's fecundity rate
+     * @param fecundityRate
+     *      the new fecundity rate
+     */
+    void setfecundityRate(Double fecundityRate) {
+        this.fecundityRate = fecundityRate;
     }
 
+
+    /**
+     * Setter for the agent's mutation rate
+     * @param mutationRate
+     *      the new mutation rate
+     */
     void setMutationRate(Double mutationRate) {
         this.mutationRate = mutationRate;
     }
 
+
+    /**
+     * Setter for the agent's age
+     * @param age
+     *      the new age
+     */
     void setAge(int age) {
         this.age = age;
     }
 
-    void setIdentifiant(Color identifiant) {
-        this.identifiant = identifiant;
+
+    /**
+     * Setter for the agent's identifier
+     * @param identifier
+     *      the new identifier
+     */
+    void setidentifier(Color identifier) {
+        this.identifier = identifier;
     }
 
+
+    /**
+     * Setter for the agent's behavior manager
+     * @param behaviorManager
+     *      the new behavior manager
+     */
     void setBehaviorManager(BehaviorManager behaviorManager) {
         this.behaviorManager = behaviorManager;
     }
