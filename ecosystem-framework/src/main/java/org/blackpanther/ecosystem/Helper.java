@@ -4,7 +4,7 @@ package org.blackpanther.ecosystem;
  * Tools method to help to design others classes
  *
  * @author MACHIZAUD Andréa
- * @version v0.2.1 - Sun Apr 24 18:01:06 CEST 2011
+ * @version 0.3 - Sun May  1 00:00:13 CEST 2011
  */
 final class Helper {
 

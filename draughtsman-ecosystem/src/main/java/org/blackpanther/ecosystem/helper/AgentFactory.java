@@ -13,7 +13,7 @@ import static org.blackpanther.ecosystem.Configuration.*;
  * TODO Why not generate a random agent ?
  *
  * @author MACHIZAUD Andréa
- * @version 1.0 - 4/25/11
+ * @version 0.3 - Sun May  1 00:00:13 CEST 2011
  */
 public final class AgentFactory {
 
