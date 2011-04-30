@@ -2,7 +2,7 @@ package org.blackpanther.ecosystem;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 1.0 - 4/24/11
+ * @version 0.3 - Sun May  1 00:00:13 CEST 2011
  */
 public class DesignEnvironment extends Environment {
 

@@ -12,7 +12,7 @@ import static org.blackpanther.ecosystem.Configuration.*;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 1.0 - 4/25/11
+ * @version 0.3 - Sun May  1 00:00:13 CEST 2011
  */
 public class McCormackDraughtsmanBehaviour
         implements BehaviorManager {
