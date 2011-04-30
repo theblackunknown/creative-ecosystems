@@ -3,11 +3,13 @@ package org.blackpanther.ecosystem;
 import org.blackpanther.ecosystem.math.Geometry;
 
 import java.awt.geom.Dimension2D;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import static org.blackpanther.ecosystem.Helper.require;
 
@@ -33,6 +35,10 @@ public abstract class Environment
      *                       STATIC PART
      *=========================================================================
      */
+    private static final Logger logger =
+            Logger.getLogger(
+                    Environment.class.getCanonicalName()
+            );
 
     private static final Long serialVersionUID = 1L;
 
@@ -79,7 +85,7 @@ public abstract class Environment
     /**
      * Agent draw's result history
      */
-    protected Set<Geometry.Vector2D> drawHistory = new HashSet<Geometry.Vector2D>(100, 0.65f);
+    protected Set<Line2D> drawHistory = new HashSet<Line2D>(100, 0.65f);
 
     /*
      *=========================================================================
@@ -167,8 +173,8 @@ public abstract class Environment
         return new HashSet<Agent>(pool);
     }
 
-    public final Set<Geometry.Vector2D> getHistory() {
-        return new HashSet<Geometry.Vector2D>(drawHistory);
+    public final Set<Line2D> getHistory() {
+        return new HashSet<Line2D>(drawHistory);
     }
 
     /**
@@ -200,7 +206,7 @@ public abstract class Environment
         return null;
     }
 
-    final void recordNewLine(Geometry.Vector2D line) {
+    final void recordNewLine(Line2D line) {
         drawHistory.add(line);
     }
 
@@ -237,7 +243,7 @@ public abstract class Environment
         //if they die, they are simply not kept in the next pool
         for (Agent agent : pool) {
             agent.update(this);
-            if (!agent.isAlive()) {
+            if (agent.isAlive()) {
                 nextPool.add(agent);
             }
         }
@@ -349,6 +355,59 @@ public abstract class Environment
         @Override
         public boolean isEmpty() {
             throw new UnsupportedOperationException();
+        }
+
+        /**
+         * Add a line to draw in the drawn line history.
+         * It determines if the given line cross an already drawn one,
+         * if that event happens, it will save a line from given line's origin to the intersection point
+         *
+         * @param line line to draw
+         * @return <code>true</code> if draughtsman must be die after his movement,
+         *         <code>false</code> otherwise.
+         */
+        @Override
+        public boolean trace(Line2D line) {
+            logger.entering(
+                    Area.class.getCanonicalName(),
+                    "boolean trace(Line2D line)",
+                    line);
+
+            for (Line2D historyLine : drawHistory) {
+                if (historyLine.intersectsLine(line)) {
+                    //Fetch the intersection - method inspired by http://paulbourke.net/geometry/pointline/
+                    double deltaX = (historyLine.getX2() - historyLine.getX1());
+                    double deltaY = (historyLine.getY2() - historyLine.getY1());
+                    double u = (
+                            (line.getX1() - historyLine.getX1()) * deltaX
+                                    + (line.getY1() - historyLine.getY1()) * deltaY
+                    ) / (
+                            Math.pow(deltaX, 2) + Math.pow(deltaY, 2)
+                    );
+                    logger.finest(String.format("[DeltaX : %.4f, DeltaY : %.4f, u : %.4f", deltaX, deltaY, u));
+
+                    Point2D intersection = new Point2D.Double(
+                            historyLine.getX1() + u * deltaX,
+                            historyLine.getY1() + u * deltaY
+                    );
+                    logger.fine(String.format("Intersection detected : %s", intersection));
+
+                    //We add a drawn line from agent's old location till intersection
+                    drawHistory.add(new Line2D.Double(
+                            line.getP1(),
+                            intersection
+                    ));
+
+                    //Yes, unfortunately, the agent died - this is Sparta here dude
+                    return true;
+                }
+            }
+
+            logger.fine("No intersection");
+
+            //Everything went better than expected
+            drawHistory.add(line);
+            return false;
         }
     }
 

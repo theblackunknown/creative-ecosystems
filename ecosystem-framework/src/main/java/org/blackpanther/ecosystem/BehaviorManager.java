@@ -15,11 +15,16 @@ public interface BehaviorManager {
 
     /**
      * Update agent state in given {@link Environment}
-     * @param env
-     *      environment in which the agent evolves
-     * @param agent
-     *      monitored agent
+     *
+     * @param env   environment in which the agent evolves
+     * @param that  monitored agent
      */
-    void update(Environment env, Agent agent);
+    void update(Environment env, Agent that);
+
+    void move(Agent that);
+
+    void mutate(Environment env, Agent that);
+
+    void spawn(Environment env, Agent that);
 
 }

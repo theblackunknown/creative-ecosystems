@@ -1,4 +1,4 @@
-bump-version.zsh
+bump-version
 target/
 
 *.iml

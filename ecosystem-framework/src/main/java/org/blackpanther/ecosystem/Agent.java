@@ -34,7 +34,7 @@ public abstract class Agent
     /**
      * Direction in which the agent moves
      */
-    private Geometry.Vector2D initial_direction;
+    private Geometry.Direction2D initial_direction;
     /**
      * Speed of the agent. Varies in <pre>[0,3]</pre>
      */
@@ -69,7 +69,7 @@ public abstract class Agent
     /**
      * Current dx & dy
      */
-    private Geometry.Vector2D current_direction;
+    private Geometry.Direction2D current_direction;
     /**
      * Current ddx & ddy
      */
@@ -113,7 +113,7 @@ public abstract class Agent
      */
     public Agent(
             final Point2D spawnLocation,
-            final Geometry.Vector2D initialDirection,
+            final Geometry.Direction2D initialDirection,
             final double initialCurvature,
             final double initialSpeed,
             final double initialMortality,
@@ -176,6 +176,10 @@ public abstract class Agent
         areaListener = null;
     }
 
+    AreaListener getAreaListener(){
+        return areaListener;
+    }
+
     /* ================================================
      *               GETTERS
      * ================================================
@@ -191,7 +195,7 @@ public abstract class Agent
      *
      * @return current direction
      */
-    public Geometry.Vector2D getDirection() {
+    public Geometry.Direction2D getDirection() {
         return current_direction;
     }
 
@@ -250,18 +254,26 @@ public abstract class Agent
     }
 
     /*=========================================================================
-     * Setter Part
+     *                 SETTERS
      * Visibility is set to package because
      * they are meant to be modified by nothing except the behaviour manager
      *=========================================================================
      */
+
+    final void setLocation(Point2D target) {
+        setLocation(target.getX(), target.getY());
+    }
+
+    final void setLocation(double abscissa, double ordinate) {
+        this.current_location.setLocation(abscissa,ordinate);
+    }
 
     /**
      * Setter for the agent's direction
      *
      * @param direction the new direction
      */
-    void setDirection(Geometry.Vector2D direction) {
+    void setDirection(Geometry.Direction2D direction) {
         this.current_direction = direction;
     }
 
@@ -302,5 +314,14 @@ public abstract class Agent
      */
     void setBehaviorManager(BehaviorManager behaviorManager) {
         this.behaviorManager = behaviorManager;
+    }
+
+    /**
+     * FIXME Erase it as soon as another solution pop out
+     *
+     * @param v
+     */
+    void setFecundityRate(double v) {
+        this.fecundityRate = v;
     }
 }

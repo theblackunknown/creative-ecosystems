@@ -15,14 +15,12 @@ public class DesignEnvironment extends Environment {
 
     @Override
     protected void initializeSpace() {
-
+        //Nothing special about space initialization
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public DesignEnvironment(final int size) {
-        super(size);
+    @Override
+    public void endThisWorldHook() {
+        //Nothing special to do when this world ends
     }
 
 }

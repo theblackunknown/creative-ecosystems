@@ -1,11 +1,13 @@
 package org.blackpanther.ecosystem;
 
+import java.awt.geom.Line2D;
+
 /**
  * <p>
- *     Observer-Listener Pattern.
- *     Designed to assign an area listener to a agent,
- *     practically a case observes agent on its area
- *     and can provide them some information around it.
+ * Observer-Listener Pattern.
+ * Designed to assign an area listener to a agent,
+ * practically a case observes agent on its area
+ * and can provide them some information around it.
  * </p>
  *
  * @author MACHIZAUD Andréa
@@ -13,4 +15,5 @@ package org.blackpanther.ecosystem;
  */
 public interface AreaListener {
 
+    boolean trace(Line2D to);
 }

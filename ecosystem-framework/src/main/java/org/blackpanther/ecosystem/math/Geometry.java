@@ -15,7 +15,7 @@ public final class Geometry {
     }
 
     public static class Dimension
-        extends Dimension2D {
+            extends Dimension2D {
 
         private double width;
         private double height;
@@ -49,75 +49,53 @@ public final class Geometry {
     /**
      * A math vector designed to be used in a 2D-space
      */
-    public static class Vector2D {
+    public static class Direction2D {
         /**
-         * Start point of this vector
+         * Abscissa variation
          */
-        private Point2D start;
+        private Double dx;
         /**
-         * End point of this vector
+         * Ordinate variation
          */
-        private Point2D destination;
+        private Double dy;
 
-        /**
-         * Default constructor which define a vector
-         * with a start point and a destination point
-         *
-         * @param x1 start abscissa
-         * @param y1 start ordinate
-         * @param x2 destination abscissa
-         * @param y2 destination ordinate
-         */
-        public Vector2D(
-                final double x1,
-                final double y1,
-                final double x2,
-                final double y2) {
-            start = new ImmutablePoint(x1, y1);
-            destination = new ImmutablePoint(x2, y2);
-        }
-
-        /**
-         * Constructor with {@link Point2D} instead of abscissa and ordinate
-         *
-         * @param startPoint       start
-         * @param destinationPoint destination
-         */
-        public Vector2D(
-                final Point2D startPoint,
-                final Point2D destinationPoint) {
-            this(startPoint.getX(), startPoint.getY(),
-                    destinationPoint.getX(), destinationPoint.getY());
-        }
-
-        /**
-         * Constructor which set a vector from <pre>(0.0,0.0)</pre>
-         * to given destination point
-         *
-         * @param destinationPoint destination
-         */
-        public Vector2D(
-                final Point2D destinationPoint
+        public Direction2D(
+                final double dx,
+                final double dy
         ) {
-            this(0.0, 0.0, destinationPoint.getX(), destinationPoint.getY());
+            this.dx = dx;
+            this.dy = dy;
         }
 
         /**
-         * Give the start point of this vector
+         * Constructor which set dx and dy corresponding to abscissa et ordinate of given respectively
          *
-         * @return start point
+         * @param variation destination
          */
-        public final Point2D getStart() {
-            return start;
+        public Direction2D(
+                final Point2D variation
+        ) {
+            this(variation.getX(), variation.getY());
         }
 
         /**
-         * Give the end point of this vector
+         * Give abscissa variation
          *
-         * @return end point
+         * @return
+         *      abscissa variation
          */
-        public final Point2D getDestination() {
-            return destination;
+        public final Double getDx() {
+            return dx;
+        }
+
+        /**
+         * Give ordinate variation
+         *
+         * @return
+         *      ordinate variation
+         */
+        public final Double getDy() {
+            return dy;
         }
     }
 
@@ -158,4 +136,5 @@ public final class Geometry {
             throw new UnsupportedOperationException("Immutable Point's location can be changed");
         }
     }
+
 }
