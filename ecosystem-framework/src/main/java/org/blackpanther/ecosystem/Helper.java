@@ -4,7 +4,7 @@ package org.blackpanther.ecosystem;
  * Tools method to help to design others classes
  *
  * @author MACHIZAUD Andréa
- * @version v0.2.1 - Sun Apr 24 18:01:06 CEST 2011
+ * @version 0.3 - Sun May  1 00:00:13 CEST 2011
  */
 final class Helper {
 
@@ -39,5 +39,16 @@ final class Helper {
     static void require(
             final boolean predicate) {
         require(predicate, null);
+    }
+
+    /**
+     * check if a user input is valid or not,
+     * based on non-null and non-empty input
+     *
+     * @param input user input
+     * @return <code>true</code> if the given input is valid, <code>false</code> otherwise
+     */
+    static boolean isValid(String input) {
+        return input != null && !input.trim().equals("");
     }
 }

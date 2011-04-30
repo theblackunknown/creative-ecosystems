@@ -29,5 +29,5 @@ Goals have been kept easy for the first version but, incrementally, more and mor
         * Representated as a probability
         * Affect a gene by setting a new value within a certain range (dependant on the gene)
     * Normalisation
-        * Tentative de normaliser chaque gène pour l'encodé sur une intervalle décimale `[-1,1]`
+        * Tentative to normalize evergy gene in order for them to be encoded within `[-1,1]`
 

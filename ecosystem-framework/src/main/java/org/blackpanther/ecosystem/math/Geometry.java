@@ -1,97 +1,108 @@
 package org.blackpanther.ecosystem.math;
 
+import java.awt.geom.Dimension2D;
 import java.awt.geom.Point2D;
 
 /**
  * Helper to use mathematical data
  *
  * @author MACHIZAUD Andréa
- * @version v0.2.1 - Sun Apr 24 18:01:06 CEST 2011
+ * @version 0.3 - Sun May  1 00:00:13 CEST 2011
  */
 public final class Geometry {
 
     private Geometry() {
     }
 
+    public static class Dimension
+            extends Dimension2D {
+
+        private double width;
+        private double height;
+
+        public Dimension(
+                final double width,
+                final double height
+        ) {
+            super();
+            this.width = width;
+            this.height = height;
+        }
+
+        @Override
+        public double getWidth() {
+            return width;
+        }
+
+        @Override
+        public double getHeight() {
+            return height;
+        }
+
+        @Override
+        public void setSize(double v, double v1) {
+            this.width = v;
+            this.height = v1;
+        }
+    }
+
     /**
      * A math vector designed to be used in a 2D-space
      */
-    public class Vector2D {
+    public static class Direction2D {
         /**
-         * Start point of this vector
+         * Abscissa variation
          */
-        private Point2D start;
+        private Double dx;
         /**
-         * End point of this vector
+         * Ordinate variation
          */
-        private Point2D destination;
+        private Double dy;
 
-        /**
-         * Default constructor which define a vector
-         * with a start point and a destination point
-         *
-         * @param x1 start abscissa
-         * @param y1 start ordinate
-         * @param x2 destination abscissa
-         * @param y2 destination ordinate
-         */
-        public Vector2D(
-                final double x1,
-                final double y1,
-                final double x2,
-                final double y2) {
-            start = new ImmutablePoint(x1, y1);
-            destination = new ImmutablePoint(x2, y2);
-        }
-
-        /**
-         * Constructor with {@link Point2D} instead of abscissa and ordinate
-         *
-         * @param startPoint       start
-         * @param destinationPoint destination
-         */
-        public Vector2D(
-                final Point2D startPoint,
-                final Point2D destinationPoint) {
-            this(startPoint.getX(), startPoint.getY(),
-                    destinationPoint.getX(), destinationPoint.getY());
-        }
-
-        /**
-         * Constructor which set a vector from <pre>(0.0,0.0)</pre>
-         * to given destination point
-         *
-         * @param destinationPoint destination
-         */
-        public Vector2D(
-                final Point2D destinationPoint
+        public Direction2D(
+                final double dx,
+                final double dy
         ) {
-            this(0.0, 0.0, destinationPoint.getX(), destinationPoint.getY());
+            this.dx = dx;
+            this.dy = dy;
         }
 
         /**
-         * Give the start point of this vector
+         * Constructor which set dx and dy corresponding to abscissa et ordinate of given respectively
          *
-         * @return start point
+         * @param variation destination
          */
-        public final Point2D getStart() {
-            return start;
+        public Direction2D(
+                final Point2D variation
+        ) {
+            this(variation.getX(), variation.getY());
         }
 
         /**
-         * Give the end point of this vector
+         * Give abscissa variation
          *
-         * @return end point
+         * @return
+         *      abscissa variation
          */
-        public final Point2D getDestination() {
-            return destination;
+        public final Double getDx() {
+            return dx;
+        }
+
+        /**
+         * Give ordinate variation
+         *
+         * @return
+         *      ordinate variation
+         */
+        public final Double getDy() {
+            return dy;
         }
     }
 
     /**
      * Implement Point2D class in order to have an immutable geometric point
      */
-    private class ImmutablePoint extends Point2D {
+    public static class ImmutablePoint extends Point2D {
 
         private java.lang.Double abscissa;
         private java.lang.Double ordinate;
@@ -125,4 +136,5 @@ public final class Geometry {
             throw new UnsupportedOperationException("Immutable Point's location can be changed");
         }
     }
+
 }
