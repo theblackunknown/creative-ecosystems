@@ -1,2 +1,6 @@
 bump-version.zsh
 target/
+
+*.iml
+*.ipr
+*.iws

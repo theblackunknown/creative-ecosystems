@@ -1,5 +1,6 @@
 package org.blackpanther.ecosystem.math;
 
+import java.awt.geom.Dimension2D;
 import java.awt.geom.Point2D;
 
 /**
@@ -11,6 +12,38 @@ import java.awt.geom.Point2D;
 public final class Geometry {
 
     private Geometry() {
+    }
+
+    public static class Dimension
+        extends Dimension2D {
+
+        private double width;
+        private double height;
+
+        public Dimension(
+                final double width,
+                final double height
+        ) {
+            super();
+            this.width = width;
+            this.height = height;
+        }
+
+        @Override
+        public double getWidth() {
+            return width;
+        }
+
+        @Override
+        public double getHeight() {
+            return height;
+        }
+
+        @Override
+        public void setSize(double v, double v1) {
+            this.width = v;
+            this.height = v1;
+        }
     }
 
     /**
@@ -91,7 +124,7 @@ public final class Geometry {
     /**
      * Implement Point2D class in order to have an immutable geometric point
      */
-    private static class ImmutablePoint extends Point2D {
+    public static class ImmutablePoint extends Point2D {
 
         private java.lang.Double abscissa;
         private java.lang.Double ordinate;

@@ -2,7 +2,6 @@ package org.blackpanther.ecosystem;
 
 import org.blackpanther.ecosystem.math.Geometry;
 
-import javax.print.Doc;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -12,6 +11,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,6 +30,16 @@ import static org.blackpanther.ecosystem.Helper.require;
  */
 public enum Configuration {
     Configuration;
+
+    static {
+        try {
+            LogManager.getLogManager().readConfiguration(
+                    Configuration.class.getClassLoader().getResourceAsStream("logging.properties")
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * Class logger

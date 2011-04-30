@@ -9,6 +9,8 @@ public class McCormackDraughtsman
 
     /**
      * {@inheritDoc}
+     *
+     * Method that make an agent to behave like McCormack describe in his essay
      */
     @Override
     public void update(Environment env, Agent agent) {

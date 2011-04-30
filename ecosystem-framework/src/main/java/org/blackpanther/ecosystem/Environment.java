@@ -1,11 +1,14 @@
 package org.blackpanther.ecosystem;
 
-import java.awt.*;
+import org.blackpanther.ecosystem.math.Geometry;
+
+import java.awt.geom.Dimension2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.blackpanther.ecosystem.Configuration.Configuration;
 import static org.blackpanther.ecosystem.Helper.require;
 
 /**
@@ -30,39 +33,41 @@ public abstract class Environment
      *                       STATIC PART
      *=========================================================================
      */
-     
+
     private static final Long serialVersionUID = 1L;
+
+    private static final Integer AREA_WIDTH_SPLIT = 2;
+    private static final Integer AREA_HEIGHT_SPLIT = 2;
 
     /**
      * Simple check for a environment space
      * which must contains no null-case
-     * @param env
-     *      Environment to be checked
-     * @return
-     *      false is there is at least one null case, true otherwise
+     *
+     * @param env Environment to be checked
+     * @return false is there is at least one null case, true otherwise
      */
     private static boolean spaceMustBeNonNull(Environment env) {
-        for(Case[] row : env.space) {
-            for(Case spaceCase : row) {
-                if ( spaceCase == null ) {
+        for (Area[] row : env.space) {
+            for (Area spaceArea : row) {
+                if (spaceArea == null) {
                     return false;
                 }
             }
         }
         return true;
     }
-        
+
 
     /*
-     *=========================================================================
-     *                       CLASS ATTRIBUTES
-     *=========================================================================
-     */
+    *=========================================================================
+    *                       CLASS ATTRIBUTES
+    *=========================================================================
+    */
 
     /**
      * Environment space
      */
-    protected Case[][] space;
+    protected Area[][] space;
     /**
      * Time tracker
      */
@@ -71,17 +76,21 @@ public abstract class Environment
      * Population
      */
     protected Set<Agent> pool;
+    /**
+     * Agent draw's result history
+     */
+    protected Set<Geometry.Vector2D> drawHistory = new HashSet<Geometry.Vector2D>(100, 0.65f);
 
     /*
      *=========================================================================
      *                       MISCELLANEOUS
      *=========================================================================
      */
-     
-     /**
-      * Mark whether this environment has been frozen or not
-      */
-     private boolean endReached;
+
+    /**
+     * Mark whether this environment has been frozen or not
+     */
+    private boolean endReached;
 
     /**
      * Default constructor which specified space bounds
@@ -90,26 +99,35 @@ public abstract class Environment
      * @param height space's height
      */
     public Environment(
-            final int width,
-            final int height
+            final double width,
+            final double height
     ) {
         //Check preconditions
         require(width > 0, "Width must be positive and non-zero");
         require(height > 0, "Height must be positive and non-zero");
 
-        //initialize space
-        space = new Case[width][height];
-        for(int row = 0; row < space.length;row++) {
-            for(int column = 0; column < space[0].length; column++) {
-                space = new this.Case(row,column);
+        //initialize space - space is split in smaller areas
+        //compute area dimension
+        double areaWidth = width / AREA_WIDTH_SPLIT;
+        double areaHeight = height / AREA_HEIGHT_SPLIT;
+        //create each area
+        space = new Area[AREA_WIDTH_SPLIT][AREA_HEIGHT_SPLIT];
+        for (int row = 0; row < AREA_WIDTH_SPLIT; row++) {
+            for (int column = 0; column < AREA_HEIGHT_SPLIT; column++) {
+                space[row][column] = new Area(
+                        (double) row * areaWidth,
+                        (double) column * areaHeight,
+                        areaWidth,
+                        areaHeight);
             }
         }
+        //template implementation to fill space at initialization
         initializeSpace();
         //postcondition
-        require(spaceMustBeNonNull(),
-            "Wrong initialization : there is at least one null case");
+        require(spaceMustBeNonNull(this),
+                "Wrong initialization : there is at least one null case");
 
-        //initalize timeline
+        //initialize timeline
         timetracker = 0;
 
         //initialize pool
@@ -131,56 +149,7 @@ public abstract class Environment
     }
 
     /**
-     * Add an agent to the environment at given position.
-     * The added agent will be monitored by corresponding case
-     * and that till its death or till it moves from there
-     *
-     * @param agent the agent
-     * @param x     abscissa
-     * @param y     ordinate
-     */
-    public final void addAgent(
-            final Agent agent,
-            final int x,
-            final int y) {
-        require(!endReached, "This environment has been frozen");
-        require(0 <= x && x < space.length,
-                "You can't add an agent out of space's bounds");
-        require(0 <= y && y < space[0].length,
-                "You can't add an agent out of space's bounds");
-        //Put it, in the pool
-        pool.add(agent);
-        //And at given position
-        space[x][y].addAgent(agent);
-    }
-
-    /**
-     * Add an agent at a random position
-     * The added agent will be monitored by corresponding case
-     * and that till its death or till it moves from there
-     *
-     * @param agent the agent
-     */
-    public final void addAgent(
-            final Agent agent) {
-        addAgent(
-                agent,
-                Configuration.getRandom().nextInt() % space.length,
-                Configuration.getRandom().nextInt() % space[0].length
-        );
-    }
-
-    /**
-     * Dump the current space state
-     *
-     * @return space's state
-     */
-    public final Case[][] dumpSpace() {
-        return space.clone();
-    }
-
-    /**
-     * Get current time (expressend as number of evolution's cycle)
+     * Get current time (expressed as number of evolution's cycle)
      * since evolution has begun
      *
      * @return number of cycles since evolution's beginning
@@ -198,20 +167,57 @@ public abstract class Environment
         return new HashSet<Agent>(pool);
     }
 
+    public final Set<Geometry.Vector2D> getHistory() {
+        return new HashSet<Geometry.Vector2D>(drawHistory);
+    }
+
+    /**
+     * Add an agent to the environment at given position.
+     * The added agent will be monitored by corresponding case
+     * and that till its death or till it moves from there
+     *
+     * @param agent the agent
+     * @param x     abscissa
+     * @param y     ordinate
+     */
+    public final void addAgent(
+            final Agent agent) {
+        //FIXME Check agent out of bounds
+        //Put it, in the pool
+        pool.add(agent);
+        //And at given position
+        agent.setAreaListener(getCorrespondingArea(agent.getLocation()));
+    }
+
+    private Area getCorrespondingArea(Point2D agentLocation) {
+        for (Area[] row : space) {
+            for (Area area : row) {
+                if (area.contains(agentLocation)) {
+                    return area;
+                }
+            }
+        }
+        return null;
+    }
+
+    final void recordNewLine(Geometry.Vector2D line) {
+        drawHistory.add(line);
+    }
+
     /**
      * <p>
-     *      Iterate over one cycle.
-     *      The current process is described below :
+     * Iterate over one cycle.
+     * The current process is described below :
      * </p>
      * <ol>
-     *  <li>Update every agent in the pool.</li>
-     *  <li>Remove all agent which died at this cycle</li>
-     *  <li>Increment timeline</li>
+     * <li>Update every agent in the pool.</li>
+     * <li>Remove all agent which died at this cycle</li>
+     * <li>Increment timeline</li>
      * </ol>
      */
     public final void runNextCycle() {
         require(!endReached, "This environment has been frozen");
-        
+
         //update environment state
         updatePool();
 
@@ -231,7 +237,7 @@ public abstract class Environment
         //if they die, they are simply not kept in the next pool
         for (Agent agent : pool) {
             agent.update(this);
-            if (!agent.isNowhere()) {
+            if (!agent.isAlive()) {
                 nextPool.add(agent);
             }
         }
@@ -242,90 +248,107 @@ public abstract class Environment
         //then update it
         pool.addAll(nextPool);
     }
-    
+
     /**
-     * Method to end the evolution of this world 
+     * Method to end the evolution of this world
      * and freeze its state
      */
-    public void endThisWorld() {
+    public final void endThisWorld() {
         endReached = true;
+        endThisWorldHook();
     }
-        
+
+    public abstract void endThisWorldHook();
 
     /**
      * <p>
      * Component designed to represent a state of a grid space
      * It can be consider as a small viewport of the global space.
      * It has the ability to monitor agent in its area,
-     * for example it can provide useful informations 
-     *  - like the number of close agents
-     *  - how close they are
-     *  - which they are
+     * for example it can provide useful information
+     * - like the number of close agents
+     * - how close they are
+     * - which they are
      * to its own population within its area
      * </p>
      *
      * @author MACHIZAUD Andréa
      * @version v0.2.1 - Sun Apr 24 18:01:06 CEST 2011
-     * FIXME Test Another representation
      */
-    public class Case
+    public class Area
+            extends Rectangle2D
             implements Serializable, AreaListener {
 
-        /** Serialization support */
-        private static final Long serialVersionUID = 1L;
-
-        /** 
-         * Buffer of agent within its area 
-         * <note>Updated at each cycle due to agents' interaction!</note>
-         */
-        private Set<Agent> subpopulation = new HashSet<Agent>();
-        /**
-         * Position of this case within global space
-         */
-        private Point coordinates;
+        private Point2D location;
+        private Dimension2D dimension;
 
         /**
-         * Default constructor to which we inform 
+         * Default constructor to which we inform
          * about where it is within the global space
-         * @param x     abscissa
-         * @param y     ordinate
+         *
+         * @param x abscissa
+         * @param y ordinate
          */
-        public Case(
-                final int x,
-                final int y) {
-            coordinates = new Point(x, y);
+        public Area(
+                final double x,
+                final double y,
+                final double width,
+                final double height) {
+            location = new Point2D.Double(x, y);
+            dimension = new Geometry.Dimension(width, height);
         }
 
-        /**
-         * Add an agent to subpool
-         * @param agent
-         *      new agent in this area
-         */
-        public final void addAgent(final Agent agent) {
-            require(!endReached, "This environment has been frozen");
-            subpopulation.add(agent);
-            agent.setAreaListener(this);
+        public Point2D getLocation() {
+            return location;
         }
 
-
-        /**
-         * Remove an agent from subpool
-         * @param agent
-         *      old agent in this area
-         */
-        public final void removeAgent(final Agent agent) {
-            require(!endReached, "This environment has been frozen");
-            subpopulation.remove(agent);
-            agent.unsetAreaListener();
+        public Dimension2D getDimension() {
+            return dimension;
         }
 
-        /**
-         * Dump the current subpopulation
-         * @return 
-         *      current subpopulation
-         */
-        public final Set<Agent> getSubpopulation() {
-            return new HashSet<Agent>(subpopulation);
+        @Override
+        public void setRect(double v, double v1, double v2, double v3) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int outcode(double v, double v1) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Rectangle2D createIntersection(Rectangle2D rectangle2D) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Rectangle2D createUnion(Rectangle2D rectangle2D) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double getX() {
+            return location.getX();
+        }
+
+        @Override
+        public double getY() {
+            return location.getY();
+        }
+
+        @Override
+        public double getWidth() {
+            return dimension.getWidth();
+        }
+
+        @Override
+        public double getHeight() {
+            return dimension.getHeight();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            throw new UnsupportedOperationException();
         }
     }
 
