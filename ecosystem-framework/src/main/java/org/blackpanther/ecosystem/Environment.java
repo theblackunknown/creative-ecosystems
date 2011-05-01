@@ -1,5 +1,6 @@
 package org.blackpanther.ecosystem;
 
+import org.blackpanther.ecosystem.event.*;
 import org.blackpanther.ecosystem.math.Geometry;
 
 import java.awt.geom.Dimension2D;
@@ -28,6 +29,7 @@ import static org.blackpanther.ecosystem.Helper.require;
  * @version 0.3 - Sun May  1 00:00:13 CEST 2011
  */
 public abstract class Environment
+        extends ObservableEnvironment
         implements Serializable {
 
     /*
@@ -97,6 +99,11 @@ public abstract class Environment
      * Mark whether this environment has been frozen or not
      */
     private boolean endReached;
+    /**
+     * Component that can monitor an environment
+     * @see java.beans.PropertyChangeSupport
+     */
+    protected EnvironmentMonitor eventSupport;
 
     /**
      * Default constructor which specified space bounds
@@ -138,6 +145,9 @@ public abstract class Environment
 
         //initialize pool
         pool = new HashSet<Agent>();
+
+        //initialize environment monitor
+        eventSupport = new EnvironmentMonitor(this);
     }
 
     /**
@@ -183,12 +193,9 @@ public abstract class Environment
      * and that till its death or till it moves from there
      *
      * @param agent the agent
-     * @param x     abscissa
-     * @param y     ordinate
      */
     public final void addAgent(
             final Agent agent) {
-        //FIXME Check agent out of bounds
         //Put it, in the pool
         pool.add(agent);
         //And at given position
@@ -208,6 +215,7 @@ public abstract class Environment
 
     final void recordNewLine(Line2D line) {
         drawHistory.add(line);
+        eventSupport.fireLineEvent(LineEvent.Type.ADDED, line);
     }
 
     /**
@@ -261,10 +269,17 @@ public abstract class Environment
      */
     public final void endThisWorld() {
         endReached = true;
-        endThisWorldHook();
+        eventSupport.fireEvolutionEvent(EvolutionEvent.Type.ENDED);
     }
 
-    public abstract void endThisWorldHook();
+    /*=====================================================================
+    *                   LISTENERS
+    *=====================================================================
+    */
+
+    public void addLineListener(LineListener listener) {
+        eventSupport.addLineListener(listener);
+    }
 
     /**
      * <p>
@@ -410,5 +425,6 @@ public abstract class Environment
             return false;
         }
     }
+
 
 }
