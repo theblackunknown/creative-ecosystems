@@ -49,6 +49,8 @@ public enum Configuration {
      * Random application parameters
      */
     public static final String RANDOM = "random";
+    public static final String ENVIRONMENT_WIDTH = "environment-width";
+    public static final String ENVIRONMENT_HEIGHT = "environment-height";
     public static final String AGENT_LOCATION = "agent-location";
     public static final String AGENT_DIRECTIONAL_VECTOR = "agent-directional-vector";
     public static final String AGENT_CURVATURE = "agent-curvature";
@@ -67,25 +69,19 @@ public enum Configuration {
             );
 
     /**
-     * User defined speed's parameter
-     */
-    private static final Pattern USER_SPEED_PARAMETER =
-            Pattern.compile(
-                    "^([0-3](?:.\\d{1,2}))$"
-            );
-
-    /**
      * Application's parameters with default loaded
      */
     protected final Map<String, Object> applicationProperties = new HashMap<String, Object>() {{
         put(RANDOM, new Random());
-        put(AGENT_LOCATION, new Point2D.Double(0.0, 0.0));
+        put(ENVIRONMENT_WIDTH, 800);
+        put(ENVIRONMENT_HEIGHT, 600);
+        put(AGENT_LOCATION, new Point2D.Double(50.0, 50.0));
         put(AGENT_DIRECTIONAL_VECTOR,
                 new Geometry.Direction2D(1.0, 1.0));
-        put(AGENT_CURVATURE, 1.0);
-        put(AGENT_SPEED, 1.0);
-        put(AGENT_MORTALITY, 0.2);
-        put(AGENT_FECUNDITY, 0.4);
+        put(AGENT_CURVATURE, Math.PI/5);
+        put(AGENT_SPEED, 3.0);
+        put(AGENT_MORTALITY, 0.20);
+        put(AGENT_FECUNDITY, 0.30);
         put(AGENT_MUTATION, 0.05);
     }};
 
@@ -228,22 +224,13 @@ public enum Configuration {
         }
     }
 
-    /**
-     * Rollback application parameter if an exception occurred
-     * while trying to load a configuration file
-     *
-     * @param oldProperties backup parameters
-     */
-    private void rollbackProperties(final Map<String, Object> oldProperties) {
-        applicationProperties.put(RANDOM, oldProperties.get(RANDOM));
-    }
-
     public <T> void setParameter(String parameterName, T parameterValue, Class<T> parameterType) {
         checkParameterValidity(parameterName, parameterValue, parameterType);
         applicationProperties.put(parameterName, parameterValue);
     }
 
-    @SuppressWarnings("unchecked")
+
+    @SuppressWarnings("unchecked") //Trust me please
     public <T> T getParameter(String parameterName, Class<T> parameterType) {
         Object correspondingParameter = applicationProperties.get(parameterName);
         if (correspondingParameter != null) {
@@ -255,9 +242,11 @@ public enum Configuration {
                 );
             }
         } else {
-            throw new IllegalArgumentException(
-                    "Requested parameter is not provided by the current configuration, "
-                            + "maybe you should register it before");
+            throw new IllegalArgumentException(String.format(
+                    "'%s'  parameter is not provided by the current configuration, "
+                            + "maybe you should register it before",
+                    parameterName
+            ));
         }
     }
 
@@ -311,7 +300,7 @@ public enum Configuration {
         } else if (paramName.equals(AGENT_DEFAULT_BEHAVIOUR_MANAGER)) {
             if (!paramType.equals(BehaviorManager.class)) {
                 throw new IllegalArgumentException(
-                        "Invalid value this parameter, it must be an "
+                        "Invalid value this parameter, it must be "
                                 + BehaviorManager.class.getCanonicalName());
             }
         } else {

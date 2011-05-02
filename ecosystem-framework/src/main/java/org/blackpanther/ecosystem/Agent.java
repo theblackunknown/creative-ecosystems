@@ -131,7 +131,7 @@ public abstract class Agent
                 "A probability is expressed in [0.0,1.0] interval");
         require(manager != null, "You must provide a BehaviourManager");
 
-        this.current_location = new Point2D.Double(spawnLocation.getX(),spawnLocation.getY());
+        this.current_location = new Point2D.Double(spawnLocation.getX(), spawnLocation.getY());
         this.current_direction = this.initial_direction = initialDirection;
         this.current_curvature = initialCurvature;
         this.current_speed = this.initial_speed = initialSpeed;
@@ -176,7 +176,7 @@ public abstract class Agent
         areaListener = null;
     }
 
-    AreaListener getAreaListener(){
+    AreaListener getAreaListener() {
         return areaListener;
     }
 
@@ -265,7 +265,7 @@ public abstract class Agent
     }
 
     final void setLocation(double abscissa, double ordinate) {
-        this.current_location.setLocation(abscissa,ordinate);
+        this.current_location = new Point2D.Double(abscissa, ordinate);
     }
 
     /**
@@ -323,5 +323,11 @@ public abstract class Agent
      */
     void setFecundityRate(double v) {
         this.fecundityRate = v;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s[Age=%d]",
+                super.toString(), age);
     }
 }

@@ -34,12 +34,16 @@ public class EnvironmentMonitor {
         lineListeners.add(new WeakReference<LineListener>(listener));
     }
 
+    public void addEvolutionListener(EvolutionListener listener) {
+        evolutionListeners.add(new WeakReference<EvolutionListener>(listener));
+    }
+
     /*=========================================================================
                                EVENT DELEGATE
       =========================================================================*/
 
     public void fireLineEvent(LineEvent.Type eventType, Line2D value) {
-        LineEvent event = new LineEvent(eventType,source,value);
+        LineEvent event = new LineEvent(eventType, source, value);
         for (WeakReference<LineListener> listener : lineListeners) {
             LineListener realListener = listener.get();
             if (realListener != null) {
@@ -49,7 +53,7 @@ public class EnvironmentMonitor {
     }
 
     public void fireEvolutionEvent(EvolutionEvent.Type eventType) {
-        EvolutionEvent event = new EvolutionEvent(eventType,source);
+        EvolutionEvent event = new EvolutionEvent(eventType, source);
         for (WeakReference<EvolutionListener> listener : evolutionListeners) {
             EvolutionListener realListener = listener.get();
             if (realListener != null) {

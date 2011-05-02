@@ -8,8 +8,10 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Stack;
 import java.util.logging.Logger;
 
 import static org.blackpanther.ecosystem.Helper.require;
@@ -29,7 +31,6 @@ import static org.blackpanther.ecosystem.Helper.require;
  * @version 0.3 - Sun May  1 00:00:13 CEST 2011
  */
 public abstract class Environment
-        extends ObservableEnvironment
         implements Serializable {
 
     /*
@@ -46,6 +47,7 @@ public abstract class Environment
 
     private static final Integer AREA_WIDTH_SPLIT = 2;
     private static final Integer AREA_HEIGHT_SPLIT = 2;
+    private Stack<Agent> nextGenerationBuffer = new Stack<Agent>();
 
     /**
      * Simple check for a environment space
@@ -101,6 +103,7 @@ public abstract class Environment
     private boolean endReached;
     /**
      * Component that can monitor an environment
+     *
      * @see java.beans.PropertyChangeSupport
      */
     protected EnvironmentMonitor eventSupport;
@@ -202,6 +205,12 @@ public abstract class Environment
         agent.setAreaListener(getCorrespondingArea(agent.getLocation()));
     }
 
+    public final void addAgent(Collection<Agent> agents) {
+        for (Agent agent : agents) {
+            addAgent(agent);
+        }
+    }
+
     private Area getCorrespondingArea(Point2D agentLocation) {
         for (Area[] row : space) {
             for (Area area : row) {
@@ -210,7 +219,8 @@ public abstract class Environment
                 }
             }
         }
-        return null;
+        //FIXME Negative coordinates make position falls here
+        return space[0][0];
     }
 
     final void recordNewLine(Line2D line) {
@@ -233,34 +243,45 @@ public abstract class Environment
         require(!endReached, "This environment has been frozen");
 
         //update environment state
-        updatePool();
+        boolean noMoreAgent = updatePool();
 
-        //update timeline
-        timetracker++;
+        if (noMoreAgent) {
+            endThisWorld();
+        } else {
+            //update timeline
+            logger.info(String.format("%s 's cycle %d ended, %d agents remaining", this, timetracker, pool.size()));
+            timetracker++;
+            eventSupport.fireEvolutionEvent(EvolutionEvent.Type.CYCLE_END);
+        }
     }
 
     /**
      * Update the environment's state
      * Internal process.
      */
-    private void updatePool() {
-        //Create next generation pool
-        Set<Agent> nextPool = new HashSet<Agent>(pool.size());
+    private boolean updatePool() {
 
         //update all agents
         //if they die, they are simply not kept in the next pool
         for (Agent agent : pool) {
             agent.update(this);
             if (agent.isAlive()) {
-                nextPool.add(agent);
+                nextGenerationBuffer.add(agent);
             }
         }
 
-        //clean the old pool
-        pool.clear();
+        if (nextGenerationBuffer.isEmpty()) {
+            return true;
+        } else {
+            //FIXME Next generation is lost !
+            //clean the old pool
+            pool.clear();
 
-        //then update it
-        pool.addAll(nextPool);
+            //then update it
+            pool.addAll(nextGenerationBuffer);
+            nextGenerationBuffer.clear();
+            return false;
+        }
     }
 
     /**
@@ -269,6 +290,7 @@ public abstract class Environment
      */
     public final void endThisWorld() {
         endReached = true;
+        logger.info(String.format("The evolution's game ended. %s's statistics[%d cycle]",this, timetracker));
         eventSupport.fireEvolutionEvent(EvolutionEvent.Type.ENDED);
     }
 
@@ -280,6 +302,16 @@ public abstract class Environment
     public void addLineListener(LineListener listener) {
         eventSupport.addLineListener(listener);
     }
+
+    public void addEvolutionListener(EvolutionListener listener) {
+        eventSupport.addEvolutionListener(listener);
+    }
+
+    public void nextGeneration(Agent child) {
+        child.setAreaListener(getCorrespondingArea(child.getLocation()));
+        nextGenerationBuffer.push(child);
+    }
+
 
     /**
      * <p>
@@ -405,23 +437,27 @@ public abstract class Environment
                             historyLine.getX1() + u * deltaX,
                             historyLine.getY1() + u * deltaY
                     );
-                    logger.fine(String.format("Intersection detected : %s", intersection));
 
-                    //We add a drawn line from agent's old location till intersection
-                    drawHistory.add(new Line2D.Double(
-                            line.getP1(),
-                            intersection
-                    ));
+                    //Intersection with the line's start is not an intersection
+                    if (!intersection.equals(line.getP1())) {
+                        logger.fine(String.format("Intersection detected : %s", intersection));
 
-                    //Yes, unfortunately, the agent died - this is Sparta here dude
-                    return true;
+                        //We add a drawn line from agent's old location till intersection
+                        recordNewLine(new Line2D.Double(
+                                line.getP1(),
+                                intersection
+                        ));
+
+                        //Yes, unfortunately, the agent died - this is Sparta here dude
+                        return true;
+                    }
                 }
             }
 
             logger.fine("No intersection");
 
             //Everything went better than expected
-            drawHistory.add(line);
+            recordNewLine(line);
             return false;
         }
     }

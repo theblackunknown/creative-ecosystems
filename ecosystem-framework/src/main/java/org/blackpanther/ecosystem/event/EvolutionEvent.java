@@ -14,6 +14,7 @@ public class EvolutionEvent
      */
     public enum Type {
         STARTED,
+        CYCLE_END,
         ENDED
     }
 

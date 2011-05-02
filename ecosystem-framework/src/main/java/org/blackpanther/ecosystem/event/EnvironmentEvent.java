@@ -18,6 +18,4 @@ abstract class EnvironmentEvent
     public Environment getSource() {
         return (Environment) super.getSource();
     }
-
-    public
 }

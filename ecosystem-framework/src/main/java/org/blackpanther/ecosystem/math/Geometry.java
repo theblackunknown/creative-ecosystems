@@ -97,6 +97,11 @@ public final class Geometry {
         public final Double getDy() {
             return dy;
         }
+
+        @Override
+        public String toString() {
+            return String.format("Direction2D[dx = %.3f, dy = %.3f]",dx,dy);
+        }
     }
 
     /**

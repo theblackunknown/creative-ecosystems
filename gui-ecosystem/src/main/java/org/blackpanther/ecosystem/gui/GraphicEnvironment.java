@@ -1,36 +1,59 @@
 package org.blackpanther.ecosystem.gui;
 
+import org.blackpanther.ecosystem.Agent;
 import org.blackpanther.ecosystem.Environment;
+import org.blackpanther.ecosystem.event.EvolutionEvent;
+import org.blackpanther.ecosystem.event.EvolutionListener;
 import org.blackpanther.ecosystem.event.LineEvent;
 import org.blackpanther.ecosystem.event.LineListener;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.util.Stack;
 import java.util.logging.Logger;
 
 /**
  * @author MACHIZAUD Andréa
- * @version
  */
 public class GraphicEnvironment
-    extends JPanel {
+        extends JPanel {
 
     private static final Logger logger =
-        Logger.getLogger(
-            GraphicEnvironment.class.getCanonicalName()
-        );
+            Logger.getLogger(
+                    GraphicEnvironment.class.getCanonicalName()
+            );
+
+    private static final Dimension DEFAULT_DIMENSION = new Dimension(800, 600);
+    private static final Integer DEFAULT_DELAY = 500;
+
+    private Environment monitoredEnvironment;
 
     /**
      * Buffer which retains next line to draw at the next repaint() call
      */
-    private Stack<Line2D> lineBuffer = new Stack<Line2D>();
+    private Stack<Line2D>  lineBuffer  = new Stack<Line2D>();
+    private Stack<Point2D> agentBuffer = new Stack<Point2D>();
+    private Timer runEnvironment;
 
     public GraphicEnvironment(Environment env) {
+        setPreferredSize(DEFAULT_DIMENSION);
+        setOpaque(true);
+        monitoredEnvironment = env;
+        LineListener lineListener = new EnvironmentLineMonitor();
+        EnvironmentEvolutionMonitor evolutionMonitor = new EnvironmentEvolutionMonitor();
         env.addLineListener(
-                new EnvironmentLineMonitor()
+                lineListener
         );
+        env.addEvolutionListener(
+                evolutionMonitor
+        );
+        runEnvironment = new Timer(
+                DEFAULT_DELAY, evolutionMonitor);
+        runEnvironment.start();
     }
 
     @Override
@@ -41,12 +64,32 @@ public class GraphicEnvironment
             g.setColor(Color.BLACK);
             //FIXME Handle environment's coordinates versus panel's coordinates
             g.drawLine(
-                    (int)line.getX1(),
-                    (int)line.getX2(),
-                    (int)line.getY1(),
-                    (int)line.getY2()
+                    (int) line.getX1(),
+                    (int) line.getY1(),
+                    (int) line.getX2(),
+                    (int) line.getY2()
             );
         }
+        while (!agentBuffer.isEmpty()) {
+            Point2D position = agentBuffer.pop();
+
+            g.setColor(Color.RED);
+
+            /*g.fillOval(
+                    (int)position.getX(),
+                    (int)position.getY(),
+                    5,
+                    5
+            );*/
+        }
+    }
+
+    public void runSimulation() {
+        runEnvironment.start();
+    }
+
+    public void stopSimulation() {
+        runEnvironment.stop();
     }
 
     /**
@@ -63,9 +106,32 @@ public class GraphicEnvironment
                     lineBuffer.add(e.getValue());
                     break;
                 default:
-                    logger.warning(String.format("Unhandled line event : %s",e));
+                    logger.warning(String.format("Unhandled line event : %s", e));
             }
 
+        }
+    }
+
+    class EnvironmentEvolutionMonitor implements ActionListener, EvolutionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            monitoredEnvironment.runNextCycle();
+        }
+
+        @Override
+        public void update(EvolutionEvent e) {
+            switch (e.getType()) {
+                case CYCLE_END:
+                    for(Agent agent : monitoredEnvironment.getPool()) {
+                        agentBuffer.push(agent.getLocation());
+                    }
+                    invalidate();
+                    repaint();
+                    break;
+                case ENDED:
+                    runEnvironment.stop();
+            }
         }
     }
 }

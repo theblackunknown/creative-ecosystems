@@ -27,4 +27,6 @@ public interface BehaviorManager {
 
     void spawn(Environment env, Agent that);
 
+    void growUp(Environment env, Agent that);
+
 }

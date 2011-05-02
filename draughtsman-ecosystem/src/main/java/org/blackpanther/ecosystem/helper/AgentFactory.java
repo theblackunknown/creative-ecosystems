@@ -6,6 +6,7 @@ import org.blackpanther.ecosystem.DesignerAgent;
 import org.blackpanther.ecosystem.math.Geometry;
 
 import java.awt.geom.Point2D;
+import java.util.Random;
 
 import static org.blackpanther.ecosystem.Configuration.*;
 
@@ -26,6 +27,29 @@ public final class AgentFactory {
                 Configuration.getParameter(AGENT_MORTALITY, Double.class),
                 Configuration.getParameter(AGENT_FECUNDITY, Double.class),
                 Configuration.getParameter(AGENT_MUTATION, Double.class),
+                Configuration.getParameter(AGENT_DEFAULT_BEHAVIOUR_MANAGER, BehaviorManager.class)
+        );
+    }
+
+    public static Agent RandomAgent() {
+        Point2D randomPoint = new Point2D.Double(
+                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 200.0,
+                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 200.0
+        );
+
+        Geometry.Direction2D randomDirection = new Geometry.Direction2D(
+                Configuration.getParameter(RANDOM, Random.class).nextDouble(),
+                Configuration.getParameter(RANDOM, Random.class).nextDouble()
+        );
+
+        return new DesignerAgent(
+                randomPoint,
+                randomDirection,
+                Configuration.getParameter(RANDOM, Random.class).nextDouble(),
+                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 3.0,
+                Configuration.getParameter(RANDOM, Random.class).nextDouble(),
+                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 0.3,
+                Configuration.getParameter(RANDOM, Random.class).nextDouble(),
                 Configuration.getParameter(AGENT_DEFAULT_BEHAVIOUR_MANAGER, BehaviorManager.class)
         );
     }

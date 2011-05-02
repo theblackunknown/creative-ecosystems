@@ -21,6 +21,12 @@
             <groupId>org.blackpanther</groupId>
             <version>0.1</version>
         </dependency>
+        <!-- FIXME Remove it to get loose coupling -->
+        <dependency>
+            <artifactId>draughtsman-ecosystem</artifactId>
+            <groupId>org.blackpanther</groupId>
+            <version>0.1</version>
+        </dependency>
     </dependencies>
 
 

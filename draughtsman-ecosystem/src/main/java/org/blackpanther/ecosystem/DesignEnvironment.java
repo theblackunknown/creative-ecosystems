@@ -18,9 +18,4 @@ public class DesignEnvironment extends Environment {
         //Nothing special about space initialization
     }
 
-    @Override
-    public void endThisWorldHook() {
-        //Nothing special to do when this world ends
-    }
-
 }

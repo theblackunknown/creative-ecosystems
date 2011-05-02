@@ -9,6 +9,7 @@ import java.util.Random;
 import java.util.logging.Logger;
 
 import static org.blackpanther.ecosystem.Configuration.*;
+import static org.blackpanther.ecosystem.Configuration.Configuration;
 
 /**
  * @author MACHIZAUD Andréa
@@ -35,6 +36,8 @@ public class McCormackDraughtsmanBehaviour
         move(agent);
         //Step 3 - mutate
         mutate(env, agent);
+        //Step 4 - grow up
+        growUp(env, agent);
     }
 
     /**
@@ -48,32 +51,40 @@ public class McCormackDraughtsmanBehaviour
         Point2D oldLocation = that.getLocation();
         that.setLocation(
                 that.getLocation().getX()
-                        + that.getSpeed()
-                        * that.getDirection().getDx(),
+                        + /*that.getSpeed()
+                        * */that.getDirection().getDx(),
                 that.getLocation().getY()
-                        + that.getSpeed()
-                        * that.getDirection().getDy()
+                        + /*that.getSpeed()
+                        * */that.getDirection().getDy()
         );
         logger.fine(String.format("Changed %s 's location from %s to %s",
                 that, oldLocation, that.getLocation()));
 
         //Step 2 - Notify AreaListener that we moved, agent can died if it cross an other line
-        boolean hasDied = that.getAreaListener().trace(new Line2D.Double(oldLocation, that.getLocation()));
+        //It dies if it didn't move
+        boolean hasDied = oldLocation.equals(that.getLocation()) ||
+                that.getAreaListener().trace(new Line2D.Double(oldLocation, that.getLocation()));
 
         if (!hasDied) {
             logger.fine(that + " is still alive.");
 
             //Step 3 - Update phenotype
             //vector rotation - http://en.wikipedia.org/wiki/Rotation_(mathematics)#Matrix_algebra
+            //FIXME Converge vers 0
             Geometry.Direction2D oldDirection = that.getDirection();
             that.setDirection(new Geometry.Direction2D(
                     that.getDirection().getDx() * Math.cos(that.getCurvature())
                             - that.getDirection().getDy() * Math.sin(that.getCurvature()),
                     that.getDirection().getDx() * Math.sin(that.getCurvature())
                             - that.getDirection().getDy() * Math.cos(that.getCurvature())
-            ));
+            ));/*
+            that.setDirection(new Geometry.Direction2D(
+                    (that.getDirection().getDx() * Math.exp(that.getCurvature())) / Math.E,
+                    (that.getDirection().getDy() * Math.exp(that.getCurvature())) / Math.E
+            )); */
             logger.fine(String.format("Changed %s 's direction from %s to %s",
                     that, oldDirection, that.getDirection()));
+
         } else {
             that.unsetAreaListener();
             logger.fine(that + " passed away.");
@@ -97,8 +108,10 @@ public class McCormackDraughtsmanBehaviour
      */
     @Override
     public void spawn(Environment env, Agent that) {
-        if (Configuration.getParameter(RANDOM, Random.class)
-                .nextDouble() < that.getFecundityRate()) {
+        double randomValue = Configuration.getParameter(RANDOM, Random.class)
+                .nextDouble();
+        logger.finer(String.format("Random spawn's value : %f", randomValue));
+        if (randomValue < that.getFecundityRate()) {
 
             //HELP Generate a new generation randomly
             //TODO Try to make parent gene influence on it
@@ -126,13 +139,29 @@ public class McCormackDraughtsmanBehaviour
 
             //Reduce parent fecundity rate (He is exhausted)
             that.setFecundityRate(
-                    that.getFecundityRate() / 3
+                    that.getFecundityRate() / 1.2
             );
 
             //Add into environment
-            env.addAgent(
+            env.nextGeneration(
                     child
             );
+        }
+    }
+
+    @Override
+    public void growUp(Environment env, Agent that) {
+        double randomValue = Configuration.getParameter(RANDOM, Random.class)
+                .nextDouble();
+        //TODO update phenotype death's chance according to age and mortality rate
+        double deathChance = that.getMortalityRate() * (that.getAge() / 10);
+        logger.finer(String.format("[Random mortality's value = %f, death's chance = %f]", randomValue, deathChance));
+        if (randomValue < deathChance) {
+            that.unsetAreaListener();
+            logger.fine(that + " died naturally.");
+        } else {
+            logger.fine(that + " didn't die yet.");
+            that.setAge(that.getAge() + 1);
         }
     }
 
