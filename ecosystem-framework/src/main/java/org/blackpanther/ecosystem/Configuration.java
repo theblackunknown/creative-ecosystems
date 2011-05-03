@@ -11,7 +11,6 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.blackpanther.ecosystem.Helper.isValid;
@@ -52,21 +51,13 @@ public enum Configuration {
     public static final String ENVIRONMENT_WIDTH = "environment-width";
     public static final String ENVIRONMENT_HEIGHT = "environment-height";
     public static final String AGENT_LOCATION = "agent-location";
-    public static final String AGENT_DIRECTIONAL_VECTOR = "agent-directional-vector";
+    public static final String AGENT_ORIENTATION = "agent-orientation";
     public static final String AGENT_CURVATURE = "agent-curvature";
     public static final String AGENT_SPEED = "agent-speed";
     public static final String AGENT_MORTALITY = "agent-mortality";
     public static final String AGENT_FECUNDITY = "agent-fecundity";
     public static final String AGENT_MUTATION = "agent-mutation";
     public static final String AGENT_DEFAULT_BEHAVIOUR_MANAGER = "agent-behaviour-manager";
-
-    /**
-     * User defined directional vector's parameter
-     */
-    private static final Pattern USER_DIRECTIONAL_VECTOR_PARAMETER =
-            Pattern.compile(
-                    "^(\\d+(?:.\\d+)?),(\\d+(?:.\\d+)?)$"
-            );
 
     /**
      * Application's parameters with default loaded
@@ -76,10 +67,9 @@ public enum Configuration {
         put(ENVIRONMENT_WIDTH, 800);
         put(ENVIRONMENT_HEIGHT, 600);
         put(AGENT_LOCATION, new Point2D.Double(50.0, 50.0));
-        put(AGENT_DIRECTIONAL_VECTOR,
-                new Geometry.Direction2D(1.0, 1.0));
-        put(AGENT_CURVATURE, Math.PI/5);
-        put(AGENT_SPEED, 3.0);
+        put(AGENT_ORIENTATION, -Math.PI/4);
+        put(AGENT_CURVATURE, Math.PI/6);
+        put(AGENT_SPEED, 10.0);
         put(AGENT_MORTALITY, 0.20);
         put(AGENT_FECUNDITY, 0.30);
         put(AGENT_MUTATION, 0.05);
@@ -110,30 +100,19 @@ public enum Configuration {
             }
         }
 
-        //update directional vector
-        String userDirectionnalVector = properties.getProperty(AGENT_DIRECTIONAL_VECTOR);
-        if (isValid(userDirectionnalVector)) {
+        //update orientation
+        String userOrientation = properties.getProperty(AGENT_ORIENTATION);
+        if (isValid(userOrientation)) {
             try {
-                Matcher matchData = USER_DIRECTIONAL_VECTOR_PARAMETER.matcher(userDirectionnalVector);
-                if (matchData.matches()) {
-                    setParameter(
-                            AGENT_DIRECTIONAL_VECTOR,
-                            new Geometry.Direction2D(
-                                    Double.parseDouble(matchData.group(1)),
-                                    Double.parseDouble(matchData.group(2))
-                            ),
-                            Geometry.Direction2D.class
-                    );
-                    logger.info(AGENT_DIRECTIONAL_VECTOR + " parameter updated.");
-                } else {
-                    logger.log(Level.WARNING,
-                            "Couldn't parse user user directional vector : '"
-                                    + userDirectionnalVector + "', "
-                                    + "it must be like (0.0,0.0)-(1.0,1.0)");
-                }
+                setParameter(
+                        AGENT_ORIENTATION,
+                        Double.parseDouble(userOrientation),
+                        Double.class
+                );
+                logger.info(AGENT_ORIENTATION + " parameter updated.");
             } catch (NumberFormatException e) {
                 logger.log(Level.SEVERE,
-                        "Couldn't parse user directional vector despite of regexp !", e);
+                        "Couldn't parse user orientation, it must be within [0,2PI] !", e);
             }
         }
 
@@ -255,11 +234,14 @@ public enum Configuration {
             T paramValue,
             Class<T> paramType
     ) {
-        if (paramName.equals(AGENT_DIRECTIONAL_VECTOR)) {
-            if (!paramType.equals(Geometry.Direction2D.class)) {
+        if (paramName.equals(AGENT_ORIENTATION)) {
+            if (!paramType.equals(Double.class)) {
                 throw new IllegalArgumentException(
                         "Invalid value this parameter, it must be an "
-                                + Geometry.Direction2D.class.getCanonicalName());
+                                + Double.class.getCanonicalName());
+            } else {
+                Double value = (Double) paramValue;
+                require(0.0 <= value && value <= (2.0 * Math.PI), "Invalid value for " + paramName + " : '" + paramValue + "'");
             }
         } else if (paramName.equals(AGENT_SPEED)) {
             if (!paramType.equals(Double.class)) {

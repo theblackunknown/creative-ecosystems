@@ -32,9 +32,10 @@ public abstract class Agent
      */
 
     /**
-     * Direction in which the agent moves
+     * Direction in which the agent moves.
+     * Expressed as an angle [0,2PI]
      */
-    private Geometry.Direction2D initial_direction;
+    private Double initial_orientation;
     /**
      * Speed of the agent. Varies in <pre>[0,3]</pre>
      */
@@ -69,7 +70,7 @@ public abstract class Agent
     /**
      * Current dx & dy
      */
-    private Geometry.Direction2D current_direction;
+    private Double current_orientation;
     /**
      * Current ddx & ddy
      */
@@ -102,18 +103,18 @@ public abstract class Agent
      * TODO Don't keep same genotype than parents
      * TODO Make genotype and phenotype more general (e.g Map with type checking at runtime)
      *
-     * @param spawnLocation    initial location of the agent in the environment
-     * @param initialDirection its initial movement direction
-     * @param initialCurvature initial curvature
-     * @param initialSpeed     initial speed
-     * @param initialMortality initial mortality rate
-     * @param initialFecundity initial fecundity rate
-     * @param initialMutation  initial mutation rate
-     * @param manager          Behaviour Strategy to use for this agent
+     * @param spawnLocation      initial location of the agent in the environment
+     * @param initialOrientation its initial movement orientation
+     * @param initialCurvature   initial curvature
+     * @param initialSpeed       initial speed
+     * @param initialMortality   initial mortality rate
+     * @param initialFecundity   initial fecundity rate
+     * @param initialMutation    initial mutation rate
+     * @param manager            Behaviour Strategy to use for this agent
      */
     public Agent(
             final Point2D spawnLocation,
-            final Geometry.Direction2D initialDirection,
+            final Double initialOrientation,
             final double initialCurvature,
             final double initialSpeed,
             final double initialMortality,
@@ -132,7 +133,7 @@ public abstract class Agent
         require(manager != null, "You must provide a BehaviourManager");
 
         this.current_location = new Point2D.Double(spawnLocation.getX(), spawnLocation.getY());
-        this.current_direction = this.initial_direction = initialDirection;
+        this.current_orientation = this.initial_orientation = initialOrientation;
         this.current_curvature = initialCurvature;
         this.current_speed = this.initial_speed = initialSpeed;
         this.mortalityRate = initialMortality;
@@ -191,12 +192,12 @@ public abstract class Agent
     }
 
     /**
-     * Get the current agent's direction
+     * Get the current agent's orientation
      *
-     * @return current direction
+     * @return current orientation
      */
-    public Geometry.Direction2D getDirection() {
-        return current_direction;
+    public Double getOrientation() {
+        return current_orientation;
     }
 
     /**
@@ -269,18 +270,19 @@ public abstract class Agent
     }
 
     /**
-     * Setter for the agent's direction
+     * Setter for the agent's orientation
      *
-     * @param direction the new direction
+     * @param orientation
+     *      the new orientation
      */
-    void setDirection(Geometry.Direction2D direction) {
-        this.current_direction = direction;
+    void setOrientation(Double orientation) {
+        this.current_orientation = orientation;
     }
 
     /**
      * Setter for the agent's curvature
      *
-     * @param direction the new curvature
+     * @param curvature the new curvature
      */
     void setCurvature(Double curvature) {
         this.current_curvature = curvature;
@@ -290,7 +292,7 @@ public abstract class Agent
     /**
      * Setter for the agent's speed
      *
-     * @param initial_speed the new speed
+     * @param speed the new speed
      */
     void setSpeed(Double speed) {
         this.current_speed = speed;

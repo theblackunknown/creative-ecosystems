@@ -47,15 +47,15 @@ public class McCormackDraughtsmanBehaviour
      */
     @Override
     public void move(Agent that) {
-        //Step 1 - Update location according to current direction
+        //Step 1 - Update location according to current orientation
         Point2D oldLocation = that.getLocation();
         that.setLocation(
                 that.getLocation().getX()
-                        + /*that.getSpeed()
-                        * */that.getDirection().getDx(),
+                        + that.getSpeed()
+                        * Math.cos( that.getOrientation() ),
                 that.getLocation().getY()
-                        + /*that.getSpeed()
-                        * */that.getDirection().getDy()
+                        + that.getSpeed()
+                        * Math.sin( that.getOrientation() )
         );
         logger.fine(String.format("Changed %s 's location from %s to %s",
                 that, oldLocation, that.getLocation()));
@@ -69,21 +69,13 @@ public class McCormackDraughtsmanBehaviour
             logger.fine(that + " is still alive.");
 
             //Step 3 - Update phenotype
-            //vector rotation - http://en.wikipedia.org/wiki/Rotation_(mathematics)#Matrix_algebra
-            //FIXME Converge vers 0
-            Geometry.Direction2D oldDirection = that.getDirection();
-            that.setDirection(new Geometry.Direction2D(
-                    that.getDirection().getDx() * Math.cos(that.getCurvature())
-                            - that.getDirection().getDy() * Math.sin(that.getCurvature()),
-                    that.getDirection().getDx() * Math.sin(that.getCurvature())
-                            - that.getDirection().getDy() * Math.cos(that.getCurvature())
-            ));/*
-            that.setDirection(new Geometry.Direction2D(
-                    (that.getDirection().getDx() * Math.exp(that.getCurvature())) / Math.E,
-                    (that.getDirection().getDy() * Math.exp(that.getCurvature())) / Math.E
-            )); */
-            logger.fine(String.format("Changed %s 's direction from %s to %s",
-                    that, oldDirection, that.getDirection()));
+            //TODO DEPRECATED vector rotation - http://en.wikipedia.org/wiki/Rotation_(mathematics)#Matrix_algebra
+            Double oldOrientation = that.getOrientation();
+            that.setOrientation(
+                    ( that.getOrientation() + that.getCurvature() ) % ( 2 * Math.PI )
+            );
+            logger.fine(String.format("Changed %s 's orientation from %s to %s",
+                    that, oldOrientation, that.getOrientation()));
 
         } else {
             that.unsetAreaListener();
@@ -115,17 +107,15 @@ public class McCormackDraughtsmanBehaviour
 
             //HELP Generate a new generation randomly
             //TODO Try to make parent gene influence on it
-            Geometry.Direction2D childDirection = new Geometry.Direction2D(
-                    Configuration.getParameter(RANDOM, Random.class).nextDouble() * 5,
-                    Configuration.getParameter(RANDOM, Random.class).nextDouble() * 5
-            );
+            Double childOrientation =
+                    Configuration.getParameter(RANDOM, Random.class).nextDouble() * 2 * Math.PI;
 
             //Create child
             //HELP Arbitrary implementation
             //TODO Parametrize it
             Agent child = new DesignerAgent(
                     that.getLocation(),
-                    childDirection,
+                    childOrientation,
                     //Static curvature to have always the same draw pattern
                     Configuration.getParameter(AGENT_CURVATURE, Double.class),
                     Configuration.getParameter(AGENT_SPEED, Double.class),

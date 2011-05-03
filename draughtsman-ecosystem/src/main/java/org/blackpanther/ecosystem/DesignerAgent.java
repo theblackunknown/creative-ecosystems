@@ -15,14 +15,14 @@ public class DesignerAgent extends Agent {
      */
     public DesignerAgent(
             final Point2D spawnLocation,
-            final Geometry.Direction2D initialDirection,
+            final Double initialOrientation,
             final double initialCurvature,
             final double initialSpeed,
             final double initialMortality,
             final double initialFecundity,
             final double initialMutation,
             final BehaviorManager manager) {
-        super(spawnLocation, initialDirection, initialCurvature, initialSpeed, initialMortality, initialFecundity, initialMutation, manager);
+        super(spawnLocation, initialOrientation, initialCurvature, initialSpeed, initialMortality, initialFecundity, initialMutation, manager);
     }
 
 }
