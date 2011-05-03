@@ -115,14 +115,14 @@ public class McCormackDraughtsmanBehaviour
             Agent child = new DesignerAgent(
                     that.getLocation(),
                     childOrientation,
-                    //Static curvature to have always the same draw pattern
-                    Configuration.getParameter(AGENT_CURVATURE, Double.class),
-                    Configuration.getParameter(AGENT_SPEED, Double.class),
+                    //Static curvature to have always the same draw pattern - father curvature
+                    that.getCurvature(),
+                    that.getSpeed(),
                     //Let children live longer
                     that.getMortalityRate() / 4,
                     //Let children be less fecund
                     that.getFecundityRate() / 3,
-                    Configuration.getParameter(AGENT_MUTATION, Double.class),
+                    that.getMutationRate(),
                     Configuration.getParameter(AGENT_DEFAULT_BEHAVIOUR_MANAGER, BehaviorManager.class)
             );
 

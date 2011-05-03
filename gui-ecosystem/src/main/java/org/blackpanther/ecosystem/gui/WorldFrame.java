@@ -24,5 +24,6 @@ public class WorldFrame
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         //setLocationRelativeTo(null);
         pack();
+        setExtendedState(MAXIMIZED_BOTH);
     }
 }

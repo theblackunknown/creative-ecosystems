@@ -14,6 +14,7 @@ import java.awt.event.ActionListener;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.Stack;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -35,7 +36,7 @@ public class GraphicEnvironment
     /**
      * Buffer which retains next line to draw at the next repaint() call
      */
-    private Stack<Line2D>  lineBuffer  = new Stack<Line2D>();
+    private Stack<Line2D> lineBuffer = new Stack<Line2D>();
     private Stack<Point2D> agentBuffer = new Stack<Point2D>();
     private Timer runEnvironment;
 
@@ -58,6 +59,7 @@ public class GraphicEnvironment
 
     @Override
     protected void paintComponent(Graphics g) {
+        logger.fine("I'm gonna paint " + lineBuffer.size() + " lines");
         while (!lineBuffer.isEmpty()) {
             Line2D line = lineBuffer.pop();
             //TODO Keep in mine that we will need to keep a record of line's color...
@@ -69,18 +71,6 @@ public class GraphicEnvironment
                     (int) line.getX2(),
                     (int) line.getY2()
             );
-        }
-        while (!agentBuffer.isEmpty()) {
-            Point2D position = agentBuffer.pop();
-
-            g.setColor(Color.RED);
-
-            /*g.fillOval(
-                    (int)position.getX(),
-                    (int)position.getY(),
-                    5,
-                    5
-            );*/
         }
     }
 
@@ -104,6 +94,8 @@ public class GraphicEnvironment
                     //if a line has been added to monitored environment,
                     // add it to lineBuffer
                     lineBuffer.add(e.getValue());
+                    logger.log(Level.FINE, "{0} added to line buffer, lineBuffer size : {1}",
+                            new Object[]{e.getValue(), lineBuffer.size()});
                     break;
                 default:
                     logger.warning(String.format("Unhandled line event : %s", e));
@@ -123,13 +115,16 @@ public class GraphicEnvironment
         public void update(EvolutionEvent e) {
             switch (e.getType()) {
                 case CYCLE_END:
-                    for(Agent agent : monitoredEnvironment.getPool()) {
+                    for (Agent agent : monitoredEnvironment.getPool()) {
                         agentBuffer.push(agent.getLocation());
                     }
-                    invalidate();
+                    //                  invalidate();
+                    paintImmediately(getBounds());
                     repaint();
                     break;
                 case ENDED:
+//                    invalidate();
+                    repaint();
                     runEnvironment.stop();
             }
         }

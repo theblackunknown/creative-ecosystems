@@ -224,8 +224,8 @@ public abstract class Environment
     }
 
     final void recordNewLine(Line2D line) {
-        drawHistory.add(line);
         eventSupport.fireLineEvent(LineEvent.Type.ADDED, line);
+        drawHistory.add(line);
     }
 
     /**

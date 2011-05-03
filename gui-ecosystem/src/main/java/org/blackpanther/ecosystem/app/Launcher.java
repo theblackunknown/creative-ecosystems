@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.blackpanther.ecosystem.Configuration.*;
-import static org.blackpanther.ecosystem.helper.AgentFactory.Agent;
+import static org.blackpanther.ecosystem.helper.AgentFactory.StandardAgent;
 import static org.blackpanther.ecosystem.helper.AgentFactory.RandomAgent;
 
 /**
@@ -18,7 +18,7 @@ import static org.blackpanther.ecosystem.helper.AgentFactory.RandomAgent;
 public class Launcher {
 
     public static void main(String[] args) {
-        int numberOfAgent = 20;
+        int numberOfAgent = 50;
 
         //Set default behaviour
         Configuration.setParameter(
@@ -33,9 +33,14 @@ public class Launcher {
                 Configuration.getParameter(ENVIRONMENT_HEIGHT, Integer.class)
         );
         List<Agent> initialPool = new ArrayList<Agent>(numberOfAgent);
+        double Xoffset = 75.0;
+        double YOffset = 25.0;
         for (int i = numberOfAgent; --i > 0;)
             initialPool.add(
-                    RandomAgent()
+                    StandardAgent(
+                            i * Xoffset,
+                            i * YOffset
+                    )
             );
         //Add a single agent
         environment.addAgent(

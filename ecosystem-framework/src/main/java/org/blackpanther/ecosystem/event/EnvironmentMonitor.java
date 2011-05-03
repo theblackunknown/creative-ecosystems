@@ -15,10 +15,10 @@ public class EnvironmentMonitor {
     /**
      * Line's event listeners
      */
-    private Set<WeakReference<LineListener>> lineListeners =
-            new HashSet<WeakReference<LineListener>>();
-    private Set<WeakReference<EvolutionListener>> evolutionListeners =
-            new HashSet<WeakReference<EvolutionListener>>();
+    private Set<LineListener> lineListeners =
+            new HashSet<LineListener>();
+    private Set<EvolutionListener> evolutionListeners =
+            new HashSet<EvolutionListener>();
 
     private Environment source;
 
@@ -31,11 +31,11 @@ public class EnvironmentMonitor {
       =========================================================================*/
 
     public void addLineListener(LineListener listener) {
-        lineListeners.add(new WeakReference<LineListener>(listener));
+        lineListeners.add(listener);
     }
 
     public void addEvolutionListener(EvolutionListener listener) {
-        evolutionListeners.add(new WeakReference<EvolutionListener>(listener));
+        evolutionListeners.add(listener);
     }
 
     /*=========================================================================
@@ -44,21 +44,15 @@ public class EnvironmentMonitor {
 
     public void fireLineEvent(LineEvent.Type eventType, Line2D value) {
         LineEvent event = new LineEvent(eventType, source, value);
-        for (WeakReference<LineListener> listener : lineListeners) {
-            LineListener realListener = listener.get();
-            if (realListener != null) {
-                realListener.update(event);
-            }
+        for (LineListener listener : lineListeners) {
+            listener.update(event);
         }
     }
 
     public void fireEvolutionEvent(EvolutionEvent.Type eventType) {
         EvolutionEvent event = new EvolutionEvent(eventType, source);
-        for (WeakReference<EvolutionListener> listener : evolutionListeners) {
-            EvolutionListener realListener = listener.get();
-            if (realListener != null) {
-                realListener.update(event);
-            }
+        for (EvolutionListener listener : evolutionListeners) {
+            listener.update(event);
         }
     }
 }

@@ -1,7 +1,5 @@
 package org.blackpanther.ecosystem;
 
-import org.blackpanther.ecosystem.math.Geometry;
-
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.HashMap;
@@ -11,7 +9,6 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import static org.blackpanther.ecosystem.Helper.isValid;
 import static org.blackpanther.ecosystem.Helper.require;
@@ -67,11 +64,11 @@ public enum Configuration {
         put(ENVIRONMENT_WIDTH, 800);
         put(ENVIRONMENT_HEIGHT, 600);
         put(AGENT_LOCATION, new Point2D.Double(50.0, 50.0));
-        put(AGENT_ORIENTATION, -Math.PI/4);
-        put(AGENT_CURVATURE, Math.PI/6);
-        put(AGENT_SPEED, 10.0);
-        put(AGENT_MORTALITY, 0.20);
-        put(AGENT_FECUNDITY, 0.30);
+        put(AGENT_ORIENTATION, Math.PI);
+        put(AGENT_CURVATURE, 0.0);
+        put(AGENT_SPEED, 1.0);
+        put(AGENT_MORTALITY, 0.30);
+        put(AGENT_FECUNDITY, 0.70);
         put(AGENT_MUTATION, 0.05);
     }};
 
@@ -217,7 +214,8 @@ public enum Configuration {
                 return (T) correspondingParameter;
             } else {
                 throw new IllegalArgumentException(
-                        "Requested parameter does not match given type, please check again"
+                        String.format("%s parameter does not match given type, please check again",
+                                parameterName)
                 );
             }
         } else {
