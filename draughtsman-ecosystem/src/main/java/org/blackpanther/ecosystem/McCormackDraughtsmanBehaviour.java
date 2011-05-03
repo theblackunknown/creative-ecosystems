@@ -9,7 +9,6 @@ import java.util.Random;
 import java.util.logging.Logger;
 
 import static org.blackpanther.ecosystem.Configuration.*;
-import static org.blackpanther.ecosystem.Configuration.Configuration;
 
 /**
  * @author MACHIZAUD Andréa
