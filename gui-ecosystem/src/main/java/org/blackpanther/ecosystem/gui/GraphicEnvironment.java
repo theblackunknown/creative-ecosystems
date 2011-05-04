@@ -6,6 +6,7 @@ import org.blackpanther.ecosystem.event.EvolutionEvent;
 import org.blackpanther.ecosystem.event.EvolutionListener;
 import org.blackpanther.ecosystem.event.LineEvent;
 import org.blackpanther.ecosystem.event.LineListener;
+import org.blackpanther.ecosystem.gui.helper.Scaler;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,6 +17,8 @@ import java.awt.geom.Point2D;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
  * @author MACHIZAUD Andréa
@@ -39,6 +42,7 @@ public class GraphicEnvironment
     private Stack<Line2D> lineBuffer = new Stack<Line2D>();
     private Stack<Point2D> agentBuffer = new Stack<Point2D>();
     private Timer runEnvironment;
+    private boolean environmentIsRunning = false;
 
     public GraphicEnvironment(Environment env) {
         setPreferredSize(DEFAULT_DIMENSION);
@@ -57,6 +61,12 @@ public class GraphicEnvironment
         runEnvironment.start();
     }
 
+    /**
+     * FIXME If global window is repainted, image is lost
+     * TODO listen for window event and save a backup image
+     * @param g
+     *      component graphics
+     */
     @Override
     protected void paintComponent(Graphics g) {
         logger.fine("I'm gonna paint " + lineBuffer.size() + " lines");
@@ -65,11 +75,19 @@ public class GraphicEnvironment
             //TODO Keep in mine that we will need to keep a record of line's color...
             g.setColor(Color.BLACK);
             //FIXME Handle environment's coordinates versus panel's coordinates
+            Point2D start = Scaler.environmentToPanel(
+                    this,
+                    monitoredEnvironment,
+                    line.getP1());
+            Point2D end   = Scaler.environmentToPanel(
+                    this,
+                    monitoredEnvironment,
+                    line.getP2());
             g.drawLine(
-                    (int) line.getX1(),
-                    (int) line.getY1(),
-                    (int) line.getX2(),
-                    (int) line.getY2()
+                    (int) start.getX(),
+                    (int) start.getY(),
+                    (int) end.getX(),
+                    (int) end.getY()
             );
         }
     }
@@ -114,16 +132,23 @@ public class GraphicEnvironment
         @Override
         public void update(EvolutionEvent e) {
             switch (e.getType()) {
+                case STARTED:
+                    environmentIsRunning = true;
+                    Monitor.updateEnvironmentRunningId(
+                            e.getSource().getId()
+                    );
                 case CYCLE_END:
-                    for (Agent agent : monitoredEnvironment.getPool()) {
+                    Monitor.updateEnvironmentAgentNumber(
+                            e.getSource().getPool().size()
+                    );
+                    for (Agent agent : e.getSource().getPool()) {
                         agentBuffer.push(agent.getLocation());
                     }
-                    //                  invalidate();
-                    paintImmediately(getBounds());
+                    invalidate();
                     repaint();
                     break;
                 case ENDED:
-//                    invalidate();
+                    invalidate();
                     repaint();
                     runEnvironment.stop();
             }

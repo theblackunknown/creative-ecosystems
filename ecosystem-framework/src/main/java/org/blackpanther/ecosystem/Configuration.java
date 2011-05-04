@@ -63,12 +63,12 @@ public enum Configuration {
         put(RANDOM, new Random());
         put(ENVIRONMENT_WIDTH, 800);
         put(ENVIRONMENT_HEIGHT, 600);
-        put(AGENT_LOCATION, new Point2D.Double(50.0, 50.0));
+        put(AGENT_LOCATION, new Point2D.Double(0.0, 0.0));
         put(AGENT_ORIENTATION, Math.PI);
         put(AGENT_CURVATURE, 0.0);
-        put(AGENT_SPEED, 1.0);
-        put(AGENT_MORTALITY, 0.30);
-        put(AGENT_FECUNDITY, 0.70);
+        put(AGENT_SPEED, 5.0);
+        put(AGENT_MORTALITY, 0.10);
+        put(AGENT_FECUNDITY, 0.60);
         put(AGENT_MUTATION, 0.05);
     }};
 

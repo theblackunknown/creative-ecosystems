@@ -45,9 +45,10 @@ public abstract class Environment
 
     private static final Long serialVersionUID = 1L;
 
+    private static long idGenerator = 0L;
+
     private static final Integer AREA_WIDTH_SPLIT = 2;
     private static final Integer AREA_HEIGHT_SPLIT = 2;
-    private Stack<Agent> nextGenerationBuffer = new Stack<Agent>();
 
     /**
      * Simple check for a environment space
@@ -74,6 +75,7 @@ public abstract class Environment
     *=========================================================================
     */
 
+    private Long id;
     /**
      * Environment space
      */
@@ -107,6 +109,9 @@ public abstract class Environment
      * @see java.beans.PropertyChangeSupport
      */
     protected EnvironmentMonitor eventSupport;
+    private Stack<Agent> nextGenerationBuffer = new Stack<Agent>();
+    private Dimension2D dimension;
+
 
     /**
      * Default constructor which specified space bounds
@@ -122,6 +127,8 @@ public abstract class Environment
         require(width > 0, "Width must be positive and non-zero");
         require(height > 0, "Height must be positive and non-zero");
 
+        this.id = ++idGenerator;
+        this.dimension = new Geometry.Dimension(width, height);
         //initialize space - space is split in smaller areas
         //compute area dimension
         double areaWidth = width / AREA_WIDTH_SPLIT;
@@ -163,8 +170,16 @@ public abstract class Environment
      *
      * @param size space's width & height
      */
-    public Environment(final int size) {
+    public Environment(final double size) {
         this(size, size);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Dimension2D getDimension() {
+        return (Dimension2D) this.dimension.clone();
     }
 
     /**
@@ -290,7 +305,7 @@ public abstract class Environment
      */
     public final void endThisWorld() {
         endReached = true;
-        logger.info(String.format("The evolution's game ended. %s's statistics[%d cycle]",this, timetracker));
+        logger.info(String.format("The evolution's game ended. %s's statistics[%d cycle]", this, timetracker));
         eventSupport.fireEvolutionEvent(EvolutionEvent.Type.ENDED);
     }
 
