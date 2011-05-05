@@ -68,7 +68,7 @@ public enum Configuration {
         put(AGENT_CURVATURE, 0.0);
         put(AGENT_SPEED, 5.0);
         put(AGENT_MORTALITY, 0.10);
-        put(AGENT_FECUNDITY, 0.60);
+        put(AGENT_FECUNDITY, 0.20);
         put(AGENT_MUTATION, 0.05);
     }};
 

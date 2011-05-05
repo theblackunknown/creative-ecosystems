@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.blackpanther.ecosystem.Configuration.*;
+import static org.blackpanther.ecosystem.helper.AgentFactory.RandomAgent;
 import static org.blackpanther.ecosystem.helper.AgentFactory.StandardAgent;
 
 /**
@@ -17,7 +18,7 @@ import static org.blackpanther.ecosystem.helper.AgentFactory.StandardAgent;
 public class Launcher {
 
     public static void main(String[] args) {
-        int numberOfAgent = 50;
+        int numberOfAgent = 20;
 
         //Set default behaviour
         Configuration.setParameter(
@@ -38,10 +39,8 @@ public class Launcher {
         for (int i = -800; i < XLimit; i += step)
             for (int j = -600; j < YLimit; j += step)
                 initialPool.add(
-                        StandardAgent(
-                                i,
-                                j
-                        )
+                        //StandardAgent(i,j)
+                        RandomAgent()
                 );
         //Add a single agent
         environment.addAgent(
@@ -49,10 +48,8 @@ public class Launcher {
         );
         //Show them our wonderful GUI
         createAndShowGUI(environment);
-        //TODO - Run simulation
     }
 
-    //TODO Return GUI Monitor
     public static void createAndShowGUI(Environment env) {
         JFrame mainFrame = new WorldFrame(env);
         mainFrame.setVisible(true);

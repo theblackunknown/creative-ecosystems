@@ -45,8 +45,8 @@ public final class AgentFactory {
 
     public static Agent RandomAgent() {
         Point2D randomPoint = new Point2D.Double(
-                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 1280.0,
-                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 800.0
+                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 2000.0 - 1000.0,
+                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 2000.0 - 1000.0
         );
 
         return new DesignerAgent(
@@ -55,10 +55,9 @@ public final class AgentFactory {
                 //orientation
                 Configuration.getParameter(RANDOM, Random.class).nextDouble() * (2 * Math.PI),
                 //curvature
-                //Configuration.getParameter(RANDOM, Random.class).nextDouble(),
-                0.0,
+                Configuration.getParameter(RANDOM, Random.class).nextDouble(),
                 //speed
-                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 50.0,
+                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 25.0,
                 //mortality
                 Configuration.getParameter(RANDOM, Random.class).nextDouble(),
                 //fecundity

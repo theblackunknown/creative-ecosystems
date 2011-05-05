@@ -257,6 +257,9 @@ public abstract class Environment
     public final void runNextCycle() {
         require(!endReached, "This environment has been frozen");
 
+        if( timetracker == 0 )
+            eventSupport.fireEvolutionEvent(EvolutionEvent.Type.STARTED);
+
         //update environment state
         boolean noMoreAgent = updatePool();
 

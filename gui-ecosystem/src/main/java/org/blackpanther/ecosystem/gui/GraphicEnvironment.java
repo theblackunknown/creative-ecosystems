@@ -6,12 +6,10 @@ import org.blackpanther.ecosystem.event.EvolutionEvent;
 import org.blackpanther.ecosystem.event.EvolutionListener;
 import org.blackpanther.ecosystem.event.LineEvent;
 import org.blackpanther.ecosystem.event.LineListener;
-import org.blackpanther.ecosystem.gui.helper.Scaler;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.Stack;
@@ -35,6 +33,14 @@ public class GraphicEnvironment
     private static final Integer DEFAULT_DELAY = 500;
 
     private Environment monitoredEnvironment;
+    private MouseListener internalMouseHandler =
+            new IconHandler();
+    private Scaler internalScaler =
+            new Scaler();
+    private EnvironmentLineMonitor internalLineMonitor =
+            new EnvironmentLineMonitor();
+    private EnvironmentEvolutionMonitor internalEvolutionMonitor =
+            new EnvironmentEvolutionMonitor();
 
     /**
      * Buffer which retains next line to draw at the next repaint() call
@@ -43,52 +49,78 @@ public class GraphicEnvironment
     private Stack<Point2D> agentBuffer = new Stack<Point2D>();
     private Timer runEnvironment;
     private boolean environmentIsRunning = false;
+    private boolean panelStructureHasChanged = false;
 
     public GraphicEnvironment(Environment env) {
+        //panel settings
         setPreferredSize(DEFAULT_DIMENSION);
         setOpaque(true);
+        addMouseListener(internalScaler);
+        addMouseWheelListener(internalScaler);
+        addMouseMotionListener(internalScaler);
+        addMouseListener(internalMouseHandler);
+
+        //timer settings
+        runEnvironment = new Timer(
+                DEFAULT_DELAY, internalEvolutionMonitor);
+
+        //environment settings
         monitoredEnvironment = env;
-        LineListener lineListener = new EnvironmentLineMonitor();
-        EnvironmentEvolutionMonitor evolutionMonitor = new EnvironmentEvolutionMonitor();
         env.addLineListener(
-                lineListener
+                internalLineMonitor
         );
         env.addEvolutionListener(
-                evolutionMonitor
+                internalEvolutionMonitor
         );
-        runEnvironment = new Timer(
-                DEFAULT_DELAY, evolutionMonitor);
+
+        //DEBUG PURPOSE
         runEnvironment.start();
     }
 
     /**
      * FIXME If global window is repainted, image is lost
      * TODO listen for window event and save a backup image
-     * @param g
-     *      component graphics
+     *
+     * @param g component graphics
      */
     @Override
     protected void paintComponent(Graphics g) {
-        logger.fine("I'm gonna paint " + lineBuffer.size() + " lines");
-        while (!lineBuffer.isEmpty()) {
-            Line2D line = lineBuffer.pop();
-            //TODO Keep in mine that we will need to keep a record of line's color...
-            g.setColor(Color.BLACK);
-            //FIXME Handle environment's coordinates versus panel's coordinates
-            Point2D start = Scaler.environmentToPanel(
-                    this,
-                    monitoredEnvironment,
-                    line.getP1());
-            Point2D end   = Scaler.environmentToPanel(
-                    this,
-                    monitoredEnvironment,
-                    line.getP2());
-            g.drawLine(
-                    (int) start.getX(),
-                    (int) start.getY(),
-                    (int) end.getX(),
-                    (int) end.getY()
-            );
+        if (panelStructureHasChanged) {
+            logger.fine("Panel structure has changed, "
+                    + "all environment history must be drawn again.");
+            redrawEnvironmentHistory(g);
+            panelStructureHasChanged = false;
+        } else {
+            logger.finer("I'm gonna paint " + lineBuffer.size() + " lines");
+            while (!lineBuffer.isEmpty()) {
+                Line2D line = lineBuffer.pop();
+                //TODO We will need to keep a record of line's color...
+                g.setColor(Color.BLACK);
+                // HELP Handle environment's coordinate vs panel's coordinates
+                Point2D start = internalScaler.environmentToPanel(line.getP1());
+                Point2D end = internalScaler.environmentToPanel(line.getP2());
+                g.drawLine(
+                        (int) start.getX(),
+                        (int) start.getY(),
+                        (int) end.getX(),
+                        (int) end.getY()
+                );
+            }
+            while (!agentBuffer.isEmpty()) {
+                Point2D position = agentBuffer.pop();
+
+                g.setColor(Color.RED);
+
+                //TODO Handle diameter scale
+                Point2D center = internalScaler.environmentToPanel(position);
+
+                g.fillOval(
+                        (int) center.getX(),
+                        (int) center.getY(),
+                        2,
+                        2
+                );
+            }
         }
     }
 
@@ -98,6 +130,38 @@ public class GraphicEnvironment
 
     public void stopSimulation() {
         runEnvironment.stop();
+    }
+
+    /**
+     * Send a signal to redraw all environment due to
+     * panel's setting modification
+     *
+     * @param g
+     */
+    private void redrawEnvironmentHistory(Graphics g) {
+        //clean panel
+        g.clearRect(
+                0,
+                0,
+                getWidth(),
+                getHeight()
+        );
+        //Draw all environment's lines
+        for (Line2D line : monitoredEnvironment.getHistory()) {
+            //TODO We will need to keep a record of line's color...
+            g.setColor(Color.BLACK);
+            // HELP Handle environment's coordinate vs panel's coordinates
+            Point2D start = internalScaler.environmentToPanel(line.getP1());
+            Point2D end = internalScaler.environmentToPanel(line.getP2());
+            g.drawLine(
+                    (int) start.getX(),
+                    (int) start.getY(),
+                    (int) end.getX(),
+                    (int) end.getY()
+            );
+        }
+        //don't duplicate work, new lines are already drawn
+        lineBuffer.clear();
     }
 
     /**
@@ -112,7 +176,7 @@ public class GraphicEnvironment
                     //if a line has been added to monitored environment,
                     // add it to lineBuffer
                     lineBuffer.add(e.getValue());
-                    logger.log(Level.FINE, "{0} added to line buffer, lineBuffer size : {1}",
+                    logger.log(Level.FINEST, "{0} added to line buffer, lineBuffer size : {1}",
                             new Object[]{e.getValue(), lineBuffer.size()});
                     break;
                 default:
@@ -129,6 +193,11 @@ public class GraphicEnvironment
             monitoredEnvironment.runNextCycle();
         }
 
+        /**
+         * Handle environment's events to update GUI
+         *
+         * @param e environment's evolution event
+         */
         @Override
         public void update(EvolutionEvent e) {
             switch (e.getType()) {
@@ -141,17 +210,149 @@ public class GraphicEnvironment
                     Monitor.updateEnvironmentAgentNumber(
                             e.getSource().getPool().size()
                     );
+//                    for (Agent agent : e.getSource().getPool()) {
+//                        agentBuffer.push(agent.getLocation());
+//                    }
+                    invalidate();
+                    repaint();
+                    break;
+                case ENDED:
+                    logger.info("evolution end start");
+                    Monitor.updateEnvironmentAgentNumber(
+                            e.getSource().getPool().size()
+                    );
                     for (Agent agent : e.getSource().getPool()) {
                         agentBuffer.push(agent.getLocation());
                     }
                     invalidate();
                     repaint();
-                    break;
-                case ENDED:
-                    invalidate();
-                    repaint();
                     runEnvironment.stop();
+                    logger.info("evolution end start");
             }
+        }
+    }
+
+    class Scaler
+            extends MouseAdapter {
+
+        private final double UP_SCALE_THRESHOLD = 5.0;
+        private final double DOWN_SCALE_THRESHOLD = 0.1;
+        private final double SCALE_GROW_STEP = 0.1;
+
+        private final int WHEEL_UP = -1;
+        private final int WHEEL_DOWN = 1;
+
+        private double panelScale = 1.0;
+        private int panelAbscissaDifferential = 0;
+        private int panelOrdinateDifferential = 0;
+
+        /**
+         * Adapt environment coordinates to panel ones
+         *
+         * @param environmentPosition position in environment's landmark
+         * @return position in panel's landmark
+         */
+        public Point2D environmentToPanel(
+                Point2D environmentPosition
+        ) {
+            //get current panel's dimension
+            Dimension panelDimension = getBounds().getSize();
+
+            //minus because environment is real mathematics cartesian coordinate
+            double panelAbscissa =
+                    ((panelDimension.getWidth() / 2.0) + environmentPosition.getX() * panelScale);
+            double panelOrdinate =
+                    ((panelDimension.getHeight() / 2.0) - environmentPosition.getY() * panelScale);
+
+            logger.finest(String.format(
+                    "(%.2f,%.2f) translated to (%.2f,%.2f) [panelDimension=%s]",
+                    environmentPosition.getX(),
+                    environmentPosition.getY(),
+                    panelAbscissa,
+                    panelOrdinate,
+                    panelDimension
+            ));
+
+            return new Point2D.Double(
+                    panelAbscissa + panelAbscissaDifferential,
+                    panelOrdinate + panelOrdinateDifferential
+            );
+        }
+
+        @Override
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            if (e.getModifiers() == InputEvent.CTRL_MASK) {
+                switch (e.getWheelRotation()) {
+                    case WHEEL_UP:
+                        if (panelScale < UP_SCALE_THRESHOLD) {
+                            panelScale += SCALE_GROW_STEP;
+                            panelStructureHasChanged = true;
+                            logger.finer(String.format(
+                                    "Panel zoom scale updated from %.1f to %.1f",
+                                    panelScale - 0.1,
+                                    panelScale
+                            ));
+                        }
+                        break;
+                    case WHEEL_DOWN:
+                        if (panelScale > DOWN_SCALE_THRESHOLD) {
+                            panelScale -= SCALE_GROW_STEP;
+                            panelStructureHasChanged = true;
+                            logger.finer(String.format(
+                                    "Panel zoom scale updated from %.1f to %.1f",
+                                    panelScale + 0.1,
+                                    panelScale
+                            ));
+                        }
+                        break;
+                }
+            }
+        }
+
+        private Point oldMouseLocation = null;
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            Point currentMousePoint = e.getPoint();
+            if (oldMouseLocation != null) {
+                //calculate diff
+                panelAbscissaDifferential +=
+                        (currentMousePoint.x - oldMouseLocation.x);
+                panelOrdinateDifferential +=
+                        (currentMousePoint.y - oldMouseLocation.y);
+                panelStructureHasChanged = true;
+            }
+            oldMouseLocation = currentMousePoint;
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            oldMouseLocation = null;
+            logger.fine(String.format(
+                    "Panel differential updated to (%d,%d)",
+                    panelAbscissaDifferential,
+                    panelOrdinateDifferential
+            ));
+        }
+    }
+
+    class IconHandler extends MouseAdapter {
+
+        //TODO Closed hand
+        @Override
+        public void mousePressed(MouseEvent e) {
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            setCursor(
+                    Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+            setCursor(
+                    Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
     }
 }
