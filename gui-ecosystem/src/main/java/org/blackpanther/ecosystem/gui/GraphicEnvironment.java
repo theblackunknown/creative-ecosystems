@@ -1,6 +1,5 @@
 package org.blackpanther.ecosystem.gui;
 
-import org.blackpanther.ecosystem.Agent;
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.event.EvolutionEvent;
 import org.blackpanther.ecosystem.event.EvolutionListener;
@@ -8,6 +7,7 @@ import org.blackpanther.ecosystem.event.LineEvent;
 import org.blackpanther.ecosystem.event.LineListener;
 
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Line2D;
@@ -30,7 +30,7 @@ public class GraphicEnvironment
             );
 
     private static final Dimension DEFAULT_DIMENSION = new Dimension(800, 600);
-    private static final Integer DEFAULT_DELAY = 500;
+    private static final Integer DEFAULT_DELAY = 100;
 
     private Environment monitoredEnvironment;
     private MouseListener internalMouseHandler =
@@ -48,7 +48,6 @@ public class GraphicEnvironment
     private Stack<Line2D> lineBuffer = new Stack<Line2D>();
     private Stack<Point2D> agentBuffer = new Stack<Point2D>();
     private Timer runEnvironment;
-    private boolean environmentIsRunning = false;
     private boolean panelStructureHasChanged = false;
 
     public GraphicEnvironment(Environment env) {
@@ -63,6 +62,7 @@ public class GraphicEnvironment
         //timer settings
         runEnvironment = new Timer(
                 DEFAULT_DELAY, internalEvolutionMonitor);
+        runEnvironment.setInitialDelay(1000);
 
         //environment settings
         monitoredEnvironment = env;
@@ -73,8 +73,13 @@ public class GraphicEnvironment
                 internalEvolutionMonitor
         );
 
+        panelStructureHasChanged = true;
+
         //DEBUG PURPOSE
         runEnvironment.start();
+        setBorder(
+                BorderFactory.createBevelBorder(BevelBorder.LOWERED)
+        );
     }
 
     /**
@@ -91,11 +96,11 @@ public class GraphicEnvironment
             redrawEnvironmentHistory(g);
             panelStructureHasChanged = false;
         } else {
-            logger.finer("I'm gonna paint " + lineBuffer.size() + " lines");
+            logger.finest("I'm gonna paint " + lineBuffer.size() + " lines");
             while (!lineBuffer.isEmpty()) {
                 Line2D line = lineBuffer.pop();
                 //TODO We will need to keep a record of line's color...
-                g.setColor(Color.BLACK);
+                g.setColor(Color.WHITE);
                 // HELP Handle environment's coordinate vs panel's coordinates
                 Point2D start = internalScaler.environmentToPanel(line.getP1());
                 Point2D end = internalScaler.environmentToPanel(line.getP2());
@@ -139,17 +144,12 @@ public class GraphicEnvironment
      * @param g
      */
     private void redrawEnvironmentHistory(Graphics g) {
-        //clean panel
-        g.clearRect(
-                0,
-                0,
-                getWidth(),
-                getHeight()
-        );
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 0, getWidth(), getHeight());
         //Draw all environment's lines
         for (Line2D line : monitoredEnvironment.getHistory()) {
             //TODO We will need to keep a record of line's color...
-            g.setColor(Color.BLACK);
+            g.setColor(Color.WHITE);
             // HELP Handle environment's coordinate vs panel's coordinates
             Point2D start = internalScaler.environmentToPanel(line.getP1());
             Point2D end = internalScaler.environmentToPanel(line.getP2());
@@ -202,7 +202,6 @@ public class GraphicEnvironment
         public void update(EvolutionEvent e) {
             switch (e.getType()) {
                 case STARTED:
-                    environmentIsRunning = true;
                     Monitor.updateEnvironmentRunningId(
                             e.getSource().getId()
                     );
@@ -210,24 +209,22 @@ public class GraphicEnvironment
                     Monitor.updateEnvironmentAgentNumber(
                             e.getSource().getPool().size()
                     );
-//                    for (Agent agent : e.getSource().getPool()) {
-//                        agentBuffer.push(agent.getLocation());
-//                    }
+                    Monitor.updateEnvironmentCycleCount(
+                            e.getSource().getTime()
+                    );
                     invalidate();
                     repaint();
                     break;
                 case ENDED:
-                    logger.info("evolution end start");
                     Monitor.updateEnvironmentAgentNumber(
                             e.getSource().getPool().size()
                     );
-                    for (Agent agent : e.getSource().getPool()) {
-                        agentBuffer.push(agent.getLocation());
-                    }
+                    Monitor.updateEnvironmentCycleCount(
+                            e.getSource().getTime()
+                    );
                     invalidate();
                     repaint();
                     runEnvironment.stop();
-                    logger.info("evolution end start");
             }
         }
     }
@@ -306,6 +303,7 @@ public class GraphicEnvironment
                         }
                         break;
                 }
+                repaint();
             }
         }
 
@@ -328,11 +326,12 @@ public class GraphicEnvironment
         @Override
         public void mouseReleased(MouseEvent e) {
             oldMouseLocation = null;
-            logger.fine(String.format(
+            logger.finer(String.format(
                     "Panel differential updated to (%d,%d)",
                     panelAbscissaDifferential,
                     panelOrdinateDifferential
             ));
+            repaint();
         }
     }
 

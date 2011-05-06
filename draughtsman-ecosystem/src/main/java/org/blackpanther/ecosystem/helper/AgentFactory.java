@@ -6,6 +6,7 @@ import org.blackpanther.ecosystem.DesignerAgent;
 
 import java.awt.geom.Point2D;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import static org.blackpanther.ecosystem.Configuration.*;
 
@@ -17,25 +18,19 @@ import static org.blackpanther.ecosystem.Configuration.*;
  */
 public final class AgentFactory {
 
-    public static Agent StandardAgent() {
-        return new DesignerAgent(
-                Configuration.getParameter(AGENT_LOCATION, Point2D.class),
-                Configuration.getParameter(AGENT_ORIENTATION, Double.class),
-                Configuration.getParameter(AGENT_CURVATURE, Double.class),
-                Configuration.getParameter(AGENT_SPEED, Double.class),
-                Configuration.getParameter(AGENT_MORTALITY, Double.class),
-                Configuration.getParameter(AGENT_FECUNDITY, Double.class),
-                Configuration.getParameter(AGENT_MUTATION, Double.class),
-                Configuration.getParameter(AGENT_DEFAULT_BEHAVIOUR_MANAGER, BehaviorManager.class)
-        );
-    }
+    private static final Logger logger =
+            Logger.getLogger(
+                    AgentFactory.class.getCanonicalName()
+            );
 
     public static Agent StandardAgent(double abscissa, double ordinate) {
         return new DesignerAgent(
-                new Point2D.Double(abscissa,ordinate),
+                new Point2D.Double(abscissa, ordinate),
                 Configuration.getParameter(AGENT_ORIENTATION, Double.class),
+                Configuration.getParameter(AGENT_ORIENTATION_LAUNCHER, Double.class),
                 Configuration.getParameter(AGENT_CURVATURE, Double.class),
                 Configuration.getParameter(AGENT_SPEED, Double.class),
+                Configuration.getParameter(AGENT_SPEED_LAUNCHER, Double.class),
                 Configuration.getParameter(AGENT_MORTALITY, Double.class),
                 Configuration.getParameter(AGENT_FECUNDITY, Double.class),
                 Configuration.getParameter(AGENT_MUTATION, Double.class),
@@ -45,9 +40,19 @@ public final class AgentFactory {
 
     public static Agent RandomAgent() {
         Point2D randomPoint = new Point2D.Double(
-                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 2000.0 - 1000.0,
-                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 2000.0 - 1000.0
+                (Configuration.getParameter(RANDOM, Random.class).nextDouble()
+                        * Configuration.getParameter(SPAWN_ABSCISSA_THRESHOLD, Double.class) * 2 )
+                        - Configuration.getParameter(SPAWN_ABSCISSA_THRESHOLD, Double.class),
+                (Configuration.getParameter(RANDOM, Random.class).nextDouble()
+                        * Configuration.getParameter(SPAWN_ORDINATE_THRESHOLD, Double.class) * 2 )
+                        - Configuration.getParameter(SPAWN_ORDINATE_THRESHOLD, Double.class)
         );
+
+        logger.finest(String.format(
+                "Random point generated (%.2f,%.2f)",
+                randomPoint.getX(),
+                randomPoint.getY()
+        ));
 
         return new DesignerAgent(
                 //position
@@ -57,7 +62,7 @@ public final class AgentFactory {
                 //curvature
                 Configuration.getParameter(RANDOM, Random.class).nextDouble(),
                 //speed
-                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 25.0,
+                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 10.0,//TODO Speed threshold
                 //mortality
                 Configuration.getParameter(RANDOM, Random.class).nextDouble(),
                 //fecundity

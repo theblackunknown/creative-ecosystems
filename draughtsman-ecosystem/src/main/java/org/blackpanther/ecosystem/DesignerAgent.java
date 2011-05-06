@@ -1,7 +1,5 @@
 package org.blackpanther.ecosystem;
 
-import org.blackpanther.ecosystem.math.Geometry;
-
 import java.awt.geom.Point2D;
 
 /**
@@ -23,6 +21,20 @@ public class DesignerAgent extends Agent {
             final double initialMutation,
             final BehaviorManager manager) {
         super(spawnLocation, initialOrientation, initialCurvature, initialSpeed, initialMortality, initialFecundity, initialMutation, manager);
+    }
+
+    public DesignerAgent(
+            final Point2D spawnLocation,
+            final Double initialOrientation,
+            final Double childOrientation,
+            final double initialCurvature,
+            final double initialSpeed,
+            final double childSpeed,
+            final double initialMortality,
+            final double initialFecundity,
+            final double initialMutation,
+            final BehaviorManager manager) {
+        super(spawnLocation, initialOrientation, childOrientation, initialCurvature, initialSpeed, childSpeed, initialMortality, initialFecundity, initialMutation, manager);
     }
 
 }

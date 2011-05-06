@@ -6,13 +6,6 @@ package org.blackpanther.ecosystem;
  */
 public class DesignEnvironment extends Environment {
 
-    /**
-     * {@inheritDoc}
-     */
-    public DesignEnvironment(final int width, final int height) {
-        super(width, height);
-    }
-
     @Override
     protected void initializeSpace() {
         //Nothing special about space initialization

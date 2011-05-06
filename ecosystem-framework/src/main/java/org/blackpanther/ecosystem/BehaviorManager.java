@@ -21,12 +21,4 @@ public interface BehaviorManager {
      */
     void update(Environment env, Agent that);
 
-    void move(Agent that);
-
-    void mutate(Environment env, Agent that);
-
-    void spawn(Environment env, Agent that);
-
-    void growUp(Environment env, Agent that);
-
 }

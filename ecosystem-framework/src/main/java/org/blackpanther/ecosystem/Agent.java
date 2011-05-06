@@ -1,12 +1,13 @@
 package org.blackpanther.ecosystem;
 
-import org.blackpanther.ecosystem.math.Geometry;
-
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.io.Serializable;
+import java.util.Random;
 
-import static org.blackpanther.ecosystem.Helper.require;
+import static org.blackpanther.ecosystem.Configuration.Configuration;
+import static org.blackpanther.ecosystem.Configuration.RANDOM;
+import static org.blackpanther.ecosystem.helper.Helper.require;
 
 /**
  * <p>
@@ -35,11 +36,11 @@ public abstract class Agent
      * Direction in which the agent moves.
      * Expressed as an angle [0,2PI]
      */
-    private Double initial_orientation;
+    private Double childOrientationLauncher;
     /**
      * Speed of the agent. Varies in <pre>[0,3]</pre>
      */
-    private Double initial_speed;
+    private Double childSpeedLauncher;
     /**
      * Probability that the agent dies
      */
@@ -56,6 +57,11 @@ public abstract class Agent
      * Agent's identifier. Design choice is to implement it as a {@link Color}
      */
     private Color identifier = Color.BLACK;
+    /**
+     * Agent's behavior manager.
+     * Responsible for agent's interaction
+     */
+    private BehaviorManager behaviorManager;
 
     //TODO Extensible genotype
 
@@ -63,10 +69,6 @@ public abstract class Agent
      *                 PHENOTYPE
      *=========================================
      */
-    /**
-     * Age of the agent. Same unit as the {@link Environment}
-     */
-    private int age = 0;
     /**
      * Current dx & dy
      */
@@ -87,11 +89,13 @@ public abstract class Agent
 
     //TODO Extensible phenotype
 
+    /*=========================================================================
+                                    MISCELLANEOUS
+      =========================================================================*/
     /**
-     * Agent's behavior manager.
-     * Responsible for agent's interaction
+     * Age of the agent. Same unit as the {@link Environment}
      */
-    private BehaviorManager behaviorManager;
+    private int age = 0;
     /**
      * Agent's area listener
      */
@@ -103,43 +107,105 @@ public abstract class Agent
      * TODO Don't keep same genotype than parents
      * TODO Make genotype and phenotype more general (e.g Map with type checking at runtime)
      *
-     * @param spawnLocation      initial location of the agent in the environment
-     * @param initialOrientation its initial movement orientation
-     * @param initialCurvature   initial curvature
-     * @param initialSpeed       initial speed
-     * @param initialMortality   initial mortality rate
-     * @param initialFecundity   initial fecundity rate
-     * @param initialMutation    initial mutation rate
-     * @param manager            Behaviour Strategy to use for this agent
+     * @param spawnLocation          initial location of the agent in the environment.
+     * @param launchOrientation      initial movement orientation
+     * @param childLaunchOrientation orientation initial value for next generation from this parent
+     * @param initialCurvature       initial curvature
+     * @param launchSpeed            initial speed
+     * @param childLaunchSpeed       orientation initial value for next generation from this parent
+     * @param initialMortality       initial mortality rate
+     * @param initialFecundity       initial fecundity rate
+     * @param initialMutation        initial mutation rate
+     * @param manager                Behaviour Strategy to use for this agent
+     * @see java.awt.geom.Point2D.Double
+     * @see org.blackpanther.ecosystem.BehaviorManager
      */
     public Agent(
             final Point2D spawnLocation,
-            final Double initialOrientation,
-            final double initialCurvature,
-            final double initialSpeed,
-            final double initialMortality,
-            final double initialFecundity,
-            final double initialMutation,
+            final Double launchOrientation,
+            final Double childLaunchOrientation,
+            final Double initialCurvature,
+            final Double launchSpeed,
+            final Double childLaunchSpeed,
+            final Double initialMortality,
+            final Double initialFecundity,
+            final Double initialMutation,
             final BehaviorManager manager
     ) {
-        //TODO Normalize range
-        require(initialSpeed >= 0, "Speed must be positive");
+        //HELP preconditions
+        require(spawnLocation != null,
+                "Initial position must be provided");
+        require(launchOrientation != null,
+                "Initial orientation must be provided");
+        require(initialCurvature != null,
+                "Initial curvature must be provided");
+        require(launchSpeed != null && launchSpeed >= 0.0,
+                "Initial speed must be provided and be positive");
         require(0.0 <= initialMortality && initialMortality <= 1.0,
-                "A probability is expressed in [0.0,1.0] interval");
+                "mortality rate is expressed in [0.0,1.0] interval not " + initialMortality);
         require(0.0 <= initialFecundity && initialFecundity <= 1.0,
-                "A probability is expressed in [0.0,1.0] interval");
+                "fecundity rate is expressed in [0.0,1.0] interval not " + initialFecundity);
         require(0.0 <= initialMutation && initialMutation <= 1.0,
-                "A probability is expressed in [0.0,1.0] interval");
+                "mutation rate is expressed in [0.0,1.0] interval not " + initialMutation);
         require(manager != null, "You must provide a BehaviourManager");
 
-        this.current_location = new Point2D.Double(spawnLocation.getX(), spawnLocation.getY());
-        this.current_orientation = this.initial_orientation = initialOrientation;
+        this.current_location =
+                new Point2D.Double(spawnLocation.getX(), spawnLocation.getY());
+        this.childOrientationLauncher =
+                childLaunchOrientation == null
+                        ? Configuration.getParameter(RANDOM, Random.class)
+                            .nextDouble() * 2 * Math.PI
+                        : childLaunchOrientation;
+        this.current_orientation = launchOrientation;
         this.current_curvature = initialCurvature;
-        this.current_speed = this.initial_speed = initialSpeed;
+        this.current_speed = launchSpeed;
+        this.childSpeedLauncher =
+                childLaunchSpeed == null
+                        ? Configuration.getParameter(RANDOM, Random.class)
+                            .nextDouble() * 2 * Math.PI
+                        : childLaunchSpeed;
         this.mortalityRate = initialMortality;
         this.fecundityRate = initialFecundity;
         this.mutationRate = initialMutation;
         this.behaviorManager = manager;
+    }
+
+    /**
+     * Old constructor w/o child initial values
+     *
+     * @param spawnLocation     initial location of the agent in the environment.
+     * @param launchOrientation initial movement orientation
+     * @param initialCurvature  initial curvature
+     * @param launchSpeed       initial speed
+     * @param initialMortality  initial mortality rate
+     * @param initialFecundity  initial fecundity rate
+     * @param initialMutation   initial mutation rate
+     * @param manager           Behaviour Strategy to use for this agent
+     * @see java.awt.geom.Point2D.Double
+     * @see org.blackpanther.ecosystem.BehaviorManager
+     */
+    public Agent(
+            final Point2D spawnLocation,
+            final Double launchOrientation,
+            final Double initialCurvature,
+            final Double launchSpeed,
+            final Double initialMortality,
+            final Double initialFecundity,
+            final Double initialMutation,
+            final BehaviorManager manager
+    ) {
+        this(
+                spawnLocation,
+                launchOrientation,
+                null,
+                initialCurvature,
+                launchSpeed,
+                null,
+                initialMortality,
+                initialFecundity,
+                initialMutation,
+                manager
+        );
     }
 
     /**
@@ -152,7 +218,7 @@ public abstract class Agent
     }
 
     /**
-     * Check if this agent has been set in any environment
+     * Check if this agent is alive in any environment.
      *
      * @return <code>true</code> if the agent has been set in an {@link Environment},
      *         <code>false</code> otherwise
@@ -177,7 +243,13 @@ public abstract class Agent
         areaListener = null;
     }
 
-    AreaListener getAreaListener() {
+    /**
+     * Return agent's AreaListener
+     *
+     * @return current agent's AreaListener
+     * @see AreaListener
+     */
+    final AreaListener getAreaListener() {
         return areaListener;
     }
 
@@ -187,12 +259,20 @@ public abstract class Agent
      */
 
 
+    /**
+     * Get current agent's location in its environment
+     *
+     * @return current agent's position
+     */
     public Point2D getLocation() {
         return current_location;
     }
 
     /**
-     * Get the current agent's orientation
+     * <p>
+     * Get the current agent's orientation angle.<br/>
+     * Orientation angle is within [0,2PI].
+     * </p>
      *
      * @return current orientation
      */
@@ -201,7 +281,18 @@ public abstract class Agent
     }
 
     /**
-     * Get the current agent's curvature
+     * Return at which orientation a child is launched.
+     *
+     * @return initial child's orientation
+     */
+    Double getChildOrientationLauncher() {
+        return childOrientationLauncher;
+    }
+
+    /**
+     * <p>
+     * Get the current agent's curvature angle.<br/>
+     * </p>
      *
      * @return current curvature
      */
@@ -210,12 +301,21 @@ public abstract class Agent
     }
 
     /**
-     * Get the current agent's initial_speed
+     * Get the current agent's speed
      *
-     * @return current initial_speed
+     * @return current agent's speed
      */
     public Double getSpeed() {
         return current_speed;
+    }
+
+    /**
+     * Return at which speed a child is launched.
+     *
+     * @return initial child's speed
+     */
+    Double getChildSpeedLauncher() {
+        return childSpeedLauncher;
     }
 
     /**
@@ -272,8 +372,7 @@ public abstract class Agent
     /**
      * Setter for the agent's orientation
      *
-     * @param orientation
-     *      the new orientation
+     * @param orientation the new orientation
      */
     void setOrientation(Double orientation) {
         this.current_orientation = orientation;
