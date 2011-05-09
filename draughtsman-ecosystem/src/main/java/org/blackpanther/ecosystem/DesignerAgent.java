@@ -8,21 +8,6 @@ import java.awt.geom.Point2D;
  */
 public class DesignerAgent extends Agent {
 
-    /**
-     * {@inheritDoc}
-     */
-    public DesignerAgent(
-            final Point2D spawnLocation,
-            final Double initialOrientation,
-            final double initialCurvature,
-            final double initialSpeed,
-            final double initialMortality,
-            final double initialFecundity,
-            final double initialMutation,
-            final BehaviorManager manager) {
-        super(spawnLocation, initialOrientation, initialCurvature, initialSpeed, initialMortality, initialFecundity, initialMutation, manager);
-    }
-
     public DesignerAgent(
             final Point2D spawnLocation,
             final Double initialOrientation,
@@ -30,11 +15,12 @@ public class DesignerAgent extends Agent {
             final double initialCurvature,
             final double initialSpeed,
             final double childSpeed,
+            final double initialIrrationality,
             final double initialMortality,
             final double initialFecundity,
             final double initialMutation,
             final BehaviorManager manager) {
-        super(spawnLocation, initialOrientation, childOrientation, initialCurvature, initialSpeed, childSpeed, initialMortality, initialFecundity, initialMutation, manager);
+        super(spawnLocation, initialOrientation, childOrientation, initialCurvature, initialSpeed, childSpeed, initialIrrationality, initialMortality, initialFecundity, initialMutation, manager);
     }
 
 }

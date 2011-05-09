@@ -9,6 +9,9 @@ import java.util.Random;
 import java.util.logging.Logger;
 
 import static org.blackpanther.ecosystem.Configuration.*;
+import static org.blackpanther.ecosystem.Agent.*;
+
+
 
 /**
  * TODO Why not generate a random agent ?
@@ -31,10 +34,11 @@ public final class AgentFactory {
                 Configuration.getParameter(AGENT_CURVATURE, Double.class),
                 Configuration.getParameter(AGENT_SPEED, Double.class),
                 Configuration.getParameter(AGENT_SPEED_LAUNCHER, Double.class),
+                Configuration.getParameter(AGENT_IRRATIONALITY, Double.class),
                 Configuration.getParameter(AGENT_MORTALITY, Double.class),
                 Configuration.getParameter(AGENT_FECUNDITY, Double.class),
                 Configuration.getParameter(AGENT_MUTATION, Double.class),
-                Configuration.getParameter(AGENT_DEFAULT_BEHAVIOUR_MANAGER, BehaviorManager.class)
+                Configuration.getParameter(AGENT_BEHAVIOUR_MANAGER, BehaviorManager.class)
         );
     }
 
@@ -59,10 +63,16 @@ public final class AgentFactory {
                 randomPoint,
                 //orientation
                 Configuration.getParameter(RANDOM, Random.class).nextDouble() * (2 * Math.PI),
+                //orientation launcher
+                Configuration.getParameter(RANDOM, Random.class).nextDouble() * (2 * Math.PI),
                 //curvature
                 Configuration.getParameter(RANDOM, Random.class).nextDouble(),
                 //speed
                 Configuration.getParameter(RANDOM, Random.class).nextDouble() * 10.0,//TODO Speed threshold
+                //speed launcher
+                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 10.0,//TODO Speed threshold
+                //irrationality
+                Configuration.getParameter(RANDOM, Random.class).nextDouble(),
                 //mortality
                 Configuration.getParameter(RANDOM, Random.class).nextDouble(),
                 //fecundity
@@ -70,7 +80,7 @@ public final class AgentFactory {
                 //mutation
                 Configuration.getParameter(RANDOM, Random.class).nextDouble(),
                 //behaviour manager
-                Configuration.getParameter(AGENT_DEFAULT_BEHAVIOUR_MANAGER, BehaviorManager.class)
+                Configuration.getParameter(AGENT_BEHAVIOUR_MANAGER, BehaviorManager.class)
         );
     }
 }

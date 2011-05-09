@@ -22,7 +22,7 @@ public final class Helper {
             final boolean predicate,
             final String errorMessage) {
         if (!predicate) {
-            throw new IllegalArgumentException("Condition unsastified"
+            throw new IllegalArgumentException("Condition unsatisfied"
                     + ((errorMessage != null && !errorMessage.equals(""))
                     ? " : " + errorMessage
                     : "")
@@ -50,5 +50,13 @@ public final class Helper {
      */
     public static boolean isValid(String input) {
         return input != null && !input.trim().equals("");
+    }
+
+    public static void error(String errorMessage) {
+        throw new RuntimeException(errorMessage);
+    }
+
+    public static boolean within(double number, double inf, double sup) {
+        return inf <= number && number < sup;
     }
 }

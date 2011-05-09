@@ -12,6 +12,9 @@ import java.util.logging.Logger;
 import static org.blackpanther.ecosystem.helper.Helper.isValid;
 import static org.blackpanther.ecosystem.helper.Helper.require;
 
+import static org.blackpanther.ecosystem.Agent.*;
+
+
 /**
  * <p>
  * Singleton Pattern.
@@ -36,15 +39,6 @@ public enum Configuration {
     public static final String RANDOM = "random-seed";
     public static final String SPAWN_ABSCISSA_THRESHOLD = "spawn-abscissa-threshold";
     public static final String SPAWN_ORDINATE_THRESHOLD = "spawn-ordinate-threshold";
-    public static final String AGENT_ORIENTATION = "agent-orientation";
-    public static final String AGENT_CURVATURE = "agent-curvature";
-    public static final String AGENT_SPEED = "agent-speed";
-    public static final String AGENT_MORTALITY = "agent-mortality";
-    public static final String AGENT_FECUNDITY = "agent-fecundity";
-    public static final String AGENT_MUTATION = "agent-mutation";
-    public static final String AGENT_ORIENTATION_LAUNCHER = "agent-orientation-launcher";
-    public static final String AGENT_SPEED_LAUNCHER = "agent-speed-launcher";
-    public static final String AGENT_DEFAULT_BEHAVIOUR_MANAGER = "agent-behaviour-manager";
 
     /**
      * Application's parameters with default loaded
@@ -95,6 +89,10 @@ public enum Configuration {
                 userProperties.getProperty(RANDOM),
                 applicationProperties.toString().replaceAll("[,]", "\n")
         ));
+    }
+
+    public Random getRandom() {
+        return getParameter(RANDOM,Random.class);
     }
 
     /**
@@ -236,6 +234,22 @@ public enum Configuration {
         }
 
         //update agent mortality
+        String userAgentIrrationality = properties.getProperty(AGENT_IRRATIONALITY);
+        if (isValid(userAgentIrrationality)) {
+            try {
+                setParameter(
+                        AGENT_IRRATIONALITY,
+                        Double.parseDouble(userAgentIrrationality),
+                        Double.class
+                );
+                logger.fine(AGENT_IRRATIONALITY + " parameter updated.");
+            } catch (NumberFormatException e) {
+                logger.log(Level.SEVERE,
+                        "Couldn't parse user agent irrationality rate, it must be within [0,1] !", e);
+            }
+        }
+
+        //update agent mortality
         String userAgentMortality = properties.getProperty(AGENT_MORTALITY);
         if (isValid(userAgentMortality)) {
             try {
@@ -285,17 +299,17 @@ public enum Configuration {
 
         //update default behavior class
         String userAgentDefaultBehaviourManager =
-                properties.getProperty(AGENT_DEFAULT_BEHAVIOUR_MANAGER);
+                properties.getProperty(AGENT_BEHAVIOUR_MANAGER);
         if (isValid(userAgentDefaultBehaviourManager)) {
             try {
                 Class<BehaviorManager> userBehaviourManagerClass =
                         (Class<BehaviorManager>) Class.forName(userAgentDefaultBehaviourManager);
                 setParameter(
-                        AGENT_DEFAULT_BEHAVIOUR_MANAGER,
+                        AGENT_BEHAVIOUR_MANAGER,
                         userBehaviourManagerClass.newInstance(),
                         BehaviorManager.class
                 );
-                logger.fine(AGENT_DEFAULT_BEHAVIOUR_MANAGER + " parameter updated.");
+                logger.fine(AGENT_BEHAVIOUR_MANAGER + " parameter updated.");
             } catch (ClassNotFoundException e) {
                 logger.log(Level.SEVERE, "Couldn't found user BehaviourManager class", e);
             } catch (InstantiationException e) {
@@ -374,7 +388,8 @@ public enum Configuration {
                 require(0.0 <= value,
                         "Invalid value for " + paramName + " : '" + paramValue + "'");
             }
-        } else if (paramName.equals(AGENT_MORTALITY)
+        } else if (paramName.equals(AGENT_IRRATIONALITY)
+                || paramName.equals(AGENT_MORTALITY)
                 || paramName.equals(AGENT_FECUNDITY)
                 || paramName.equals(AGENT_MUTATION)) {
             if (!paramType.equals(Double.class)) {
@@ -386,7 +401,7 @@ public enum Configuration {
                 require(0.0 <= value && value <= 1.0,
                         "Invalid value for " + paramName + " : '" + paramValue + "'");
             }
-        } else if (paramName.equals(AGENT_DEFAULT_BEHAVIOUR_MANAGER)) {
+        } else if (paramName.equals(AGENT_BEHAVIOUR_MANAGER)) {
             if (!paramType.equals(BehaviorManager.class)) {
                 throw new IllegalArgumentException(
                         "Invalid value this parameter, it must be a "
@@ -397,4 +412,12 @@ public enum Configuration {
         }
     }
 
+
+    @Override
+    public String toString() {
+        return applicationProperties.toString()
+                .replaceAll("\\[","")
+                .replaceAll("\\]","")
+                .replaceAll(",","\n");
+    }
 }

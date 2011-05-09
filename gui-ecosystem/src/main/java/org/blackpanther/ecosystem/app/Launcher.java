@@ -5,6 +5,7 @@ import org.blackpanther.ecosystem.DesignEnvironment;
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.gui.WorldFrame;
 
+import javax.management.monitor.Monitor;
 import javax.swing.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.Random;
 import static org.blackpanther.ecosystem.Configuration.*;
 import static org.blackpanther.ecosystem.helper.AgentFactory.RandomAgent;
 import static org.blackpanther.ecosystem.helper.AgentFactory.StandardAgent;
+import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
  * @author MACHIZAUD Andréa
@@ -23,23 +25,21 @@ import static org.blackpanther.ecosystem.helper.AgentFactory.StandardAgent;
 public class Launcher {
 
     public static void main(String[] args) {
-
         //Create an environment
         Environment environment = new DesignEnvironment();
-        //Add a single agent
+        //Add agents
         environment.addAgent(
                 generatePopulation(
                         Launcher.GenerationType.STANDARD_POSITION_PROVIDED,
-                        400.0,
-                        300.0,
-                        50.0
+                        400.0,400.0,50.0
                 ));
         //Show them our wonderful GUI
-        createAndShowGUI(environment);
+        createAndShowGUI();
+        Monitor.setCurrentEnvironment(environment);
     }
 
-    public static void createAndShowGUI(Environment env) {
-        JFrame mainFrame = new WorldFrame(env);
+    public static void createAndShowGUI() {
+        JFrame mainFrame = new WorldFrame();
         mainFrame.setVisible(true);
     }
 

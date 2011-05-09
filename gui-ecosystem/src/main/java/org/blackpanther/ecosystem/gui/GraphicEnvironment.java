@@ -12,6 +12,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,7 +31,7 @@ public class GraphicEnvironment
             );
 
     private static final Dimension DEFAULT_DIMENSION = new Dimension(800, 600);
-    private static final Integer DEFAULT_DELAY = 100;
+    private static final Integer DEFAULT_DELAY = 400;
 
     private Environment monitoredEnvironment;
     private MouseListener internalMouseHandler =
@@ -50,7 +51,7 @@ public class GraphicEnvironment
     private Timer runEnvironment;
     private boolean panelStructureHasChanged = false;
 
-    public GraphicEnvironment(Environment env) {
+    public GraphicEnvironment() {
         //panel settings
         setPreferredSize(DEFAULT_DIMENSION);
         setOpaque(true);
@@ -64,19 +65,8 @@ public class GraphicEnvironment
                 DEFAULT_DELAY, internalEvolutionMonitor);
         runEnvironment.setInitialDelay(1000);
 
-        //environment settings
-        monitoredEnvironment = env;
-        env.addLineListener(
-                internalLineMonitor
-        );
-        env.addEvolutionListener(
-                internalEvolutionMonitor
-        );
-
         panelStructureHasChanged = true;
 
-        //DEBUG PURPOSE
-        runEnvironment.start();
         setBorder(
                 BorderFactory.createBevelBorder(BevelBorder.LOWERED)
         );
@@ -129,6 +119,24 @@ public class GraphicEnvironment
         }
     }
 
+    public void setEnvironment(Environment env){
+        //environment settings
+        monitoredEnvironment = env;
+        env.addLineListener(
+                internalLineMonitor
+        );
+        env.addEvolutionListener(
+                internalEvolutionMonitor
+        );
+    }
+
+    public void unsetEnvironment(){
+        monitoredEnvironment.removeLineListener(internalLineMonitor);
+        monitoredEnvironment.removeEvolutionListener(internalEvolutionMonitor);
+        monitoredEnvironment = null;
+
+    }
+
     public void runSimulation() {
         runEnvironment.start();
     }
@@ -161,7 +169,23 @@ public class GraphicEnvironment
             );
         }
         //don't duplicate work, new lines are already drawn
-        lineBuffer.clear();
+//        lineBuffer.clear();
+    }
+
+    public BufferedImage dumpCurrentImage() {
+        if (monitoredEnvironment != null) {
+            BufferedImage image = new BufferedImage(
+                    getWidth(),
+                    getHeight(),
+                    BufferedImage.TYPE_INT_RGB
+            );
+            Graphics2D graphics = image.createGraphics();
+            redrawEnvironmentHistory(graphics);
+            return image;
+        } else {
+            throw new IllegalStateException("No environment set yet");
+        }
+
     }
 
     /**
@@ -222,6 +246,7 @@ public class GraphicEnvironment
                     Monitor.updateEnvironmentCycleCount(
                             e.getSource().getTime()
                     );
+                    Monitor.environmentFrozen();
                     invalidate();
                     repaint();
                     runEnvironment.stop();
@@ -232,7 +257,7 @@ public class GraphicEnvironment
     class Scaler
             extends MouseAdapter {
 
-        private final double UP_SCALE_THRESHOLD = 5.0;
+        private final double UP_SCALE_THRESHOLD = 20.0;
         private final double DOWN_SCALE_THRESHOLD = 0.1;
         private final double SCALE_GROW_STEP = 0.1;
 
@@ -319,6 +344,7 @@ public class GraphicEnvironment
                 panelOrdinateDifferential +=
                         (currentMousePoint.y - oldMouseLocation.y);
                 panelStructureHasChanged = true;
+                repaint();
             }
             oldMouseLocation = currentMousePoint;
         }

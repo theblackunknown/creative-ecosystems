@@ -59,4 +59,10 @@ public class EnvironmentSetting extends JPanel {
                 "#Cycle : %d", cycleCount
         ));
     }
+
+    void environmentEnded() {
+        this.environmentLabel.setText(
+                environmentLabel.getText() + "[FROZEN]"
+        );
+    }
 }

@@ -1,6 +1,9 @@
 package org.blackpanther.ecosystem.gui;
 
 import org.blackpanther.ecosystem.Environment;
+import org.blackpanther.ecosystem.gui.actions.EnvironmentCreationAction;
+import org.blackpanther.ecosystem.gui.actions.LoadConfigurationAction;
+import org.blackpanther.ecosystem.gui.actions.SaveImageAction;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,13 +17,15 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 public class WorldFrame
         extends JFrame {
 
-    public WorldFrame(Environment env) {
+    public WorldFrame() {
         super();
+
+        setJMenuBar(buildMenuBar());
 
         EnvironmentSetting environmentSetting =
                 new EnvironmentSetting();
         GraphicEnvironment graphicEnvironment =
-                new GraphicEnvironment(env);
+                new GraphicEnvironment();
         EnvironmentCommands environmentCommands =
                 new EnvironmentCommands();
 
@@ -52,6 +57,27 @@ public class WorldFrame
         //setLocationRelativeTo(null);
         pack();
         setExtendedState(MAXIMIZED_BOTH);
+    }
+
+    private JMenuBar buildMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+
+        JMenu file = new JMenu("File");
+        JMenu environment = new JMenu("Environment");
+
+        JMenuItem createEnvironment = new JMenuItem(
+                EnvironmentCreationAction.getInstance());
+        createEnvironment.setEnabled(false);
+
+        file.add(LoadConfigurationAction.getInstance());
+        file.add(SaveImageAction.getInstance());
+
+        environment.add(createEnvironment);
+
+        menuBar.add(file);
+        menuBar.add(environment);
+
+        return menuBar;
     }
 
     /**

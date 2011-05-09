@@ -1,5 +1,9 @@
 package org.blackpanther.ecosystem.gui;
 
+import org.blackpanther.ecosystem.Environment;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.logging.Logger;
 
 import static org.blackpanther.ecosystem.helper.Helper.require;
@@ -31,6 +35,15 @@ public enum GUIMonitor {
 
     public void registerEnvironmentSettingsPanel(EnvironmentSetting environmentSetting) {
         this.environmentSettingPanel = environmentSetting;
+    }
+
+    public void setCurrentEnvironment(Environment env) {
+        this.drawPanel.setEnvironment(env);
+        updateEnvironmentRunningId(env.getId());
+        updateEnvironmentAgentNumber(env.getPool().size());
+        updateEnvironmentCycleCount(env.getTime());
+        environmentCommandsPanel.environmentSet();
+        logger.info("Current environment set to " + env);
     }
 
     public void updateEnvironmentAgentNumber(Integer agentNumber) {
@@ -68,5 +81,29 @@ public enum GUIMonitor {
         } else
             logger.info("No delegate environment's evolution's flow"
                     + "because no environment is set yet");
+    }
+
+    //TODO Handle state by a separated label
+    public void environmentFrozen() {
+        environmentSettingPanel.environmentEnded();
+        logger.info("Environment's death's notified to environment setting panel");
+    }
+
+    //TODO Ask for a save
+    public void stopEvolution() {
+        //To change body of created methods use File | Settings | File Templates.
+    }
+
+    public void pauseEvolution() {
+        //To change body of created methods use File | Settings | File Templates.
+    }
+
+    public void resumeEvolution() {
+        //To change body of created methods use File | Settings | File Templates.
+    }
+
+    public BufferedImage dumpCurrentImage() {
+        logger.info("Dump image action delegated to draw panel");
+        return drawPanel.dumpCurrentImage();
     }
 }

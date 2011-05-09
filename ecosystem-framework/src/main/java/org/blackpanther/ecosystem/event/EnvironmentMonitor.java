@@ -55,4 +55,12 @@ public class EnvironmentMonitor {
             listener.update(event);
         }
     }
+
+    public void removeEvolutionListener(EvolutionListener listener) {
+        evolutionListeners.remove(listener);
+    }
+
+    public void removeLineListener(LineListener listener) {
+        lineListeners.remove(listener);
+    }
 }

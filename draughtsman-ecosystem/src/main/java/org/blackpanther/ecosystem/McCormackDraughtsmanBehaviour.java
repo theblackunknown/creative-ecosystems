@@ -6,8 +6,8 @@ import java.awt.geom.Point2D;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import static org.blackpanther.ecosystem.Configuration.*;
 import static org.blackpanther.ecosystem.Configuration.Configuration;
+import static org.blackpanther.ecosystem.Configuration.RANDOM;
 
 /**
  * <p>
@@ -41,10 +41,8 @@ public class McCormackDraughtsmanBehaviour
         //Step 1 - spawn
         spawn(env, agent);
         //Step 2 - move ( and trace )
-        move(agent);
-        //Step 3 - mutate
-        mutate(env, agent);
-        //Step 4 - grow up
+        move(env, agent);
+        //Step 3 - grow up
         growUp(env, agent);
     }
 
@@ -53,9 +51,9 @@ public class McCormackDraughtsmanBehaviour
      *
      * @param that currently updated agent
      */
-    protected void move(Agent that) {
+    protected void move(Environment env, Agent that) {
         //Step 1 - Update location according to current orientation
-        Point2D oldLocation = that.getLocation();
+        Point2D oldLocation = (Point2D) that.getLocation().clone();
         that.setLocation(
                 that.getLocation().getX()
                         + that.getSpeed()
@@ -64,47 +62,51 @@ public class McCormackDraughtsmanBehaviour
                         + that.getSpeed()
                         * Math.sin(that.getOrientation())
         );
-        logger.fine(String.format("Changed %s 's location from %s to %s",
+        logger.finer(String.format("Changed %s 's location from %s to %s",
                 that, oldLocation, that.getLocation()));
 
         //Step 2 - Notify AreaListener that we moved, agent can died if it cross an other line
         //It dies if it didn't move
         boolean hasDied = oldLocation.equals(that.getLocation()) ||
-                that.getAreaListener().trace(new Line2D.Double(oldLocation, that.getLocation()));
+                env.trace(new Line2D.Double(oldLocation, that.getLocation()));
 
         if (!hasDied) {
-            logger.fine(that + " is still alive.");
+            logger.finer(that + " is still alive.");
 
-            //Step 3 - Update phenotype
-            //TODO DEPRECATED vector rotation - http://en.wikipedia.org/wiki/Rotation_(mathematics)#Matrix_algebra
+            //Step 3 - Irrationality effect, influence the current curvature
+            if (Configuration.getRandom().nextDouble() <= that.getIrrationality()) {
+                //Irrationality is the rate but also the DEGREE OF CHANGE
+                double oldCurvature = that.getCurvature();
+                that.setCurvature(
+                        that.getCurvature() + (
+                                Configuration.getRandom().nextGaussian() * that.getIrrationality()
+                        )
+                );
+                logger.finer(String.format("Changed %s 's curvature from %s to %s",
+                        that, oldCurvature, that.getCurvature()));
+            }
+
+            //Step 4 - Update phenotype
             Double oldOrientation = that.getOrientation();
+            //FIXME change quickly orientation
             that.setOrientation(
-                    (that.getOrientation() + that.getCurvature()) % (2 * Math.PI)
+                    that.getOrientation() + that.getCurvature()
             );
-            logger.fine(String.format("Changed %s 's orientation from %s to %s",
-                    that, oldOrientation, that.getOrientation()));
+            logger.finer(String.format("Changed %s 's orientation from %.4f PI to %.4f PI",
+                    that, oldOrientation / Math.PI, that.getOrientation() / Math.PI));
 
         } else {
             that.unsetAreaListener();
-            logger.fine(that + " passed away.");
+            logger.finer(that + " passed away.");
         }
     }
 
     /**
      * Method that make an agent to behave like McCormack describe in his essay
      */
-    protected void mutate(Environment env, Agent that) {
-        //HELP No mutation for the moment - XMen have not exist yet
-    }
-
-    /**
-     * Method that make an agent to behave like McCormack describe in his essay
-     */
     protected void spawn(final Environment env, final Agent that) {
-        double randomValue = Configuration.getParameter(RANDOM, Random.class)
-                .nextDouble();
-        logger.finer(String.format("Random spawn's value : %f", randomValue));
-        if (randomValue < that.getFecundityRate()) {
+        Random applicationRandom = Configuration.getRandom();
+        if (applicationRandom.nextDouble() < that.getFecundityRate()) {
 
             //Create child
             //HELP Gaussian variation of baby's genotype
@@ -114,31 +116,54 @@ public class McCormackDraughtsmanBehaviour
             double orientationVariation = 0.1;
             double speedVariation = 0.1;
             Agent child = new DesignerAgent(
+                    //initial position
                     that.getLocation(),
+                    //initial orientation
                     that.getChildOrientationLauncher(),
-                    that.getChildOrientationLauncher()
-                            + orientationVariation
-                            * Configuration.getParameter(RANDOM, Random.class).nextGaussian(),
-                    that.getCurvature()
-                            + curvatureVariation
-                            * Configuration.getParameter(RANDOM, Random.class).nextGaussian(),
+                    //child orientation launcher
+                    mutate(
+                            that.getMutationRate(),
+                            that.getChildOrientationLauncher(),
+                            orientationVariation
+                                    * applicationRandom.nextGaussian()),
+                    //initial speed
+                    mutate(
+                            that.getMutationRate(),
+                            that.getCurvature(),
+                            curvatureVariation
+                                    * applicationRandom.nextGaussian()),
                     normalizeSpeed(that.getChildSpeedLauncher()),
-                    normalizeSpeed(that.getChildSpeedLauncher()
-                            + speedVariation
-                            * Configuration.getParameter(RANDOM, Random.class).nextGaussian()),
-                    normalizeProbability(
-                            that.getMortalityRate()
-                                    + probabilityVariation
-                                    * Configuration.getParameter(RANDOM, Random.class).nextGaussian()),
-                    normalizeProbability(
-                            that.getFecundityRate()
-                                    + probabilityVariation
-                                    * Configuration.getParameter(RANDOM, Random.class).nextGaussian()),
-                    normalizeProbability(
-                            that.getMutationRate()
-                                    + probabilityVariation
-                                    * Configuration.getParameter(RANDOM, Random.class).nextGaussian()),
-                    Configuration.getParameter(AGENT_DEFAULT_BEHAVIOUR_MANAGER, BehaviorManager.class)
+                    //child speed launcher
+                    normalizeSpeed(mutate(
+                            that.getMutationRate(),
+                            that.getChildSpeedLauncher(),
+                            speedVariation
+                                    * applicationRandom.nextGaussian())),
+                    //irrationality rate
+                    normalizeProbability(mutate(
+                            that.getIrrationality(),
+                            that.getIrrationality(),
+                            probabilityVariation
+                                    * applicationRandom.nextGaussian())),
+                    //mortality rate
+                    normalizeProbability(mutate(
+                            that.getMutationRate(),
+                            that.getMortalityRate(),
+                            probabilityVariation
+                                    * applicationRandom.nextGaussian())),
+                    //fecundity rate
+                    normalizeProbability(mutate(
+                            that.getMutationRate(),
+                            that.getFecundityRate(),
+                            probabilityVariation
+                                    * applicationRandom.nextGaussian())),
+                    //mutation rate
+                    normalizeProbability(mutate(
+                            that.getMutationRate(),
+                            that.getMutationRate(),
+                            probabilityVariation
+                                    * applicationRandom.nextGaussian())),
+                    that.getBehaviour()
             );
 
             //Add into environment
@@ -177,6 +202,19 @@ public class McCormackDraughtsmanBehaviour
             return 0.0;
         else
             return speed;
+    }
+
+    private static Double mutate(
+            Double mutationRate,
+            Double normalValue,
+            Double mutationVariation
+    ) {
+        if (Configuration.getParameter(RANDOM, Random.class)
+                .nextDouble() <= mutationRate) {
+            return normalValue + mutationVariation;
+        } else {
+            return normalValue;
+        }
     }
 
 
