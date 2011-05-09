@@ -45,7 +45,12 @@ public class SaveImageAction
         Monitor.pauseEvolution();
 
         BufferedImage image = Monitor.dumpCurrentImage();
-        Component parent = ((Component) e.getSource()).getParent();
+        if (image == null)
+            return;
+
+        Component parent = e.getSource() instanceof Component
+                ? ((Component) e.getSource()).getParent()
+                : null;
         switch (fileSaver.showSaveDialog(parent)) {
             case JFileChooser.APPROVE_OPTION:
                 File selectedFile = fileSaver.getSelectedFile();

@@ -1,8 +1,10 @@
 package org.blackpanther.ecosystem.gui;
 
 import org.blackpanther.ecosystem.Environment;
+import org.blackpanther.ecosystem.gui.actions.SaveImageAction;
+import org.blackpanther.ecosystem.gui.lightweight.ConfigurationInformation;
 
-import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.util.logging.Logger;
 
@@ -21,7 +23,7 @@ public enum GUIMonitor {
             );
 
     private GraphicEnvironment drawPanel;
-    private EnvironmentSetting environmentSettingPanel;
+    private EnvironmentInformationPanel environmentInformationPanel;
     private EnvironmentCommands environmentCommandsPanel;
 
 
@@ -33,38 +35,27 @@ public enum GUIMonitor {
         this.drawPanel = panel;
     }
 
-    public void registerEnvironmentSettingsPanel(EnvironmentSetting environmentSetting) {
-        this.environmentSettingPanel = environmentSetting;
+    public void registerEnvironmentSettingsPanel(EnvironmentInformationPanel environmentInformationPanel) {
+        this.environmentInformationPanel = environmentInformationPanel;
     }
 
-    public void setCurrentEnvironment(Environment env) {
+    public void setCurrentEnvironment(Environment env, ConfigurationInformation info) {
+        require(drawPanel != null,
+                "No draw panel to delegate environment change notification");
+        require(environmentInformationPanel != null,
+                "No information panel to delegate environment change notification");
+        stopEvolution();
         this.drawPanel.setEnvironment(env);
-        updateEnvironmentRunningId(env.getId());
-        updateEnvironmentAgentNumber(env.getPool().size());
-        updateEnvironmentCycleCount(env.getTime());
+        this.environmentInformationPanel.addEnvironment(env, info);
         environmentCommandsPanel.environmentSet();
         logger.info("Current environment set to " + env);
     }
 
-    public void updateEnvironmentAgentNumber(Integer agentNumber) {
-        require(environmentSettingPanel != null,
+    public void updateEnvironmentInformation() {
+        require(environmentInformationPanel != null,
                 "No environment settings panel to delegate task");
-        this.environmentSettingPanel.setEnvironmentAgentNumber(agentNumber);
-        logger.finer("Environment's agent number delegated to environment setting panel");
-    }
-
-    public void updateEnvironmentCycleCount(Integer count) {
-        require(environmentSettingPanel != null,
-                "No environment settings panel to delegate task");
-        this.environmentSettingPanel.setEnvironmentCycleCount(count);
-        logger.finer("Environment's cycle count delegated to environment setting panel");
-    }
-
-    public void updateEnvironmentRunningId(Long id) {
-        require(environmentSettingPanel != null,
-                "No environment settings panel to delegate task");
-        this.environmentSettingPanel.setEnvironmentId(id);
-        logger.finer("Environment's id delegated to environment setting panel");
+        environmentInformationPanel.updateInformation();
+        logger.finer("Environment's information delegated to environment setting panel");
     }
 
     public void interceptEnvironmentEvolutionFlow(String buttonLabel) {
@@ -85,25 +76,38 @@ public enum GUIMonitor {
 
     //TODO Handle state by a separated label
     public void environmentFrozen() {
-        environmentSettingPanel.environmentEnded();
+        environmentInformationPanel.environmentEnded();
         logger.info("Environment's death's notified to environment setting panel");
     }
 
-    //TODO Ask for a save
     public void stopEvolution() {
-        //To change body of created methods use File | Settings | File Templates.
+        require(drawPanel != null,
+                "No draw panel to delegate environment change notification");
+        drawPanel.stopSimulation();
+        //TODO Dump environment state
+        SaveImageAction.getInstance().actionPerformed(
+                new ActionEvent(this, 0, "EvolutionStopped")
+        );
     }
 
     public void pauseEvolution() {
-        //To change body of created methods use File | Settings | File Templates.
+        require(drawPanel != null,
+                "No draw panel to delegate environment change notification");
+        drawPanel.stopSimulation();
     }
 
     public void resumeEvolution() {
-        //To change body of created methods use File | Settings | File Templates.
+        require(drawPanel != null,
+                "No draw panel to delegate environment change notification");
+        drawPanel.runSimulation();
     }
 
     public BufferedImage dumpCurrentImage() {
         logger.info("Dump image action delegated to draw panel");
         return drawPanel.dumpCurrentImage();
+    }
+
+    public void switchEnvironment(Environment envA, Environment envB) {
+        //Handle stuff
     }
 }

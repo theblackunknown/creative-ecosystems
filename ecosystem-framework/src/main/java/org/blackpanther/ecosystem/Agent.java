@@ -35,6 +35,7 @@ public abstract class Agent
     public static final String AGENT_ORIENTATION = "agent-orientation";
     public static final String AGENT_CURVATURE = "agent-curvature";
     public static final String AGENT_SPEED = "agent-speed";
+
     public static final String AGENT_IRRATIONALITY = "agent-irrationality";
     public static final String AGENT_MORTALITY = "agent-mortality";
     public static final String AGENT_FECUNDITY = "agent-fecundity";

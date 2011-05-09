@@ -4,8 +4,8 @@ import org.blackpanther.ecosystem.Agent;
 import org.blackpanther.ecosystem.DesignEnvironment;
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.gui.WorldFrame;
+import org.blackpanther.ecosystem.gui.lightweight.ConfigurationInformation;
 
-import javax.management.monitor.Monitor;
 import javax.swing.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.Random;
 
 import static org.blackpanther.ecosystem.Configuration.*;
+import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 import static org.blackpanther.ecosystem.helper.AgentFactory.RandomAgent;
 import static org.blackpanther.ecosystem.helper.AgentFactory.StandardAgent;
-import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
  * @author MACHIZAUD Andréa
@@ -31,11 +31,13 @@ public class Launcher {
         environment.addAgent(
                 generatePopulation(
                         Launcher.GenerationType.STANDARD_POSITION_PROVIDED,
-                        400.0,400.0,50.0
+                        400.0, 400.0, 50.0
                 ));
         //Show them our wonderful GUI
         createAndShowGUI();
-        Monitor.setCurrentEnvironment(environment);
+        Monitor.setCurrentEnvironment(
+                environment,
+                ConfigurationInformation.dump(Configuration));
     }
 
     public static void createAndShowGUI() {

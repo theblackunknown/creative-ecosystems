@@ -1,6 +1,5 @@
 package org.blackpanther.ecosystem.gui;
 
-import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.gui.actions.EnvironmentCreationAction;
 import org.blackpanther.ecosystem.gui.actions.LoadConfigurationAction;
 import org.blackpanther.ecosystem.gui.actions.SaveImageAction;
@@ -22,8 +21,8 @@ public class WorldFrame
 
         setJMenuBar(buildMenuBar());
 
-        EnvironmentSetting environmentSetting =
-                new EnvironmentSetting();
+        EnvironmentInformationPanel environmentInformationPanel =
+                new EnvironmentInformationPanel();
         GraphicEnvironment graphicEnvironment =
                 new GraphicEnvironment();
         EnvironmentCommands environmentCommands =
@@ -33,7 +32,7 @@ public class WorldFrame
                 graphicEnvironment
         );
         Monitor.registerEnvironmentSettingsPanel(
-                environmentSetting
+                environmentInformationPanel
         );
         Monitor.registerEnvironmentCommandsPanel(
                 environmentCommands
@@ -41,8 +40,8 @@ public class WorldFrame
 
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(
-                wrapComponent(environmentSetting, BorderLayout.WEST),
-                BorderLayout.NORTH
+                wrapComponent(environmentInformationPanel, BorderLayout.WEST),
+                BorderLayout.WEST
         );
         getContentPane().add(
                 graphicEnvironment,

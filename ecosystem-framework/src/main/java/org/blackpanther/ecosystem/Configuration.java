@@ -1,18 +1,14 @@
 package org.blackpanther.ecosystem;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import static org.blackpanther.ecosystem.Agent.*;
 import static org.blackpanther.ecosystem.helper.Helper.isValid;
 import static org.blackpanther.ecosystem.helper.Helper.require;
-
-import static org.blackpanther.ecosystem.Agent.*;
 
 
 /**
@@ -39,12 +35,15 @@ public enum Configuration {
     public static final String RANDOM = "random-seed";
     public static final String SPAWN_ABSCISSA_THRESHOLD = "spawn-abscissa-threshold";
     public static final String SPAWN_ORDINATE_THRESHOLD = "spawn-ordinate-threshold";
+    //HELP Kept because it is hidden by JAVA implmentation
+    private long randomSeed;
 
     /**
      * Application's parameters with default loaded
      */
     protected final Map<String, Object> applicationProperties = new HashMap<String, Object>() {{
-        put(RANDOM, new Random());
+        randomSeed = 42L;
+        put(RANDOM, new Random(42L));
         put(SPAWN_ABSCISSA_THRESHOLD, 2000.0);
         put(SPAWN_ORDINATE_THRESHOLD, 2000.0);
         put(AGENT_ORIENTATION, Math.PI);
@@ -92,7 +91,11 @@ public enum Configuration {
     }
 
     public Random getRandom() {
-        return getParameter(RANDOM,Random.class);
+        return getParameter(RANDOM, Random.class);
+    }
+
+    public long getRandomSeed() {
+        return randomSeed;
     }
 
     /**
@@ -114,6 +117,7 @@ public enum Configuration {
                         RANDOM,
                         Random.class)
                         .setSeed(Long.parseLong(userRandomSeed));
+                randomSeed = Long.parseLong(userRandomSeed);
                 logger.fine(RANDOM + " parameter updated.");
             } catch (NumberFormatException e) {
                 logger.log(Level.WARNING,
@@ -416,8 +420,12 @@ public enum Configuration {
     @Override
     public String toString() {
         return applicationProperties.toString()
-                .replaceAll("\\[","")
-                .replaceAll("\\]","")
-                .replaceAll(",","\n");
+                .replaceAll("\\[", "")
+                .replaceAll("\\]", "")
+                .replaceAll(",", "\n");
+    }
+
+    public Set<Map.Entry<String, Object>> parameters() {
+        return applicationProperties.entrySet();
     }
 }

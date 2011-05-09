@@ -72,12 +72,6 @@ public class GraphicEnvironment
         );
     }
 
-    /**
-     * FIXME If global window is repainted, image is lost
-     * TODO listen for window event and save a backup image
-     *
-     * @param g component graphics
-     */
     @Override
     protected void paintComponent(Graphics g) {
         if (panelStructureHasChanged) {
@@ -119,7 +113,7 @@ public class GraphicEnvironment
         }
     }
 
-    public void setEnvironment(Environment env){
+    public void setEnvironment(Environment env) {
         //environment settings
         monitoredEnvironment = env;
         env.addLineListener(
@@ -128,21 +122,26 @@ public class GraphicEnvironment
         env.addEvolutionListener(
                 internalEvolutionMonitor
         );
+        panelStructureHasChanged = true;
     }
 
-    public void unsetEnvironment(){
+    public void unsetEnvironment() {
         monitoredEnvironment.removeLineListener(internalLineMonitor);
         monitoredEnvironment.removeEvolutionListener(internalEvolutionMonitor);
         monitoredEnvironment = null;
-
+        panelStructureHasChanged = true;
     }
 
     public void runSimulation() {
-        runEnvironment.start();
+        if (monitoredEnvironment != null
+                && !runEnvironment.isRunning())
+            runEnvironment.start();
     }
 
     public void stopSimulation() {
-        runEnvironment.stop();
+        if (monitoredEnvironment != null
+                && runEnvironment.isRunning())
+            runEnvironment.stop();
     }
 
     /**
@@ -154,22 +153,22 @@ public class GraphicEnvironment
     private void redrawEnvironmentHistory(Graphics g) {
         g.setColor(Color.BLACK);
         g.fillRect(0, 0, getWidth(), getHeight());
-        //Draw all environment's lines
-        for (Line2D line : monitoredEnvironment.getHistory()) {
-            //TODO We will need to keep a record of line's color...
-            g.setColor(Color.WHITE);
-            // HELP Handle environment's coordinate vs panel's coordinates
-            Point2D start = internalScaler.environmentToPanel(line.getP1());
-            Point2D end = internalScaler.environmentToPanel(line.getP2());
-            g.drawLine(
-                    (int) start.getX(),
-                    (int) start.getY(),
-                    (int) end.getX(),
-                    (int) end.getY()
-            );
+        if (monitoredEnvironment != null) {
+            //Draw all environment's lines
+            for (Line2D line : monitoredEnvironment.getHistory()) {
+                //TODO We will need to keep a record of line's color...
+                g.setColor(Color.WHITE);
+                // HELP Handle environment's coordinate vs panel's coordinates
+                Point2D start = internalScaler.environmentToPanel(line.getP1());
+                Point2D end = internalScaler.environmentToPanel(line.getP2());
+                g.drawLine(
+                        (int) start.getX(),
+                        (int) start.getY(),
+                        (int) end.getX(),
+                        (int) end.getY()
+                );
+            }
         }
-        //don't duplicate work, new lines are already drawn
-//        lineBuffer.clear();
     }
 
     public BufferedImage dumpCurrentImage() {
@@ -183,7 +182,8 @@ public class GraphicEnvironment
             redrawEnvironmentHistory(graphics);
             return image;
         } else {
-            throw new IllegalStateException("No environment set yet");
+            //no environment set
+            return null;
         }
 
     }
@@ -226,26 +226,14 @@ public class GraphicEnvironment
         public void update(EvolutionEvent e) {
             switch (e.getType()) {
                 case STARTED:
-                    Monitor.updateEnvironmentRunningId(
-                            e.getSource().getId()
-                    );
+                    Monitor.updateEnvironmentInformation();
                 case CYCLE_END:
-                    Monitor.updateEnvironmentAgentNumber(
-                            e.getSource().getPool().size()
-                    );
-                    Monitor.updateEnvironmentCycleCount(
-                            e.getSource().getTime()
-                    );
+                    Monitor.updateEnvironmentInformation();
                     invalidate();
                     repaint();
                     break;
                 case ENDED:
-                    Monitor.updateEnvironmentAgentNumber(
-                            e.getSource().getPool().size()
-                    );
-                    Monitor.updateEnvironmentCycleCount(
-                            e.getSource().getTime()
-                    );
+                    Monitor.updateEnvironmentInformation();
                     Monitor.environmentFrozen();
                     invalidate();
                     repaint();
