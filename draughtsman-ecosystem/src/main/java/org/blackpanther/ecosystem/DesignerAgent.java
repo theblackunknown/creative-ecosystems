@@ -15,12 +15,19 @@ public class DesignerAgent extends Agent {
             final double initialCurvature,
             final double initialSpeed,
             final double childSpeed,
+            final double initialSensorRadius,
             final double initialIrrationality,
             final double initialMortality,
             final double initialFecundity,
             final double initialMutation,
             final BehaviorManager manager) {
-        super(spawnLocation, initialOrientation, childOrientation, initialCurvature, initialSpeed, childSpeed, initialIrrationality, initialMortality, initialFecundity, initialMutation, manager);
+        super(spawnLocation,
+                initialOrientation, childOrientation,
+                initialCurvature,
+                initialSpeed, childSpeed,
+                initialSensorRadius,
+                initialIrrationality, initialMortality, initialFecundity, initialMutation,
+                manager);
     }
 
 }

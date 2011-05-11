@@ -1,6 +1,7 @@
 package org.blackpanther.ecosystem;
 
 import org.blackpanther.ecosystem.event.*;
+import org.blackpanther.ecosystem.math.Geometry;
 
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
@@ -13,8 +14,8 @@ import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import static org.blackpanther.ecosystem.helper.Helper.error;
-import static org.blackpanther.ecosystem.helper.Helper.require;
+import static org.blackpanther.ecosystem.SensorTarget.detected;
+import static org.blackpanther.ecosystem.helper.Helper.*;
 import static org.blackpanther.ecosystem.math.Geometry.getIntersection;
 
 /**
@@ -147,6 +148,10 @@ public abstract class Environment
 
         //initialize environment monitor
         eventSupport = new EnvironmentMonitor(this);
+
+        //DEBUG Purpose
+        addResource(new Resource(50.0, 50.0, 100, 10.0));
+        addResource(new Resource(-50.0, -50.0, 65, 12.0));
     }
 
     /**
@@ -184,7 +189,6 @@ public abstract class Environment
 
     /**
      * Get the whole environment draw's history
-     * TODO Good to build it every time ?
      *
      * @return environment's draw history
      */
@@ -194,6 +198,14 @@ public abstract class Environment
             for (Area area : row)
                 wholeHistory.addAll(area.getHistory());
         return wholeHistory;
+    }
+
+    public final Set<Resource> getResources() {
+        Set<Resource> wholeResources = new HashSet<Resource>();
+        for (Area[] row : space)
+            for (Area area : row)
+                wholeResources.addAll(area.getResources());
+        return wholeResources;
     }
 
     /**
@@ -208,7 +220,13 @@ public abstract class Environment
         //Put it, in the pool
         pool.add(agent);
         //And at given position
-        agent.setAreaListener(getCorrespondingArea(agent.getLocation()));
+        agent.attachTo(getCorrespondingArea(agent.getLocation()));
+    }
+
+    public final void addResource(
+            final Resource resource) {
+        getCorrespondingArea(resource.getCenter())
+                .addResource(resource);
     }
 
 
@@ -328,7 +346,7 @@ public abstract class Environment
             if (agent.isAlive()) {
                 nextGenerationBuffer.add(agent);
             } else {
-                //TODO AgentEvent - DEAD
+                eventSupport.fireAgentEvent(AgentEvent.Type.DEATH, agent);
             }
         }
         //clean the old pool
@@ -364,6 +382,10 @@ public abstract class Environment
     *=====================================================================
     */
 
+    public void addAgentListener(AgentListener listener) {
+        eventSupport.addAgentListener(listener);
+    }
+
     public void addLineListener(LineListener listener) {
         eventSupport.addLineListener(listener);
     }
@@ -373,11 +395,10 @@ public abstract class Environment
     }
 
     public void nextGeneration(Agent child) {
-        //TODO AgentEvent - BORN
-        child.setAreaListener(getCorrespondingArea(child.getLocation()));
+        eventSupport.fireAgentEvent(AgentEvent.Type.BORN, child);
+        child.attachTo(getCorrespondingArea(child.getLocation()));
         nextGenerationBuffer.push(child);
     }
-
 
     long comparison = 0;
 
@@ -394,6 +415,10 @@ public abstract class Environment
         totalComparison += comparison;
         comparison = 0;
         return agentDeath;
+    }
+
+    public void removeAgentListener(AgentListener listener) {
+        eventSupport.removeAgentListener(listener);
     }
 
     public void removeEvolutionListener(EvolutionListener listener) {
@@ -425,22 +450,18 @@ public abstract class Environment
             implements Serializable, AreaListener {
 
         private Set<Line2D> internalDrawHistory = new HashSet<Line2D>(100, 0.65f);
+        private Set<Resource> resourcePool = new HashSet<Resource>();
 
-        /**
-         * Default constructor to which we inform
-         * about where it is within the global space
-         *
-         * @param x
-         * @param y
-         * @param w
-         * @param h
-         */
         public Area(double x, double y, double w, double h) {
             super(x, y, w, h);
         }
 
         public Collection<Line2D> getHistory() {
             return internalDrawHistory;
+        }
+
+        public Collection<Resource> getResources() {
+            return resourcePool;
         }
 
         /**
@@ -482,6 +503,40 @@ public abstract class Environment
             internalDrawHistory.add(line);
             eventSupport.fireLineEvent(LineEvent.Type.ADDED, line);
             return false;
+        }
+
+        @Override
+        public SenseResult aggregateInformation(Geometry.Circle circle) {
+            Set<SensorTarget<Agent>> detectedAgents = new HashSet<SensorTarget<Agent>>();
+            for (Agent agent : pool)
+                if (!agent.getLocation().equals(circle.getCenter()) //Not himself
+                        && circle.contains(agent.getLocation())) {
+                    detectedAgents.add(detected(
+                            computeOrientation(
+                                    circle.getCenter(),
+                                    agent.getLocation()
+                                    , circle.getRadius()),
+                            agent
+                    ));
+                }
+            Set<SensorTarget<Resource>> detectedResources = new HashSet<SensorTarget<Resource>>();
+            for (Resource resource : resourcePool)
+                if (circle.cross(resource)) {
+                    detectedResources.add(detected(
+                            computeOrientation(
+                                    circle.getCenter(),
+                                    resource.getCenter(),
+                                    circle.getRadius()
+                            ),
+                            resource
+                    ));
+                }
+
+            return new SenseResult(detectedAgents, detectedResources);
+        }
+
+        public void addResource(Resource resource) {
+            resourcePool.add(resource);
         }
     }
 

@@ -1,10 +1,8 @@
 package org.blackpanther.ecosystem.gui;
 
 import org.blackpanther.ecosystem.Environment;
-import org.blackpanther.ecosystem.event.EvolutionEvent;
-import org.blackpanther.ecosystem.event.EvolutionListener;
-import org.blackpanther.ecosystem.event.LineEvent;
-import org.blackpanther.ecosystem.event.LineListener;
+import org.blackpanther.ecosystem.Resource;
+import org.blackpanther.ecosystem.event.*;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
@@ -42,6 +40,8 @@ public class GraphicEnvironment
             new EnvironmentLineMonitor();
     private EnvironmentEvolutionMonitor internalEvolutionMonitor =
             new EnvironmentEvolutionMonitor();
+    private AgentMonitor internalAgentMonitor =
+            new AgentMonitor();
 
     /**
      * Buffer which retains next line to draw at the next repaint() call
@@ -77,7 +77,7 @@ public class GraphicEnvironment
         if (panelStructureHasChanged) {
             logger.fine("Panel structure has changed, "
                     + "all environment history must be drawn again.");
-            redrawEnvironmentHistory(g);
+            redrawEnvironment(g);
             panelStructureHasChanged = false;
         } else {
             logger.finest("I'm gonna paint " + lineBuffer.size() + " lines");
@@ -116,22 +116,24 @@ public class GraphicEnvironment
     public void setEnvironment(Environment env) {
         //environment settings
         monitoredEnvironment = env;
-        env.addLineListener(
-                internalLineMonitor
-        );
-        env.addEvolutionListener(
-                internalEvolutionMonitor
-        );
+        env.addLineListener(internalLineMonitor);
+        env.addEvolutionListener(internalEvolutionMonitor);
+        env.addAgentListener(internalAgentMonitor);
         panelStructureHasChanged = true;
-        paintImmediately(0,0,getWidth(),getHeight());
+        paintImmediately(0, 0, getWidth(), getHeight());
     }
 
     public void unsetEnvironment() {
-        monitoredEnvironment.removeLineListener(internalLineMonitor);
-        monitoredEnvironment.removeEvolutionListener(internalEvolutionMonitor);
-        monitoredEnvironment = null;
-        panelStructureHasChanged = true;
-        paintImmediately(0,0,getWidth(),getHeight());
+        if (runEnvironment.isRunning())
+            runEnvironment.stop();
+        if (monitoredEnvironment != null) {
+            monitoredEnvironment.removeLineListener(internalLineMonitor);
+            monitoredEnvironment.removeEvolutionListener(internalEvolutionMonitor);
+            monitoredEnvironment.removeAgentListener(internalAgentMonitor);
+            monitoredEnvironment = null;
+            panelStructureHasChanged = true;
+            paintImmediately(0, 0, getWidth(), getHeight());
+        }
     }
 
     public void runSimulation() {
@@ -152,7 +154,7 @@ public class GraphicEnvironment
      *
      * @param g
      */
-    private void redrawEnvironmentHistory(Graphics g) {
+    private void redrawEnvironment(Graphics g) {
         g.setColor(Color.BLACK);
         g.fillRect(0, 0, getWidth(), getHeight());
         if (monitoredEnvironment != null) {
@@ -170,6 +172,21 @@ public class GraphicEnvironment
                         (int) end.getY()
                 );
             }
+            for (Resource resource : monitoredEnvironment.getResources()) {
+                //TODO Resources related to color ?
+                Color blueGradient = new Color(0f, 0f,
+                        resource.getAmount() / (float) Resource.MAX_AMOUNT
+                );
+                g.setColor(blueGradient);
+                Point2D center = internalScaler.environmentToPanel(resource.getCenter());
+                double radius = internalScaler.environmentToPanel(resource.getRadius());
+                g.fillOval(
+                        (int) center.getX(),
+                        (int) center.getY(),
+                        (int) radius,
+                        (int) radius
+                );
+            }
         }
     }
 
@@ -181,7 +198,7 @@ public class GraphicEnvironment
                     BufferedImage.TYPE_INT_RGB
             );
             Graphics2D graphics = image.createGraphics();
-            redrawEnvironmentHistory(graphics);
+            redrawEnvironment(graphics);
             return image;
         } else {
             //no environment set
@@ -231,15 +248,27 @@ public class GraphicEnvironment
                     Monitor.updateEnvironmentInformation();
                 case CYCLE_END:
                     Monitor.updateEnvironmentInformation();
-                    invalidate();
                     repaint();
                     break;
                 case ENDED:
                     Monitor.updateEnvironmentInformation();
                     Monitor.environmentFrozen();
-                    invalidate();
                     repaint();
                     runEnvironment.stop();
+            }
+        }
+    }
+
+    class AgentMonitor implements AgentListener {
+
+        @Override
+        public void update(AgentEvent e) {
+            switch (e.getType()) {
+                case BORN:
+                    break;
+                case DEATH:
+                    //TODO Trace dead agent
+                    break;
             }
         }
     }
@@ -289,6 +318,25 @@ public class GraphicEnvironment
                     panelAbscissa + panelAbscissaDifferential,
                     panelOrdinate + panelOrdinateDifferential
             );
+        }
+
+        public Double environmentToPanel(
+                Double distance
+        ) {
+            //get current panel's dimension
+            Dimension panelDimension = getBounds().getSize();
+
+            //minus because environment is real mathematics cartesian coordinate
+            double panelDistance = distance * panelScale;
+
+            logger.finest(String.format(
+                    "%.4f translated to %.4f [panelDimension=%s]",
+                    distance,
+                    panelDistance,
+                    panelDimension
+            ));
+
+            return distance;
         }
 
         @Override

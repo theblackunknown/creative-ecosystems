@@ -1,9 +1,9 @@
 package org.blackpanther.ecosystem.event;
 
+import org.blackpanther.ecosystem.Agent;
 import org.blackpanther.ecosystem.Environment;
 
 import java.awt.geom.Line2D;
-import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,6 +19,8 @@ public class EnvironmentMonitor {
             new HashSet<LineListener>();
     private Set<EvolutionListener> evolutionListeners =
             new HashSet<EvolutionListener>();
+    private Set<AgentListener> agentListeners =
+            new HashSet<AgentListener>();
 
     private Environment source;
 
@@ -29,6 +31,10 @@ public class EnvironmentMonitor {
     /*=========================================================================
                                LISTENER HOOK
       =========================================================================*/
+
+    public void addAgentListener(AgentListener listener) {
+        agentListeners.add(listener);
+    }
 
     public void addLineListener(LineListener listener) {
         lineListeners.add(listener);
@@ -42,6 +48,14 @@ public class EnvironmentMonitor {
                                EVENT DELEGATE
       =========================================================================*/
 
+
+    public void fireAgentEvent(AgentEvent.Type eventType, Agent value) {
+        AgentEvent event = new AgentEvent(eventType, source, value);
+        for (AgentListener listener : agentListeners) {
+            listener.update(event);
+        }
+    }
+
     public void fireLineEvent(LineEvent.Type eventType, Line2D value) {
         LineEvent event = new LineEvent(eventType, source, value);
         for (LineListener listener : lineListeners) {
@@ -54,6 +68,10 @@ public class EnvironmentMonitor {
         for (EvolutionListener listener : evolutionListeners) {
             listener.update(event);
         }
+    }
+
+    public void removeAgentListener(AgentListener listener) {
+        agentListeners.remove(listener);
     }
 
     public void removeEvolutionListener(EvolutionListener listener) {

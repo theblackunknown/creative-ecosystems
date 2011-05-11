@@ -1,14 +1,11 @@
 package org.blackpanther.ecosystem.math;
 
 import java.awt.geom.Dimension2D;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
-import static org.blackpanther.ecosystem.helper.Helper.require;
 import static org.blackpanther.ecosystem.helper.Helper.within;
 
 /**
@@ -29,99 +26,12 @@ public final class Geometry {
     private Geometry() {
     }
 
-    /**
-     * FIXME Also bullshit, don't compute them all, determine with line position which side are going to collide
-     *
-     * @param area
-     * @param line
-     * @return intersectionLine
-     */
-    public static Line2D intersect(Rectangle2D area, Line2D line) {
-        Line2D northLine = new Line2D.Double(
-                area.getX(),
-                area.getY(),
-                area.getX() + area.getWidth(),
-                area.getY()
-        );
-        Line2D westLine = new Line2D.Double(
-                area.getX(),
-                area.getY(),
-                area.getX(),
-                area.getY() - area.getHeight()
-        );
-        Line2D southLine = new Line2D.Double(
-                area.getX(),
-                area.getY() - area.getHeight(),
-                area.getX() + area.getWidth(),
-                area.getY() - area.getHeight()
-        );
-        Line2D eastLine = new Line2D.Double(
-                area.getX() + area.getWidth(),
-                area.getY(),
-                area.getX() + area.getWidth(),
-                area.getY() - area.getHeight()
-        );
-        //compute all collisions with given area
-        Point2D topCollisions = getIntersection(
-                northLine, line
-        );
-        Point2D westCollisions = getIntersection(
-                westLine, line
-        );
-        Point2D eastCollisions = getIntersection(
-                eastLine, line
-        );
-        Point2D southCollisions = getIntersection(
-                southLine, line
-        );
-        //check that only two side collided
-        List<Point2D> nonNullCollection = new ArrayList<Point2D>();
-        if (topCollisions != null)
-            nonNullCollection.add(topCollisions);
-        if (westCollisions != null)
-            nonNullCollection.add(westCollisions);
-        if (eastCollisions != null)
-            nonNullCollection.add(eastCollisions);
-        if (southCollisions != null)
-            nonNullCollection.add(southCollisions);
-
-        if (nonNullCollection.isEmpty())
-            return null;
-        else {
-            require(nonNullCollection.size() == 2, String.format(
-                    "More than two collision between %s and %s",
-                    area, line
-            ));
-
-            return new Line2D.Double(
-                    nonNullCollection.get(0),
-                    nonNullCollection.get(1)
-            );
-        }
-    }
-
     private static boolean insideRange(Line2D line, Point2D point) {
         return Math.min(line.getX1(), line.getX2()) <= point.getX()
                 && point.getX() <= Math.max(line.getX1(), line.getX2())
                 && Math.min(line.getY1(), line.getY2()) <= point.getY()
                 && point.getY() <= Math.max(line.getY1(), line.getY2());
     }
-
-//    public static String toString(Line2D line) {
-//        return line == null
-//                ? "null"
-//                : String.format("[%s to %s]",
-//                toString(line.getP1()),
-//                toString(line.getP2()));
-//    }
-//
-//    public static String toString(Point2D point) {
-//        return point == null
-//                ? "null"
-//                : String.format("(%.2f,%.2f)",
-//                point.getX(),
-//                point.getY());
-//    }
 
     public static Point2D getIntersection(Line2D a, Line2D b) {
         //Fetch the intersection - method inspired by http://paulbourke.net/geometry/lineline2d/
@@ -130,20 +40,12 @@ public final class Geometry {
                 (b.getY2() - b.getY1()) * (a.getX2() - a.getX1())
                         - (b.getX2() - b.getX1()) * (a.getY2() - a.getY1());
 
-//        double numeratorBufferA =
-//                (b.getX2() - b.getX1()) * (a.getY1() - b.getY1())
-//                        - (b.getY2() - b.getY1()) * (a.getX1() - b.getX1());
-
         double directionalVectorLineA =
                 ((b.getX2() - b.getX1()) * (a.getY1() - b.getY1())
                         - (b.getY2() - b.getY1()) * (a.getX1() - b.getX1()))
                         /
                         ((b.getY2() - b.getY1()) * (a.getX2() - a.getX1())
                                 - (b.getX2() - b.getX1()) * (a.getY2() - a.getY1()));
-
-//        double numeratorBufferB =
-//                (a.getX2() - a.getX1()) * (a.getY1() - b.getY1())
-//                        - (a.getY2() - a.getY1()) * (a.getX1() - b.getX1());
 
         double directionalVectorLineB =
                 ((a.getX2() - a.getX1()) * (a.getY1() - b.getY1())
@@ -155,16 +57,6 @@ public final class Geometry {
 
         //No intersection
         if (Math.abs(denominator) <= COMPARISON_THRESHOLD) { //HELP double are never equal to 0.0
-//            if (Math.abs(numeratorBufferA) <= COMPARISON_THRESHOLD
-//                    && Math.abs(numeratorBufferB) <= COMPARISON_THRESHOLD) {
-//                logger.finer(String.format(
-//                        "%s and %s are coincident",
-//                        toString(a), toString(b)));
-//            } else {
-//                logger.finer(String.format(
-//                        "%s and %s are parallel",
-//                        toString(a), toString(b)));
-//            }
             return null;
         }
         //intersection
@@ -177,9 +69,6 @@ public final class Geometry {
 
             //lines are not infinite, check if intersection is on both lines
             if (insideRange(a, intersection) && insideRange(b, intersection)) {
-//                    logger.finer(String.format(
-//                            "%s and %s intersect in %s",
-//                            toString(a), toString(b), toString(intersection)));
                 return intersection;
             } else {
                 logger.finer("No intersection with non-infinite lines");
@@ -194,21 +83,12 @@ public final class Geometry {
 
             //lines are not infinite, check if intersection is on both lines
             if (insideRange(a, intersection) && insideRange(b, intersection)) {
-//                    logger.finer(String.format(
-//                            "%s and %s intersect in %s",
-//                            toString(a), toString(b), toString(intersection)));
                 return intersection;
             } else {
-//                    logger.finer(String.format(
-//                            "%s and %s don't cross each other because they are not infinite",
-//                            toString(a), toString(b)));
                 return null;
             }
         } else {
             //no intersection
-//                logger.finer(String.format(
-//                        "No intersection between %s and %s !",
-//                        toString(a), toString(b)));
             return null;
         }
     }
@@ -242,6 +122,30 @@ public final class Geometry {
         public void setSize(double v, double v1) {
             this.width = v;
             this.height = v1;
+        }
+    }
+
+    public static class Circle extends Ellipse2D.Double {
+
+        public Circle(double x, double y, double radius) {
+            super(x, y, radius, radius);
+        }
+
+        public Circle(Point2D point, double radius){
+            this(point.getX(),point.getY(), radius);
+        }
+
+        public Point2D getCenter() {
+            return new Point2D.Double(getCenterX(), getCenterY());
+        }
+
+        public java.lang.Double getRadius() {
+            return getHeight();
+        }
+
+        public boolean cross(Circle that) {
+            return getCenter().distance(that.getCenter())
+                    <= getRadius() + that.getRadius();
         }
     }
 

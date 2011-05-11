@@ -52,6 +52,8 @@ public enum Configuration {
         put(AGENT_ORIENTATION, Math.PI);
         put(AGENT_CURVATURE, 0.0);
         put(AGENT_SPEED, 5.0);
+        put(AGENT_SENSOR_RADIUS, 0.4);
+        put(AGENT_IRRATIONALITY, 0.35);
         put(AGENT_MORTALITY, 0.10);
         put(AGENT_FECUNDITY, 0.20);
         put(AGENT_MUTATION, 0.05);
@@ -239,6 +241,22 @@ public enum Configuration {
             }
         }
 
+        //update agent sensor radius
+        String userAgentSensorRadius = properties.getProperty(AGENT_SENSOR_RADIUS);
+        if (isValid(userAgentSensorRadius)) {
+            try {
+                setParameter(
+                        AGENT_SENSOR_RADIUS,
+                        Double.parseDouble(userAgentSensorRadius),
+                        Double.class
+                );
+                logger.fine(AGENT_SENSOR_RADIUS + " parameter updated.");
+            } catch (NumberFormatException e) {
+                logger.log(Level.SEVERE,
+                        "Couldn't parse user agent sensor radius, it must be positive !", e);
+            }
+        }
+
         //update agent mortality
         String userAgentIrrationality = properties.getProperty(AGENT_IRRATIONALITY);
         if (isValid(userAgentIrrationality)) {
@@ -389,7 +407,8 @@ public enum Configuration {
                         "Invalid value for " + paramName + " : '" + paramValue + "'");
             }
         } else if (paramName.equals(AGENT_SPEED)
-                || paramName.equals(AGENT_SPEED_LAUNCHER)) {
+                || paramName.equals(AGENT_SPEED_LAUNCHER)
+                || paramName.equals(AGENT_SENSOR_RADIUS)) {
             if (!paramType.equals(Double.class)) {
                 throw new IllegalArgumentException(
                         "Invalid value this parameter, it must be an "

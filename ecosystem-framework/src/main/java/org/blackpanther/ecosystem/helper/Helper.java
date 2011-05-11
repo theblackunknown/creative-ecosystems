@@ -2,6 +2,7 @@ package org.blackpanther.ecosystem.helper;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.net.URL;
 
 /**
@@ -71,12 +72,19 @@ public final class Helper {
     private static final Dimension FIELD_DIMENSION = new Dimension(400, 50);
 
     public static JPanel createLabeledField(final String labelName, final Component field) {
-        return new JPanel(new GridLayout(2,1)) {{
+        return new JPanel(new GridLayout(2, 1)) {{
             JLabel label = new JLabel(labelName);
             label.setLabelFor(field);
             add(label);
             add(field);
             setPreferredSize(FIELD_DIMENSION);
         }};
+    }
+
+    public static Double computeOrientation(Point2D source, Point2D target, Double radius) {
+        return Math.acos(
+                (target.getX() - source.getX())
+                        / radius
+        );
     }
 }

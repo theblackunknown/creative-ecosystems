@@ -1,5 +1,7 @@
 package org.blackpanther.ecosystem;
 
+import org.blackpanther.ecosystem.math.Geometry;
+
 import java.awt.geom.Line2D;
 
 /**
@@ -16,4 +18,6 @@ import java.awt.geom.Line2D;
 public interface AreaListener {
 
     boolean trace(Line2D to);
+
+    SenseResult aggregateInformation(Geometry.Circle circle);
 }

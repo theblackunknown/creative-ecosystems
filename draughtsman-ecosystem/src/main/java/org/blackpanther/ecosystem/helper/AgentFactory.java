@@ -34,6 +34,7 @@ public final class AgentFactory {
                 Configuration.getParameter(AGENT_CURVATURE, Double.class),
                 Configuration.getParameter(AGENT_SPEED, Double.class),
                 Configuration.getParameter(AGENT_SPEED_LAUNCHER, Double.class),
+                Configuration.getParameter(AGENT_SENSOR_RADIUS, Double.class),
                 Configuration.getParameter(AGENT_IRRATIONALITY, Double.class),
                 Configuration.getParameter(AGENT_MORTALITY, Double.class),
                 Configuration.getParameter(AGENT_FECUNDITY, Double.class),
@@ -50,6 +51,7 @@ public final class AgentFactory {
                 Configuration.getParameter(AGENT_CURVATURE, Double.class),
                 Configuration.getParameter(AGENT_SPEED, Double.class),
                 Configuration.getParameter(AGENT_SPEED_LAUNCHER, Double.class),
+                Configuration.getParameter(AGENT_SENSOR_RADIUS, Double.class),
                 Configuration.getParameter(AGENT_IRRATIONALITY, Double.class),
                 Configuration.getParameter(AGENT_MORTALITY, Double.class),
                 Configuration.getParameter(AGENT_FECUNDITY, Double.class),
@@ -87,6 +89,8 @@ public final class AgentFactory {
                 Configuration.getParameter(RANDOM, Random.class).nextDouble() * 10.0,//TODO Speed threshold
                 //speed launcher
                 Configuration.getParameter(RANDOM, Random.class).nextDouble() * 10.0,//TODO Speed threshold
+                //sensor radius
+                Configuration.getParameter(RANDOM, Random.class).nextDouble() * 10.0,//TODO Radius Threshold
                 //irrationality
                 Configuration.getParameter(RANDOM, Random.class).nextDouble(),
                 //mortality

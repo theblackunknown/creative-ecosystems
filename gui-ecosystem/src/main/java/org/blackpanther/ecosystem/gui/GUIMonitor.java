@@ -103,7 +103,7 @@ public enum GUIMonitor {
         require(drawPanel != null);
         require(environmentCommandsPanel != null);
 
-        pauseEvolution();
+        drawPanel.unsetEnvironment();
         drawPanel.setEnvironment(envB);
         environmentCommandsPanel.environmentSet();
     }

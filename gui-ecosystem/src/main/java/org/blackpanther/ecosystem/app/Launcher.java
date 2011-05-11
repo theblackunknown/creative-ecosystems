@@ -25,6 +25,7 @@ public class Launcher {
             @Override
             public void run() {
                 WorldFrame.getInstance().setVisible(true);
+                WorldFrame.getInstance().validate();
             }
         });
     }

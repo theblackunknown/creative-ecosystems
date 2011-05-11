@@ -1,5 +1,7 @@
 package org.blackpanther.ecosystem;
 
+import org.blackpanther.ecosystem.math.Geometry;
+
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.io.Serializable;
@@ -36,6 +38,7 @@ public abstract class Agent
     public static final String AGENT_CURVATURE = "agent-curvature";
     public static final String AGENT_SPEED = "agent-speed";
 
+    public static final String AGENT_SENSOR_RADIUS = "agent-sensor-radius";
     public static final String AGENT_IRRATIONALITY = "agent-irrationality";
     public static final String AGENT_MORTALITY = "agent-mortality";
     public static final String AGENT_FECUNDITY = "agent-fecundity";
@@ -87,13 +90,13 @@ public abstract class Agent
             final Double initialCurvature,
             final Double launchSpeed,
             final Double childLaunchSpeed,
+            final Double initialSensorRadius,
             final Double initialIrrationality,
             final Double initialMortality,
             final Double initialFecundity,
             final Double initialMutation,
             final BehaviorManager manager
     ) {
-        //HELP preconditions
         require(spawnLocation != null,
                 "Initial position must be provided");
         require(launchOrientation != null,
@@ -102,6 +105,8 @@ public abstract class Agent
                 "Initial curvature must be provided");
         require(launchSpeed != null && launchSpeed >= 0.0,
                 "Initial speed must be provided and be positive");
+        require(initialSensorRadius != null && initialSensorRadius >= 0.0,
+                "Initial sensor radius must be provided and be positive");
         require(0.0 <= initialIrrationality && initialIrrationality <= 1.0,
                 "irrationality rate is expressed in [0.0,1.0] interval not " + initialIrrationality);
         require(0.0 <= initialMortality && initialMortality <= 1.0,
@@ -114,6 +119,7 @@ public abstract class Agent
 
         //FIXME Agent identifier is static
         genotype.put(AGENT_IDENTIFIER, Color.BLACK);
+        genotype.put(AGENT_SENSOR_RADIUS, initialSensorRadius);
         genotype.put(AGENT_IRRATIONALITY, initialIrrationality);
         genotype.put(AGENT_MORTALITY, initialMortality);
         genotype.put(AGENT_FECUNDITY, initialFecundity);
@@ -155,25 +161,24 @@ public abstract class Agent
      *
      * @param listener the new area listener
      */
-    final void setAreaListener(final AreaListener listener) {
+    final void attachTo(final AreaListener listener) {
         areaListener = listener;
     }
 
     /**
      * Unset the current area listener if any
      */
-    final void unsetAreaListener() {
+    final void detachFromEnvironment() {
         areaListener = null;
     }
 
-    /**
-     * Return agent's AreaListener
-     *
-     * @return current agent's AreaListener
-     * @see AreaListener
-     */
-    final AreaListener getAreaListener() {
-        return areaListener;
+    public SenseResult sense() {
+        if (areaListener == null)
+            throw new IllegalStateException(
+                    "Couldn't not sense outside an environment");
+        return areaListener.aggregateInformation(new Geometry.Circle(
+                getLocation(),
+                getGene(AGENT_SENSOR_RADIUS, Double.class)));
     }
 
     /* ================================================
@@ -280,11 +285,15 @@ public abstract class Agent
      *
      * @return initial child's speed
      */
-    Double getChildSpeedLauncher() {
+    public Double getChildSpeedLauncher() {
         return getGene(AGENT_SPEED_LAUNCHER, Double.class);
     }
 
-    Double getIrrationality() {
+    public Double getSensorRadius() {
+        return getGene(AGENT_SENSOR_RADIUS, Double.class);
+    }
+
+    public Double getIrrationality() {
         return getGene(AGENT_IRRATIONALITY, Double.class);
     }
 
@@ -325,7 +334,7 @@ public abstract class Agent
     }
 
     public BehaviorManager getBehaviour() {
-        return getGene(AGENT_BEHAVIOUR,BehaviorManager.class);
+        return getGene(AGENT_BEHAVIOUR, BehaviorManager.class);
     }
 
     /*=========================================================================

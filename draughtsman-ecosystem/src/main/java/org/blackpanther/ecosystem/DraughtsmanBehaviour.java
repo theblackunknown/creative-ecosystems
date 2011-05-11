@@ -96,7 +96,7 @@ public class DraughtsmanBehaviour
                     that, oldOrientation / Math.PI, that.getOrientation() / Math.PI));
 
         } else {
-            that.unsetAreaListener();
+            that.detachFromEnvironment();
             logger.finer(that + " passed away.");
         }
     }
@@ -139,6 +139,12 @@ public class DraughtsmanBehaviour
                             that.getChildSpeedLauncher(),
                             speedVariation
                                     * applicationRandom.nextGaussian())),
+                    //initial sensor radius
+                    mutate(
+                            that.getMutationRate(),
+                            that.getSensorRadius(),
+                            speedVariation
+                                    * applicationRandom.nextGaussian()),
                     //irrationality rate
                     normalizeProbability(mutate(
                             that.getIrrationality(),
@@ -180,7 +186,7 @@ public class DraughtsmanBehaviour
         double deathChance = that.getMortalityRate() * (that.getAge() / 10);
         logger.finer(String.format("[Random mortality's value = %f, death's chance = %f]", randomValue, deathChance));
         if (randomValue < deathChance) {
-            that.unsetAreaListener();
+            that.detachFromEnvironment();
             logger.fine(that + " died naturally.");
         } else {
             logger.fine(that + " didn't die yet.");
