@@ -25,7 +25,7 @@
         <java
                 version="1.6+"/>
         <jar
-                href="target/gui-ecosystem-0.1-jar-with-dependencies.jar"
+                href="target/signed-gui-ecosystem-0.5.jar"
                 main="true"/>
     </resources>
     <application-desc
