@@ -2,7 +2,7 @@ package org.blackpanther.ecosystem.event;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/1/11
+ * @version 0.2 - Wed May 11 02:54:46 CEST 2011
  */
 public interface LineListener extends EnvironmentListener<LineEvent> {
 

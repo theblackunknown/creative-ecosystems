@@ -5,7 +5,7 @@ import org.blackpanther.ecosystem.gui.WorldFrame;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/10/11
+ * @version 0.2 - Wed May 11 02:54:46 CEST 2011
  */
 public class EnvironmentCreationWizard
         extends Wizard {
