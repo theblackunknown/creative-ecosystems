@@ -12,7 +12,7 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
  * TODO Slider to manage evolution speed
  *
  * @author MACHIZAUD Andréa
- * @version 5/6/11
+ * @version 0.2 - Wed May 11 02:54:46 CEST 2011
  */
 public class EnvironmentCommands
         extends JPanel {

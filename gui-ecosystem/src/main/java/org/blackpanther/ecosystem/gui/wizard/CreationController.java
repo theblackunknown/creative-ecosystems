@@ -5,7 +5,7 @@ import com.nexes.wizard.WizardController;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/10/11
+ * @version 0.2 - Wed May 11 02:54:46 CEST 2011
  */
 public class CreationController
         extends WizardController {

@@ -13,7 +13,7 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/9/11
+ * @version 0.2 - Wed May 11 02:54:46 CEST 2011
  */
 public class SaveImageAction
         extends AbstractAction {
