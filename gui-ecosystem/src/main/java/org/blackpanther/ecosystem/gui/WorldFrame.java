@@ -20,6 +20,7 @@ public class WorldFrame
 
     private WorldFrame() {
         super();
+        setTitle("GUI Ecosystem Evolution Visualizer");
         try {
             UIManager.setLookAndFeel(
                     new NimbusLookAndFeel()
