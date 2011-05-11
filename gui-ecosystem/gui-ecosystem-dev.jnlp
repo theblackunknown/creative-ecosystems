@@ -2,7 +2,7 @@
 <jnlp
         spec="1.0+"
         codebase="https://github.com/blackpanther/creative-ecosystems/raw/devel/gui-ecosystem/"
-        href="">
+        href="gui-ecosystem-dev.jnlp">
     <information>
         <title>GUI Ecosystem</title>
         <vendor>blackpanther</vendor>
