@@ -29,5 +29,5 @@
                 main="true"/>
     </resources>
     <application-desc
-         name="Ecosystem Evolution Visualisation Application"
+         name="Ecosystem Evolution Visualisation Application"/>
 </jnlp>
