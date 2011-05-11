@@ -9,6 +9,7 @@
     <modules>
         <module>ecosystem-framework</module>
         <module>draughtsman-ecosystem</module>
+        <module>gui-ecosystem</module>
     </modules>
 
     <packaging>pom</packaging>
@@ -144,5 +145,14 @@
         </site>
     </distributionManagement>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
 </project>

@@ -1,17 +1,21 @@
 package org.blackpanther.ecosystem;
 
-import org.blackpanther.ecosystem.math.Geometry;
+import org.blackpanther.ecosystem.event.*;
 
-import java.awt.geom.Dimension2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Stack;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import static org.blackpanther.ecosystem.Helper.require;
+import static org.blackpanther.ecosystem.helper.Helper.error;
+import static org.blackpanther.ecosystem.helper.Helper.require;
+import static org.blackpanther.ecosystem.math.Geometry.getIntersection;
 
 /**
  * <p>
@@ -25,7 +29,7 @@ import static org.blackpanther.ecosystem.Helper.require;
  * </ul>
  *
  * @author MACHIZAUD Andréa
- * @version 0.3 - Sun May  1 00:00:13 CEST 2011
+ * @version 0.2 - Wed May 11 02:54:46 CEST 2011
  */
 public abstract class Environment
         implements Serializable {
@@ -42,8 +46,9 @@ public abstract class Environment
 
     private static final Long serialVersionUID = 1L;
 
-    private static final Integer AREA_WIDTH_SPLIT = 2;
-    private static final Integer AREA_HEIGHT_SPLIT = 2;
+    private static long idGenerator = 0L;
+    private static int AREA_COLUMN_NUMBER = 3;
+    private static int AREA_ROW_NUMBER = 3;
 
     /**
      * Simple check for a environment space
@@ -70,6 +75,7 @@ public abstract class Environment
     *=========================================================================
     */
 
+    private Long id;
     /**
      * Environment space
      */
@@ -82,10 +88,6 @@ public abstract class Environment
      * Population
      */
     protected Set<Agent> pool;
-    /**
-     * Agent draw's result history
-     */
-    protected Set<Line2D> drawHistory = new HashSet<Line2D>(100, 0.65f);
 
     /*
      *=========================================================================
@@ -97,34 +99,38 @@ public abstract class Environment
      * Mark whether this environment has been frozen or not
      */
     private boolean endReached;
+    /**
+     * Component that can monitor an environment
+     *
+     * @see java.beans.PropertyChangeSupport
+     */
+    protected EnvironmentMonitor eventSupport;
+    private Stack<Agent> nextGenerationBuffer = new Stack<Agent>();
+
 
     /**
      * Default constructor which specified space bounds
-     *
-     * @param width  space's width
-     * @param height space's height
      */
-    public Environment(
-            final double width,
-            final double height
-    ) {
-        //Check preconditions
-        require(width > 0, "Width must be positive and non-zero");
-        require(height > 0, "Height must be positive and non-zero");
+    public Environment() {
+        this.id = ++idGenerator;
+        //initialize space
+        space = new Area[AREA_ROW_NUMBER][AREA_COLUMN_NUMBER];
+        double ordinateCursor = -Double.MAX_VALUE / 2.0;
+        double abscissaCursor;
+        for (int rowIndex = 0;
+             rowIndex < AREA_ROW_NUMBER;
+             ordinateCursor += (Double.MAX_VALUE / AREA_ROW_NUMBER),
+                     rowIndex++) {
 
-        //initialize space - space is split in smaller areas
-        //compute area dimension
-        double areaWidth = width / AREA_WIDTH_SPLIT;
-        double areaHeight = height / AREA_HEIGHT_SPLIT;
-        //create each area
-        space = new Area[AREA_WIDTH_SPLIT][AREA_HEIGHT_SPLIT];
-        for (int row = 0; row < AREA_WIDTH_SPLIT; row++) {
-            for (int column = 0; column < AREA_HEIGHT_SPLIT; column++) {
-                space[row][column] = new Area(
-                        (double) row * areaWidth,
-                        (double) column * areaHeight,
-                        areaWidth,
-                        areaHeight);
+            abscissaCursor = -Double.MAX_VALUE / 2.0;
+            for (int columnIndex = 0;
+                 columnIndex < AREA_COLUMN_NUMBER;
+                 abscissaCursor += (Double.MAX_VALUE / AREA_COLUMN_NUMBER),
+                         columnIndex++) {
+                space[rowIndex][columnIndex] = new Area(
+                        abscissaCursor, ordinateCursor,
+                        Double.MAX_VALUE / AREA_COLUMN_NUMBER, Double.MAX_VALUE / AREA_ROW_NUMBER
+                );
             }
         }
         //template implementation to fill space at initialization
@@ -138,6 +144,9 @@ public abstract class Environment
 
         //initialize pool
         pool = new HashSet<Agent>();
+
+        //initialize environment monitor
+        eventSupport = new EnvironmentMonitor(this);
     }
 
     /**
@@ -146,12 +155,12 @@ public abstract class Environment
     protected abstract void initializeSpace();
 
     /**
-     * Constructor for a square-shape space
+     * Internal unique environment identifier
      *
-     * @param size space's width & height
+     * @return environment identifier
      */
-    public Environment(final int size) {
-        this(size, size);
+    public Long getId() {
+        return id;
     }
 
     /**
@@ -173,42 +182,88 @@ public abstract class Environment
         return new HashSet<Agent>(pool);
     }
 
+    /**
+     * Get the whole environment draw's history
+     * TODO Good to build it every time ?
+     *
+     * @return environment's draw history
+     */
     public final Set<Line2D> getHistory() {
-        return new HashSet<Line2D>(drawHistory);
+        Set<Line2D> wholeHistory = new HashSet<Line2D>();
+        for (Area[] row : space)
+            for (Area area : row)
+                wholeHistory.addAll(area.getHistory());
+        return wholeHistory;
     }
 
     /**
-     * Add an agent to the environment at given position.
+     * Add an agent to the environment.
      * The added agent will be monitored by corresponding case
      * and that till its death or till it moves from there
      *
      * @param agent the agent
-     * @param x     abscissa
-     * @param y     ordinate
      */
     public final void addAgent(
             final Agent agent) {
-        //FIXME Check agent out of bounds
         //Put it, in the pool
         pool.add(agent);
         //And at given position
         agent.setAreaListener(getCorrespondingArea(agent.getLocation()));
     }
 
-    private Area getCorrespondingArea(Point2D agentLocation) {
-        for (Area[] row : space) {
-            for (Area area : row) {
-                if (area.contains(agentLocation)) {
-                    return area;
-                }
-            }
+
+    /**
+     * Add an agent collection to the environment.
+     * The added agent will be monitored by corresponding case
+     * and that till its death or till it moves from there
+     *
+     * @param agents the agent collection
+     */
+    public final void addAgent(Collection<Agent> agents) {
+        for (Agent agent : agents) {
+            addAgent(agent);
         }
+    }
+
+    /**
+     * Determine in which environment area a point is located
+     *
+     * @param agentLocation location to find a spot
+     * @return corresponding area
+     */
+    private Area getCorrespondingArea(Point2D agentLocation) {
+        //Rectangle2D is not good enough for me ...
+        for (Area[] row : space)
+            for (Area area : row)
+                if (area.contains(agentLocation))
+                    return area;
+        error(String.format("No area able to manage (%.2f,%.2f)",
+                agentLocation.getX(), agentLocation.getY()));
+        //never reached - fuck that
         return null;
     }
 
-    final void recordNewLine(Line2D line) {
-        drawHistory.add(line);
+    private Set<Area> getCrossedArea(Line2D line) {
+        Set<Area> crossedArea = new HashSet<Area>(
+                AREA_ROW_NUMBER * AREA_COLUMN_NUMBER);
+        for (Area[] row : space) {
+            for (final Area area : row) {
+                //line is totally contained by this area
+                // OMG this is so COOL !
+                if (area.contains(line.getP1())
+                        || area.contains(line.getP2())) {
+                    crossedArea.add(area);
+                }
+            }
+        }
+
+//        require(crossedArea.size() > 0,
+//                Geometry.toString(line) + " cross no area");
+
+        return crossedArea;
     }
+
+    long totalComparison = 0;
 
     /**
      * <p>
@@ -220,39 +275,73 @@ public abstract class Environment
      * <li>Remove all agent which died at this cycle</li>
      * <li>Increment timeline</li>
      * </ol>
+     * <p>
+     * Environment is ended if no more agents are alive at after the update step.
+     * </p>
      */
     public final void runNextCycle() {
         require(!endReached, "This environment has been frozen");
 
-        //update environment state
-        updatePool();
+        if (timetracker == 0)
+            eventSupport.fireEvolutionEvent(EvolutionEvent.Type.STARTED);
 
-        //update timeline
-        timetracker++;
+        long start = System.nanoTime();
+        //update environment state
+        boolean noMoreAgent = updatePool();
+        logger.fine(String.format(
+                "Pool updated in %d milliseconds",
+                TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)
+        ));
+        logger.fine(String.format(
+                "%d comparisons made in this cycle",
+                totalComparison
+        ));
+
+        totalComparison = 0;
+
+        if (noMoreAgent) {
+            endThisWorld();
+        } else {
+            //update timeline
+            logger.info(String.format(
+                    "%s 's cycle %d ended, %d agents remaining",
+                    this,
+                    timetracker,
+                    pool.size()));
+            timetracker++;
+            eventSupport.fireEvolutionEvent(EvolutionEvent.Type.CYCLE_END);
+        }
     }
 
     /**
      * Update the environment's state
      * Internal process.
+     *
+     * @return if any any agents remain in the environment
      */
-    private void updatePool() {
-        //Create next generation pool
-        Set<Agent> nextPool = new HashSet<Agent>(pool.size());
+    private boolean updatePool() {
 
         //update all agents
         //if they die, they are simply not kept in the next pool
         for (Agent agent : pool) {
             agent.update(this);
             if (agent.isAlive()) {
-                nextPool.add(agent);
+                nextGenerationBuffer.add(agent);
+            } else {
+                //TODO AgentEvent - DEAD
             }
         }
-
         //clean the old pool
         pool.clear();
 
-        //then update it
-        pool.addAll(nextPool);
+        if (nextGenerationBuffer.isEmpty()) {
+            return true;
+        } else {
+            //then update it
+            pool.addAll(nextGenerationBuffer);
+            nextGenerationBuffer.clear();
+            return false;
+        }
     }
 
     /**
@@ -261,10 +350,60 @@ public abstract class Environment
      */
     public final void endThisWorld() {
         endReached = true;
-        endThisWorldHook();
+        logger.info(String.format("The evolution's game ended. %s's statistics[%d cycle]", this, timetracker));
+        eventSupport.fireEvolutionEvent(EvolutionEvent.Type.ENDED);
     }
 
-    public abstract void endThisWorldHook();
+    @Override
+    public String toString() {
+        return String.format("Environment#%s", Long.toHexString(id));
+    }
+
+    /*=====================================================================
+    *                   LISTENERS
+    *=====================================================================
+    */
+
+    public void addLineListener(LineListener listener) {
+        eventSupport.addLineListener(listener);
+    }
+
+    public void addEvolutionListener(EvolutionListener listener) {
+        eventSupport.addEvolutionListener(listener);
+    }
+
+    public void nextGeneration(Agent child) {
+        //TODO AgentEvent - BORN
+        child.setAreaListener(getCorrespondingArea(child.getLocation()));
+        nextGenerationBuffer.push(child);
+    }
+
+
+    long comparison = 0;
+
+    public boolean trace(Line2D line) {
+        Set<Area> crossedAreas = getCrossedArea(line);
+        boolean agentDeath = false;
+        for (Area area : crossedAreas) {
+            agentDeath = area.trace(line) || agentDeath;
+        }
+        logger.finer(String.format(
+                "%d comparison to place a line",
+                comparison
+        ));
+        totalComparison += comparison;
+        comparison = 0;
+        return agentDeath;
+    }
+
+    public void removeEvolutionListener(EvolutionListener listener) {
+        eventSupport.removeEvolutionListener(listener);
+    }
+
+    public void removeLineListener(LineListener listener) {
+        eventSupport.removeLineListener(listener);
+    }
+
 
     /**
      * <p>
@@ -279,82 +418,29 @@ public abstract class Environment
      * </p>
      *
      * @author MACHIZAUD Andréa
-     * @version 0.3 - Sun May  1 00:00:13 CEST 2011
+     * @version 0.2 - Wed May 11 02:54:46 CEST 2011
      */
     public class Area
-            extends Rectangle2D
+            extends Rectangle2D.Double
             implements Serializable, AreaListener {
 
-        private Point2D location;
-        private Dimension2D dimension;
+        private Set<Line2D> internalDrawHistory = new HashSet<Line2D>(100, 0.65f);
 
         /**
          * Default constructor to which we inform
          * about where it is within the global space
          *
-         * @param x abscissa
-         * @param y ordinate
+         * @param x
+         * @param y
+         * @param w
+         * @param h
          */
-        public Area(
-                final double x,
-                final double y,
-                final double width,
-                final double height) {
-            location = new Point2D.Double(x, y);
-            dimension = new Geometry.Dimension(width, height);
+        public Area(double x, double y, double w, double h) {
+            super(x, y, w, h);
         }
 
-        public Point2D getLocation() {
-            return location;
-        }
-
-        public Dimension2D getDimension() {
-            return dimension;
-        }
-
-        @Override
-        public void setRect(double v, double v1, double v2, double v3) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public int outcode(double v, double v1) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Rectangle2D createIntersection(Rectangle2D rectangle2D) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Rectangle2D createUnion(Rectangle2D rectangle2D) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double getX() {
-            return location.getX();
-        }
-
-        @Override
-        public double getY() {
-            return location.getY();
-        }
-
-        @Override
-        public double getWidth() {
-            return dimension.getWidth();
-        }
-
-        @Override
-        public double getHeight() {
-            return dimension.getHeight();
-        }
-
-        @Override
-        public boolean isEmpty() {
-            throw new UnsupportedOperationException();
+        public Collection<Line2D> getHistory() {
+            return internalDrawHistory;
         }
 
         /**
@@ -368,47 +454,36 @@ public abstract class Environment
          */
         @Override
         public boolean trace(Line2D line) {
-            logger.entering(
-                    Area.class.getCanonicalName(),
-                    "boolean trace(Line2D line)",
-                    line);
 
-            for (Line2D historyLine : drawHistory) {
-                if (historyLine.intersectsLine(line)) {
-                    //Fetch the intersection - method inspired by http://paulbourke.net/geometry/pointline/
-                    double deltaX = (historyLine.getX2() - historyLine.getX1());
-                    double deltaY = (historyLine.getY2() - historyLine.getY1());
-                    double u = (
-                            (line.getX1() - historyLine.getX1()) * deltaX
-                                    + (line.getY1() - historyLine.getY1()) * deltaY
-                    ) / (
-                            Math.pow(deltaX, 2) + Math.pow(deltaY, 2)
-                    );
-                    logger.finest(String.format("[DeltaX : %.4f, DeltaY : %.4f, u : %.4f", deltaX, deltaY, u));
+            for (Line2D historyLine : internalDrawHistory) {
+                comparison++;
 
-                    Point2D intersection = new Point2D.Double(
-                            historyLine.getX1() + u * deltaX,
-                            historyLine.getY1() + u * deltaY
-                    );
-                    logger.fine(String.format("Intersection detected : %s", intersection));
+                Point2D intersection = getIntersection(historyLine, line);
 
-                    //We add a drawn line from agent's old location till intersection
-                    drawHistory.add(new Line2D.Double(
+                if (intersection != null
+                        //Intersection with the line's start is not an intersection
+                        && !intersection.equals(line.getP1())) {
+
+                    Line2D realLine = new Line2D.Double(
                             line.getP1(),
                             intersection
-                    ));
+                    );
 
+                    //We add a drawn line from agent's old location till intersection
+                    internalDrawHistory.add(realLine);
+                    eventSupport.fireLineEvent(LineEvent.Type.ADDED, realLine);
                     //Yes, unfortunately, the agent died - this is Sparta here dude
                     return true;
                 }
+
             }
 
-            logger.fine("No intersection");
-
             //Everything went better than expected
-            drawHistory.add(line);
+            internalDrawHistory.add(line);
+            eventSupport.fireLineEvent(LineEvent.Type.ADDED, line);
             return false;
         }
     }
+
 
 }

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>creative-ecosystems</artifactId>
+        <groupId>org.blackpanther</groupId>
+        <version>0.1</version>
+    </parent>
+
+    <artifactId>gui-ecosystem</artifactId>
+
+    <name>A General GUI to monitor environment's evolution</name>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>org.blackpanther.ecosystem.app.Launcher</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <artifactId>ecosystem-framework</artifactId>
+            <groupId>org.blackpanther</groupId>
+            <version>0.1</version>
+        </dependency>
+        <!-- FIXME Remove it to get loose coupling -->
+        <dependency>
+            <artifactId>draughtsman-ecosystem</artifactId>
+            <groupId>org.blackpanther</groupId>
+            <version>0.1</version>
+        </dependency>
+    </dependencies>
+
+
+</project>

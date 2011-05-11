@@ -9,7 +9,7 @@ package org.blackpanther.ecosystem;
  * </p>
  *
  * @author MACHIZAUD Andréa
- * @version 0.3 - Sun May  1 00:00:13 CEST 2011
+ * @version 0.2 - Wed May 11 02:54:46 CEST 2011
  */
 public interface BehaviorManager {
 
@@ -20,11 +20,5 @@ public interface BehaviorManager {
      * @param that  monitored agent
      */
     void update(Environment env, Agent that);
-
-    void move(Agent that);
-
-    void mutate(Environment env, Agent that);
-
-    void spawn(Environment env, Agent that);
 
 }

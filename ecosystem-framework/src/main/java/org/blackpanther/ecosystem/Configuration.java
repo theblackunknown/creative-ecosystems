@@ -1,8 +1,5 @@
 package org.blackpanther.ecosystem;
 
-import org.blackpanther.ecosystem.math.Geometry;
-
-import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,11 +8,11 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static org.blackpanther.ecosystem.Helper.isValid;
-import static org.blackpanther.ecosystem.Helper.require;
+import static org.blackpanther.ecosystem.Agent.*;
+import static org.blackpanther.ecosystem.helper.Helper.isValid;
+import static org.blackpanther.ecosystem.helper.Helper.require;
+
 
 /**
  * <p>
@@ -24,20 +21,10 @@ import static org.blackpanther.ecosystem.Helper.require;
  * </p>
  *
  * @author MACHIZAUD Andréa
- * @version 0.3 - Sun May  1 00:00:13 CEST 2011
+ * @version 0.2 - Wed May 11 02:54:46 CEST 2011
  */
 public enum Configuration {
     Configuration;
-
-    static {
-        try {
-            LogManager.getLogManager().readConfiguration(
-                    Configuration.class.getClassLoader().getResourceAsStream("logging.properties")
-            );
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * Class logger
@@ -48,96 +35,175 @@ public enum Configuration {
     /**
      * Random application parameters
      */
-    public static final String RANDOM = "random";
-    public static final String AGENT_LOCATION = "agent-location";
-    public static final String AGENT_DIRECTIONAL_VECTOR = "agent-directional-vector";
-    public static final String AGENT_CURVATURE = "agent-curvature";
-    public static final String AGENT_SPEED = "agent-speed";
-    public static final String AGENT_MORTALITY = "agent-mortality";
-    public static final String AGENT_FECUNDITY = "agent-fecundity";
-    public static final String AGENT_MUTATION = "agent-mutation";
-    public static final String AGENT_DEFAULT_BEHAVIOUR_MANAGER = "agent-behaviour-manager";
-
-    /**
-     * User defined directional vector's parameter
-     */
-    private static final Pattern USER_DIRECTIONAL_VECTOR_PARAMETER =
-            Pattern.compile(
-                    "^(\\d+(?:.\\d+)?),(\\d+(?:.\\d+)?)$"
-            );
-
-    /**
-     * User defined speed's parameter
-     */
-    private static final Pattern USER_SPEED_PARAMETER =
-            Pattern.compile(
-                    "^([0-3](?:.\\d{1,2}))$"
-            );
+    public static final String RANDOM = "random-seed";
+    public static final String SPAWN_ABSCISSA_THRESHOLD = "spawn-abscissa-threshold";
+    public static final String SPAWN_ORDINATE_THRESHOLD = "spawn-ordinate-threshold";
+    //HELP Kept because it is hidden by JAVA implmentation
+    private long randomSeed;
 
     /**
      * Application's parameters with default loaded
      */
     protected final Map<String, Object> applicationProperties = new HashMap<String, Object>() {{
-        put(RANDOM, new Random());
-        put(AGENT_LOCATION, new Point2D.Double(0.0, 0.0));
-        put(AGENT_DIRECTIONAL_VECTOR,
-                new Geometry.Direction2D(1.0, 1.0));
-        put(AGENT_CURVATURE, 1.0);
-        put(AGENT_SPEED, 1.0);
-        put(AGENT_MORTALITY, 0.2);
-        put(AGENT_FECUNDITY, 0.4);
+        randomSeed = 42L;
+        put(RANDOM, new Random(42L));
+        put(SPAWN_ABSCISSA_THRESHOLD, 2000.0);
+        put(SPAWN_ORDINATE_THRESHOLD, 2000.0);
+        put(AGENT_ORIENTATION, Math.PI);
+        put(AGENT_CURVATURE, 0.0);
+        put(AGENT_SPEED, 5.0);
+        put(AGENT_MORTALITY, 0.10);
+        put(AGENT_FECUNDITY, 0.20);
         put(AGENT_MUTATION, 0.05);
+        put(AGENT_ORIENTATION_LAUNCHER, Math.PI / 2);
+        put(AGENT_SPEED_LAUNCHER, 3.0);
     }};
+
+    /**
+     * Silent application's parameters initialization
+     */
+    private Configuration() {
+        Logger classLogger = Logger.getLogger(Configuration.class.getCanonicalName());
+        //load logging properties
+        try {
+            LogManager.getLogManager().readConfiguration(
+                    Configuration.class.getClassLoader()
+                            .getResourceAsStream("logging.properties")
+            );
+        } catch (IOException e) {
+            classLogger.log(
+                    Level.WARNING, "Problem loading default logging.properties", e);
+        }
+        //load application properties
+        Properties userProperties = new Properties(System.getProperties());
+        try {
+            userProperties.load(
+                    Configuration.class.getClassLoader()
+                            .getResourceAsStream("application.properties")
+            );
+            loadConfiguration(userProperties);
+        } catch (IOException e) {
+            classLogger.log(
+                    Level.WARNING, "Problem loading default application.properties", e);
+        }
+    }
+
+    public Random getRandom() {
+        return getParameter(RANDOM, Random.class);
+    }
+
+    public long getRandomSeed() {
+        return randomSeed;
+    }
 
     /**
      * Load properties from a configuration file
      * <p/>
      * TODO Handle location & curvature
      *
-     * @param propertyFile configuration file
+     * @param properties usersProperties
      */
     @SuppressWarnings("unchecked")
     public void loadConfiguration(Properties properties) {
+        Logger logger = Logger.getLogger(Configuration.class.getCanonicalName());
 
+        logger.finer("Before : \n" +
+                RANDOM + "=" + getRandomSeed() + "\n" +
+                applicationProperties.toString()
+                        .replaceAll("[,]", "\n"));
         //update random seed
         String userRandomSeed = properties.getProperty(RANDOM);
         if (isValid(userRandomSeed)) {
             try {
-                setParameter(
+                getParameter(
                         RANDOM,
-                        new Random(Long.parseLong(userRandomSeed)),
-                        Random.class);
-                logger.info(RANDOM + " parameter updated.");
+                        Random.class)
+                        .setSeed(Long.parseLong(userRandomSeed));
+                randomSeed = Long.parseLong(userRandomSeed);
+                logger.fine(RANDOM + " parameter updated.");
             } catch (NumberFormatException e) {
                 logger.log(Level.WARNING,
                         "Couldn't parse random parameter : '" + userRandomSeed + "'", e);
             }
         }
 
-        //update directional vector
-        String userDirectionnalVector = properties.getProperty(AGENT_DIRECTIONAL_VECTOR);
-        if (isValid(userDirectionnalVector)) {
+        //update spawn abscissa threshold
+        String userAbscissaThreshold = properties.getProperty(SPAWN_ABSCISSA_THRESHOLD);
+        if (isValid(userAbscissaThreshold)) {
             try {
-                Matcher matchData = USER_DIRECTIONAL_VECTOR_PARAMETER.matcher(userDirectionnalVector);
-                if (matchData.matches()) {
-                    setParameter(
-                            AGENT_DIRECTIONAL_VECTOR,
-                            new Geometry.Direction2D(
-                                    Double.parseDouble(matchData.group(1)),
-                                    Double.parseDouble(matchData.group(2))
-                            ),
-                            Geometry.Direction2D.class
-                    );
-                    logger.info(AGENT_DIRECTIONAL_VECTOR + " parameter updated.");
-                } else {
-                    logger.log(Level.WARNING,
-                            "Couldn't parse user user directional vector : '"
-                                    + userDirectionnalVector + "', "
-                                    + "it must be like (0.0,0.0)-(1.0,1.0)");
-                }
+                setParameter(
+                        SPAWN_ABSCISSA_THRESHOLD,
+                        Double.parseDouble(userAbscissaThreshold),
+                        Double.class
+                );
+                logger.fine(SPAWN_ABSCISSA_THRESHOLD + " parameter updated.");
             } catch (NumberFormatException e) {
                 logger.log(Level.SEVERE,
-                        "Couldn't parse user directional vector despite of regexp !", e);
+                        "Couldn't parse user spawn abscissa threshold, it must be a decimal value!", e);
+            }
+        }
+
+        //update spawn ordinate threshold
+        String userOrdinateThreshold = properties.getProperty(SPAWN_ORDINATE_THRESHOLD);
+        if (isValid(userOrdinateThreshold)) {
+            try {
+                setParameter(
+                        SPAWN_ORDINATE_THRESHOLD,
+                        Double.parseDouble(userOrdinateThreshold),
+                        Double.class
+                );
+                logger.fine(SPAWN_ORDINATE_THRESHOLD + " parameter updated.");
+            } catch (NumberFormatException e) {
+                logger.log(Level.SEVERE,
+                        "Couldn't parse user spawn ordinate threshold, it must be a decimal value!", e);
+            }
+        }
+
+        //update orientation
+        String userOrientation = properties.getProperty(AGENT_ORIENTATION);
+        if (isValid(userOrientation)) {
+            try {
+                setParameter(
+                        AGENT_ORIENTATION,
+                        Double.parseDouble(userOrientation),
+                        Double.class
+                );
+                logger.fine(AGENT_ORIENTATION + " parameter updated.");
+            } catch (NumberFormatException e) {
+                logger.log(Level.SEVERE,
+                        "Couldn't parse user orientation, it must be within [0,2PI] !", e);
+            }
+        }
+
+        //update orientation launcher
+        String userOrientationLauncher = properties.getProperty(AGENT_ORIENTATION_LAUNCHER);
+        if (isValid(userOrientationLauncher)) {
+            try {
+                setParameter(
+                        AGENT_ORIENTATION_LAUNCHER,
+                        Double.parseDouble(userOrientationLauncher),
+                        Double.class
+                );
+                logger.fine(AGENT_ORIENTATION_LAUNCHER + " parameter updated.");
+            } catch (NumberFormatException e) {
+                logger.log(Level.SEVERE,
+                        "Couldn't parse user orientation launcher, it must be within [0,2PI] !", e);
+            }
+        }
+
+        //update curvature
+        String userCurvature = properties.getProperty(AGENT_CURVATURE);
+        if (isValid(userCurvature)) {
+            try {
+                setParameter(
+                        AGENT_CURVATURE,
+                        Double.parseDouble(userCurvature),
+                        Double.class
+                );
+                logger.fine(AGENT_CURVATURE + " parameter updated.");
+            } catch (NumberFormatException e) {
+                logger.log(Level.SEVERE,
+                        "Couldn't parse user curvature, it must be a decimal value !", e);
             }
         }
 
@@ -150,10 +216,42 @@ public enum Configuration {
                         Double.parseDouble(userAgentSpeed),
                         Double.class
                 );
-                logger.info(AGENT_SPEED + " parameter updated.");
+                logger.fine(AGENT_SPEED + " parameter updated.");
             } catch (NumberFormatException e) {
                 logger.log(Level.SEVERE,
-                        "Couldn't parse user agent speed, it must be within [0,3] !", e);
+                        "Couldn't parse user agent speed, it must be positive !", e);
+            }
+        }
+
+        //update agent speed
+        String userAgentSpeedLauncher = properties.getProperty(AGENT_SPEED_LAUNCHER);
+        if (isValid(userAgentSpeedLauncher)) {
+            try {
+                setParameter(
+                        AGENT_SPEED_LAUNCHER,
+                        Double.parseDouble(userAgentSpeedLauncher),
+                        Double.class
+                );
+                logger.fine(AGENT_SPEED_LAUNCHER + " parameter updated.");
+            } catch (NumberFormatException e) {
+                logger.log(Level.SEVERE,
+                        "Couldn't parse user agent speed launcher, it must be positive !", e);
+            }
+        }
+
+        //update agent mortality
+        String userAgentIrrationality = properties.getProperty(AGENT_IRRATIONALITY);
+        if (isValid(userAgentIrrationality)) {
+            try {
+                setParameter(
+                        AGENT_IRRATIONALITY,
+                        Double.parseDouble(userAgentIrrationality),
+                        Double.class
+                );
+                logger.fine(AGENT_IRRATIONALITY + " parameter updated.");
+            } catch (NumberFormatException e) {
+                logger.log(Level.SEVERE,
+                        "Couldn't parse user agent irrationality rate, it must be within [0,1] !", e);
             }
         }
 
@@ -166,7 +264,7 @@ public enum Configuration {
                         Double.parseDouble(userAgentMortality),
                         Double.class
                 );
-                logger.info(AGENT_MORTALITY + " parameter updated.");
+                logger.fine(AGENT_MORTALITY + " parameter updated.");
             } catch (NumberFormatException e) {
                 logger.log(Level.SEVERE,
                         "Couldn't parse user agent mortality rate, it must be within [0,1] !", e);
@@ -182,7 +280,7 @@ public enum Configuration {
                         Double.parseDouble(userAgentFecundity),
                         Double.class
                 );
-                logger.info(AGENT_FECUNDITY + " parameter updated.");
+                logger.fine(AGENT_FECUNDITY + " parameter updated.");
             } catch (NumberFormatException e) {
                 logger.log(Level.SEVERE,
                         "Couldn't parse user agent fecundity rate, it must be within [0,1] !", e);
@@ -198,7 +296,7 @@ public enum Configuration {
                         Double.parseDouble(userAgentMutation),
                         Double.class
                 );
-                logger.info(AGENT_MUTATION + " parameter updated.");
+                logger.fine(AGENT_MUTATION + " parameter updated.");
             } catch (NumberFormatException e) {
                 logger.log(Level.SEVERE,
                         "Couldn't parse user agent mutation rate, it must be within [0,1] !", e);
@@ -207,17 +305,22 @@ public enum Configuration {
 
         //update default behavior class
         String userAgentDefaultBehaviourManager =
-                properties.getProperty(AGENT_DEFAULT_BEHAVIOUR_MANAGER);
+                properties.getProperty(AGENT_BEHAVIOUR);
         if (isValid(userAgentDefaultBehaviourManager)) {
             try {
                 Class<BehaviorManager> userBehaviourManagerClass =
                         (Class<BehaviorManager>) Class.forName(userAgentDefaultBehaviourManager);
                 setParameter(
-                        AGENT_DEFAULT_BEHAVIOUR_MANAGER,
+                        AGENT_BEHAVIOUR,
                         userBehaviourManagerClass.newInstance(),
                         BehaviorManager.class
                 );
-                logger.info(AGENT_DEFAULT_BEHAVIOUR_MANAGER + " parameter updated.");
+                logger.fine(AGENT_BEHAVIOUR + " parameter updated.");
+
+                logger.finer("After : \n" +
+                        RANDOM + "=" + getRandomSeed() + "\n" +
+                        applicationProperties.toString()
+                                .replaceAll("[,]", "\n"));
             } catch (ClassNotFoundException e) {
                 logger.log(Level.SEVERE, "Couldn't found user BehaviourManager class", e);
             } catch (InstantiationException e) {
@@ -228,22 +331,13 @@ public enum Configuration {
         }
     }
 
-    /**
-     * Rollback application parameter if an exception occurred
-     * while trying to load a configuration file
-     *
-     * @param oldProperties backup parameters
-     */
-    private void rollbackProperties(final Map<String, Object> oldProperties) {
-        applicationProperties.put(RANDOM, oldProperties.get(RANDOM));
-    }
-
     public <T> void setParameter(String parameterName, T parameterValue, Class<T> parameterType) {
         checkParameterValidity(parameterName, parameterValue, parameterType);
         applicationProperties.put(parameterName, parameterValue);
     }
 
-    @SuppressWarnings("unchecked")
+
+    @SuppressWarnings("unchecked") //Trust me please
     public <T> T getParameter(String parameterName, Class<T> parameterType) {
         Object correspondingParameter = applicationProperties.get(parameterName);
         if (correspondingParameter != null) {
@@ -251,13 +345,16 @@ public enum Configuration {
                 return (T) correspondingParameter;
             } else {
                 throw new IllegalArgumentException(
-                        "Requested parameter does not match given type, please check again"
+                        String.format("%s parameter does not match given type, please check again",
+                                parameterName)
                 );
             }
         } else {
-            throw new IllegalArgumentException(
-                    "Requested parameter is not provided by the current configuration, "
-                            + "maybe you should register it before");
+            throw new IllegalArgumentException(String.format(
+                    "'%s'  parameter is not provided by the current configuration, "
+                            + "maybe you should register it before",
+                    parameterName
+            ));
         }
     }
 
@@ -266,57 +363,82 @@ public enum Configuration {
             T paramValue,
             Class<T> paramType
     ) {
-        if (paramName.equals(AGENT_DIRECTIONAL_VECTOR)) {
-            if (!paramType.equals(Geometry.Direction2D.class)) {
+        if (paramName.equals(RANDOM)) {
+            if (!paramType.equals(Random.class)) {
                 throw new IllegalArgumentException(
                         "Invalid value this parameter, it must be an "
-                                + Geometry.Direction2D.class.getCanonicalName());
+                                + Random.class.getCanonicalName());
             }
-        } else if (paramName.equals(AGENT_SPEED)) {
+        } else if (paramName.equals(SPAWN_ABSCISSA_THRESHOLD)
+                || paramName.equals(SPAWN_ORDINATE_THRESHOLD)
+                || paramName.equals(AGENT_CURVATURE)) {
+            if (!paramType.equals(Double.class)) {
+                throw new IllegalArgumentException(
+                        "Invalid value this parameter, it must be an "
+                                + Double.class.getCanonicalName());
+            }
+        } else if (paramName.equals(AGENT_ORIENTATION)
+                || paramName.equals(AGENT_ORIENTATION_LAUNCHER)) {
             if (!paramType.equals(Double.class)) {
                 throw new IllegalArgumentException(
                         "Invalid value this parameter, it must be an "
                                 + Double.class.getCanonicalName());
             } else {
                 Double value = (Double) paramValue;
-                require(0.0 <= value && value <= 3.0, "Invalid value for " + paramName + " : '" + paramValue + "'");
+                require(0.0 <= value && value <= (2.0 * Math.PI),
+                        "Invalid value for " + paramName + " : '" + paramValue + "'");
             }
-        } else if (paramName.equals(AGENT_MORTALITY)) {
+        } else if (paramName.equals(AGENT_SPEED)
+                || paramName.equals(AGENT_SPEED_LAUNCHER)) {
             if (!paramType.equals(Double.class)) {
                 throw new IllegalArgumentException(
                         "Invalid value this parameter, it must be an "
                                 + Double.class.getCanonicalName());
             } else {
                 Double value = (Double) paramValue;
-                require(0.0 <= value && value <= 1.0, "Invalid value for " + paramName + " : '" + paramValue + "'");
+                require(0.0 <= value,
+                        "Invalid value for " + paramName + " : '" + paramValue + "'");
             }
-        } else if (paramName.equals(AGENT_FECUNDITY)) {
+        } else if (paramName.equals(AGENT_IRRATIONALITY)
+                || paramName.equals(AGENT_MORTALITY)
+                || paramName.equals(AGENT_FECUNDITY)
+                || paramName.equals(AGENT_MUTATION)) {
             if (!paramType.equals(Double.class)) {
                 throw new IllegalArgumentException(
                         "Invalid value this parameter, it must be an "
                                 + Double.class.getCanonicalName());
             } else {
                 Double value = (Double) paramValue;
-                require(0.0 <= value && value <= 1.0, "Invalid value for " + paramName + " : '" + paramValue + "'");
+                require(0.0 <= value && value <= 1.0,
+                        "Invalid value for " + paramName + " : '" + paramValue + "'");
             }
-        } else if (paramName.equals(AGENT_MUTATION)) {
-            if (!paramType.equals(Double.class)) {
-                throw new IllegalArgumentException(
-                        "Invalid value this parameter, it must be an "
-                                + Double.class.getCanonicalName());
-            } else {
-                Double value = (Double) paramValue;
-                require(0.0 <= value && value <= 1.0, "Invalid value for " + paramName + " : '" + paramValue + "'");
-            }
-        } else if (paramName.equals(AGENT_DEFAULT_BEHAVIOUR_MANAGER)) {
+        } else if (paramName.equals(AGENT_BEHAVIOUR)) {
             if (!paramType.equals(BehaviorManager.class)) {
                 throw new IllegalArgumentException(
-                        "Invalid value this parameter, it must be an "
-                                + BehaviorManager.class.getCanonicalName());
+                        "Invalid value this parameter, it must be a "
+                                + BehaviorManager.class.getCanonicalName() + " class");
             }
         } else {
-            throw new IllegalArgumentException("Invalid parameter name");
+            throw new IllegalArgumentException("Invalid parameter name : " + paramName);
         }
     }
 
+
+    @Override
+    public String toString() {
+        return applicationProperties.toString()
+                .replaceAll("\\[", "")
+                .replaceAll("\\]", "")
+                .replaceAll(",", "\n");
+    }
+
+    public Properties parameters() {
+        Properties parameters = new Properties();
+        for (Map.Entry<String, Object> entry : applicationProperties.entrySet())
+            if (entry.getKey().equals(RANDOM))
+                parameters.put(entry.getKey(), getRandomSeed());
+            else
+                parameters.put(entry.getKey(), entry.getValue());
+        return parameters;
+    }
 }
