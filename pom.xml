@@ -4,7 +4,7 @@
 
     <groupId>org.blackpanther</groupId>
     <artifactId>creative-ecosystems</artifactId>
-    <version>0.1</version>
+    <version>0.3</version>
 
     <modules>
         <module>ecosystem-framework</module>
