@@ -5,8 +5,11 @@ import org.blackpanther.ecosystem.gui.actions.EnvironmentCreationAction;
 import org.blackpanther.ecosystem.gui.actions.LoadConfigurationAction;
 import org.blackpanther.ecosystem.gui.actions.SaveImageAction;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
+import java.net.URL;
 
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
@@ -17,10 +20,11 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 public class WorldFrame
         extends JFrame {
 
+    public static final String ICON_PATH = "org/blackpanther/black-cat-icon.png";
+    public static final Image APPLICATION_ICON = fetchApplicationIcon();
 
-    private WorldFrame() {
-        super();
-        setTitle("GUI Ecosystem Evolution Visualizer");
+    //Set UI Manager
+    static {
         try {
             UIManager.setLookAndFeel(
                     new NimbusLookAndFeel()
@@ -28,6 +32,25 @@ public class WorldFrame
         } catch (UnsupportedLookAndFeelException e) {
             e.printStackTrace();
         }
+    }
+
+    private static Image fetchApplicationIcon() {
+        try {
+            URL resourceURL = WorldFrame.class.getClassLoader()
+                    .getResource(ICON_PATH);
+            return ImageIO.read(resourceURL);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private WorldFrame() {
+        super();
+        setTitle("GUI Ecosystem Evolution Visualizer");
+        if (APPLICATION_ICON != null)
+            setIconImage(APPLICATION_ICON);
+
         setJMenuBar(buildMenuBar());
 
         EnvironmentInformationPanel environmentInformationPanel =
@@ -69,10 +92,10 @@ public class WorldFrame
 
     private static class WorldFrameHolder {
         private static final WorldFrame instance =
-            new WorldFrame();
+                new WorldFrame();
     }
 
-    public static WorldFrame getInstance(){
+    public static WorldFrame getInstance() {
         return WorldFrameHolder.instance;
     }
 

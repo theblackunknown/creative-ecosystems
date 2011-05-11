@@ -9,7 +9,7 @@
         <homepage>https://github.com/blackpanther/creative-ecosystems/tree/devel</homepage>
         <description>GUI to visualize evolution fo draugthsman's ecosystem</description>
         <icon
-                href="src/main/resources/com/nexes/wizard/evolution-ornament.png"
+                href="src/main/resources/org/blackpanther/black-cat-icon.png"
                 kind="splash"/>
         <offline-allowed/>
         <desktop/>
@@ -30,5 +30,4 @@
     </resources>
     <application-desc
          name="Ecosystem Evolution Visualisation Application"
-         main-class="org.blackpanther.ecosystem.app.Launcher"/>
 </jnlp>
