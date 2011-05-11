@@ -38,7 +38,23 @@ public final class AgentFactory {
                 Configuration.getParameter(AGENT_MORTALITY, Double.class),
                 Configuration.getParameter(AGENT_FECUNDITY, Double.class),
                 Configuration.getParameter(AGENT_MUTATION, Double.class),
-                Configuration.getParameter(AGENT_BEHAVIOUR_MANAGER, BehaviorManager.class)
+                Configuration.getParameter(AGENT_BEHAVIOUR, BehaviorManager.class)
+        );
+    }
+
+    public static Agent StandardAgent(double abscissa, double ordinate, double orientation) {
+        return new DesignerAgent(
+                new Point2D.Double(abscissa, ordinate),
+                orientation,
+                Configuration.getParameter(AGENT_ORIENTATION_LAUNCHER, Double.class),
+                Configuration.getParameter(AGENT_CURVATURE, Double.class),
+                Configuration.getParameter(AGENT_SPEED, Double.class),
+                Configuration.getParameter(AGENT_SPEED_LAUNCHER, Double.class),
+                Configuration.getParameter(AGENT_IRRATIONALITY, Double.class),
+                Configuration.getParameter(AGENT_MORTALITY, Double.class),
+                Configuration.getParameter(AGENT_FECUNDITY, Double.class),
+                Configuration.getParameter(AGENT_MUTATION, Double.class),
+                Configuration.getParameter(AGENT_BEHAVIOUR, BehaviorManager.class)
         );
     }
 
@@ -80,7 +96,7 @@ public final class AgentFactory {
                 //mutation
                 Configuration.getParameter(RANDOM, Random.class).nextDouble(),
                 //behaviour manager
-                Configuration.getParameter(AGENT_BEHAVIOUR_MANAGER, BehaviorManager.class)
+                Configuration.getParameter(AGENT_BEHAVIOUR, BehaviorManager.class)
         );
     }
 }

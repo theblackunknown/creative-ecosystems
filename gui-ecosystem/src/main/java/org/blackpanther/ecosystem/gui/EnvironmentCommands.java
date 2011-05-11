@@ -30,7 +30,7 @@ public class EnvironmentCommands
         setPreferredSize(DEFAULT_DIMENSION);
         setLayout(new FlowLayout());
 
-        evolutionFlowButton = new JButton(STOP_ENVIRONMENT);
+        evolutionFlowButton = new JButton(NO_ENVIRONMENT);
         evolutionFlowButton.addActionListener(
                 EventHandler.create(
                         ActionListener.class,

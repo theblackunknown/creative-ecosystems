@@ -1,5 +1,6 @@
 package org.blackpanther.ecosystem.gui;
 
+import com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel;
 import org.blackpanther.ecosystem.gui.actions.EnvironmentCreationAction;
 import org.blackpanther.ecosystem.gui.actions.LoadConfigurationAction;
 import org.blackpanther.ecosystem.gui.actions.SaveImageAction;
@@ -16,9 +17,16 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 public class WorldFrame
         extends JFrame {
 
-    public WorldFrame() {
-        super();
 
+    private WorldFrame() {
+        super();
+        try {
+            UIManager.setLookAndFeel(
+                    new NimbusLookAndFeel()
+            );
+        } catch (UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
         setJMenuBar(buildMenuBar());
 
         EnvironmentInformationPanel environmentInformationPanel =
@@ -58,6 +66,15 @@ public class WorldFrame
         setExtendedState(MAXIMIZED_BOTH);
     }
 
+    private static class WorldFrameHolder {
+        private static final WorldFrame instance =
+            new WorldFrame();
+    }
+
+    public static WorldFrame getInstance(){
+        return WorldFrameHolder.instance;
+    }
+
     private JMenuBar buildMenuBar() {
         JMenuBar menuBar = new JMenuBar();
 
@@ -66,7 +83,6 @@ public class WorldFrame
 
         JMenuItem createEnvironment = new JMenuItem(
                 EnvironmentCreationAction.getInstance());
-        createEnvironment.setEnabled(false);
 
         file.add(LoadConfigurationAction.getInstance());
         file.add(SaveImageAction.getInstance());

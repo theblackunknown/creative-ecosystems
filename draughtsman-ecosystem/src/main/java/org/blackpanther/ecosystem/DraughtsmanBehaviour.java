@@ -19,7 +19,7 @@ import static org.blackpanther.ecosystem.Configuration.RANDOM;
  * @author MACHIZAUD Andréa
  * @version 0.3 - Sun May  1 00:00:13 CEST 2011
  */
-public class McCormackDraughtsmanBehaviour
+public class DraughtsmanBehaviour
         implements BehaviorManager {
 
     /**
@@ -27,7 +27,7 @@ public class McCormackDraughtsmanBehaviour
      */
     private static final Logger logger =
             Logger.getLogger(
-                    McCormackDraughtsmanBehaviour.class.getCanonicalName()
+                    DraughtsmanBehaviour.class.getCanonicalName()
             );
 
     /**

@@ -4,7 +4,7 @@ import org.blackpanther.ecosystem.Configuration;
 
 import java.util.Map;
 
-import static org.blackpanther.ecosystem.Agent.AGENT_BEHAVIOUR_MANAGER;
+import static org.blackpanther.ecosystem.Agent.AGENT_BEHAVIOUR;
 import static org.blackpanther.ecosystem.Configuration.RANDOM;
 
 /**
@@ -25,9 +25,9 @@ public class ConfigurationInformation {
         StringBuilder sb = new StringBuilder();
         sb.append("<html><ul>");
         sb.append("<li>" + RANDOM + "=").append(config.getRandomSeed()).append("</li>");
-        for (Map.Entry<String, Object> parameter : config.parameters()) {
+        for (Map.Entry<Object, Object> parameter : config.parameters().entrySet()) {
             if (!parameter.getKey().equals(RANDOM)) {
-                if (parameter.getKey().equals(AGENT_BEHAVIOUR_MANAGER)) {
+                if (parameter.getKey().equals(AGENT_BEHAVIOUR)) {
                     sb.append("<li>").append(parameter.getKey()).append("=<br/>")
                             .append(parameter.getValue().getClass().getSimpleName()).append("</li>");
                 } else {

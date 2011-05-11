@@ -1,5 +1,7 @@
 package org.blackpanther.ecosystem.gui;
 
+import org.blackpanther.ecosystem.Configuration;
+import org.blackpanther.ecosystem.DesignEnvironment;
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.gui.actions.SaveImageAction;
 import org.blackpanther.ecosystem.gui.lightweight.ConfigurationInformation;
@@ -44,7 +46,7 @@ public enum GUIMonitor {
                 "No draw panel to delegate environment change notification");
         require(environmentInformationPanel != null,
                 "No information panel to delegate environment change notification");
-        stopEvolution();
+        pauseEvolution();
         this.drawPanel.setEnvironment(env);
         this.environmentInformationPanel.addEnvironment(env, info);
         environmentCommandsPanel.environmentSet();
@@ -80,16 +82,6 @@ public enum GUIMonitor {
         logger.info("Environment's death's notified to environment setting panel");
     }
 
-    public void stopEvolution() {
-        require(drawPanel != null,
-                "No draw panel to delegate environment change notification");
-        drawPanel.stopSimulation();
-        //TODO Dump environment state
-        SaveImageAction.getInstance().actionPerformed(
-                new ActionEvent(this, 0, "EvolutionStopped")
-        );
-    }
-
     public void pauseEvolution() {
         require(drawPanel != null,
                 "No draw panel to delegate environment change notification");
@@ -108,6 +100,20 @@ public enum GUIMonitor {
     }
 
     public void switchEnvironment(Environment envA, Environment envB) {
-        //Handle stuff
+        require(drawPanel != null);
+        require(environmentCommandsPanel != null);
+
+        pauseEvolution();
+        drawPanel.setEnvironment(envB);
+        environmentCommandsPanel.environmentSet();
+    }
+
+    public void newEnvironment(Environment env) {
+        require(environmentInformationPanel != null);
+
+        environmentInformationPanel.addEnvironment(
+                env,
+                ConfigurationInformation.dump(Configuration.Configuration)
+        );
     }
 }

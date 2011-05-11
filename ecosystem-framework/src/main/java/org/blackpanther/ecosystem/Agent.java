@@ -42,7 +42,7 @@ public abstract class Agent
     public static final String AGENT_MUTATION = "agent-mutation";
     public static final String AGENT_ORIENTATION_LAUNCHER = "agent-orientation-launcher";
     public static final String AGENT_SPEED_LAUNCHER = "agent-speed-launcher";
-    public static final String AGENT_BEHAVIOUR_MANAGER = "agent-behaviour-manager";
+    public static final String AGENT_BEHAVIOUR = "agent-behaviour-manager";
 
     /*=========================================
      *                 GENOTYPE
@@ -120,7 +120,7 @@ public abstract class Agent
         genotype.put(AGENT_MUTATION, initialMutation);
         genotype.put(AGENT_ORIENTATION_LAUNCHER, childLaunchOrientation);
         genotype.put(AGENT_SPEED_LAUNCHER, childLaunchSpeed);
-        genotype.put(AGENT_BEHAVIOUR_MANAGER, manager);
+        genotype.put(AGENT_BEHAVIOUR, manager);
 
         currentState.put(AGENT_AGE, 0);
         currentState.put(AGENT_LOCATION,
@@ -137,7 +137,7 @@ public abstract class Agent
      * @param env given environment in which the agent evolves
      */
     public final void update(final Environment env) {
-        getGene(AGENT_BEHAVIOUR_MANAGER, BehaviorManager.class).update(env, this);
+        getGene(AGENT_BEHAVIOUR, BehaviorManager.class).update(env, this);
     }
 
     /**
@@ -325,7 +325,7 @@ public abstract class Agent
     }
 
     public BehaviorManager getBehaviour() {
-        return getGene(AGENT_BEHAVIOUR_MANAGER,BehaviorManager.class);
+        return getGene(AGENT_BEHAVIOUR,BehaviorManager.class);
     }
 
     /*=========================================================================

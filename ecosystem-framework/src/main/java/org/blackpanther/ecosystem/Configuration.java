@@ -1,7 +1,10 @@
 package org.blackpanther.ecosystem;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -83,11 +86,6 @@ public enum Configuration {
             classLogger.log(
                     Level.WARNING, "Problem loading default application.properties", e);
         }
-        classLogger.info(String.format(
-                "Application parameters : %n random-seed=%s%n%s",
-                userProperties.getProperty(RANDOM),
-                applicationProperties.toString().replaceAll("[,]", "\n")
-        ));
     }
 
     public Random getRandom() {
@@ -109,6 +107,10 @@ public enum Configuration {
     public void loadConfiguration(Properties properties) {
         Logger logger = Logger.getLogger(Configuration.class.getCanonicalName());
 
+        logger.finer("Before : \n" +
+                RANDOM + "=" + getRandomSeed() + "\n" +
+                applicationProperties.toString()
+                        .replaceAll("[,]", "\n"));
         //update random seed
         String userRandomSeed = properties.getProperty(RANDOM);
         if (isValid(userRandomSeed)) {
@@ -303,17 +305,22 @@ public enum Configuration {
 
         //update default behavior class
         String userAgentDefaultBehaviourManager =
-                properties.getProperty(AGENT_BEHAVIOUR_MANAGER);
+                properties.getProperty(AGENT_BEHAVIOUR);
         if (isValid(userAgentDefaultBehaviourManager)) {
             try {
                 Class<BehaviorManager> userBehaviourManagerClass =
                         (Class<BehaviorManager>) Class.forName(userAgentDefaultBehaviourManager);
                 setParameter(
-                        AGENT_BEHAVIOUR_MANAGER,
+                        AGENT_BEHAVIOUR,
                         userBehaviourManagerClass.newInstance(),
                         BehaviorManager.class
                 );
-                logger.fine(AGENT_BEHAVIOUR_MANAGER + " parameter updated.");
+                logger.fine(AGENT_BEHAVIOUR + " parameter updated.");
+
+                logger.finer("After : \n" +
+                        RANDOM + "=" + getRandomSeed() + "\n" +
+                        applicationProperties.toString()
+                                .replaceAll("[,]", "\n"));
             } catch (ClassNotFoundException e) {
                 logger.log(Level.SEVERE, "Couldn't found user BehaviourManager class", e);
             } catch (InstantiationException e) {
@@ -405,7 +412,7 @@ public enum Configuration {
                 require(0.0 <= value && value <= 1.0,
                         "Invalid value for " + paramName + " : '" + paramValue + "'");
             }
-        } else if (paramName.equals(AGENT_BEHAVIOUR_MANAGER)) {
+        } else if (paramName.equals(AGENT_BEHAVIOUR)) {
             if (!paramType.equals(BehaviorManager.class)) {
                 throw new IllegalArgumentException(
                         "Invalid value this parameter, it must be a "
@@ -425,7 +432,13 @@ public enum Configuration {
                 .replaceAll(",", "\n");
     }
 
-    public Set<Map.Entry<String, Object>> parameters() {
-        return applicationProperties.entrySet();
+    public Properties parameters() {
+        Properties parameters = new Properties();
+        for (Map.Entry<String, Object> entry : applicationProperties.entrySet())
+            if (entry.getKey().equals(RANDOM))
+                parameters.put(entry.getKey(), getRandomSeed());
+            else
+                parameters.put(entry.getKey(), entry.getValue());
+        return parameters;
     }
 }

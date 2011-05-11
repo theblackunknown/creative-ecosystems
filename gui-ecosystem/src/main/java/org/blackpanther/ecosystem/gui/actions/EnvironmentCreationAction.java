@@ -1,10 +1,15 @@
 package org.blackpanther.ecosystem.gui.actions;
 
+import com.nexes.wizard.Wizard;
+import org.blackpanther.ecosystem.DesignEnvironment;
+import org.blackpanther.ecosystem.Environment;
+import org.blackpanther.ecosystem.gui.wizard.EnvironmentCreationWizard;
+
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.logging.Logger;
 
+import static org.blackpanther.ecosystem.Configuration.Configuration;
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
@@ -34,7 +39,21 @@ public class EnvironmentCreationAction
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        Monitor.stopEvolution();
-        logger.info("Environment creation action");
+        Monitor.pauseEvolution();
+        switch (EnvironmentCreationWizard.getInstance().showModalDialog()) {
+            case Wizard.FINISH_RETURN_CODE:
+                Configuration.loadConfiguration(EnvironmentCreationWizard.getInstance()
+                        .getModel().getEnvironmentProperties());
+                Environment env = new DesignEnvironment();
+                env.addAgent(EnvironmentCreationWizard.getInstance()
+                        .getModel().getPool());
+                Monitor.newEnvironment(env);
+                break;
+            case Wizard.CANCEL_RETURN_CODE:
+                //Nothing to do
+                break;
+            case Wizard.ERROR_RETURN_CODE:
+                throw new RuntimeException("Unexpected close of environment wizard creation");
+        }
     }
 }

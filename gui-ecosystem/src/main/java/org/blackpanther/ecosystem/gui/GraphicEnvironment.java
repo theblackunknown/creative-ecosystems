@@ -123,6 +123,7 @@ public class GraphicEnvironment
                 internalEvolutionMonitor
         );
         panelStructureHasChanged = true;
+        paintImmediately(0,0,getWidth(),getHeight());
     }
 
     public void unsetEnvironment() {
@@ -130,6 +131,7 @@ public class GraphicEnvironment
         monitoredEnvironment.removeEvolutionListener(internalEvolutionMonitor);
         monitoredEnvironment = null;
         panelStructureHasChanged = true;
+        paintImmediately(0,0,getWidth(),getHeight());
     }
 
     public void runSimulation() {

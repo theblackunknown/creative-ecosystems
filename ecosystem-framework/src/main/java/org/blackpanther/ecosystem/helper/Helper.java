@@ -1,5 +1,9 @@
 package org.blackpanther.ecosystem.helper;
 
+import javax.swing.*;
+import java.awt.*;
+import java.net.URL;
+
 /**
  * Tools method to help to design others classes
  *
@@ -58,5 +62,21 @@ public final class Helper {
 
     public static boolean within(double number, double inf, double sup) {
         return inf <= number && number < sup;
+    }
+
+    public static URL getImage(String imagePath) {
+        return Helper.class.getClassLoader().getResource(imagePath);
+    }
+
+    private static final Dimension FIELD_DIMENSION = new Dimension(400, 50);
+
+    public static JPanel createLabeledField(final String labelName, final Component field) {
+        return new JPanel(new GridLayout(2,1)) {{
+            JLabel label = new JLabel(labelName);
+            label.setLabelFor(field);
+            add(label);
+            add(field);
+            setPreferredSize(FIELD_DIMENSION);
+        }};
     }
 }
