@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.blackpanther.ecosystem.helper.Helper.require;
+import static org.blackpanther.ecosystem.Configuration.Configuration;
 
 /**
  * <p>
@@ -38,6 +39,8 @@ public abstract class Agent
     public static final String AGENT_CURVATURE = "agent-curvature";
     public static final String AGENT_SPEED = "agent-speed";
 
+    public static final String AGENT_GREED = "agent-greed";
+    public static final String AGENT_LUST = "agent-lust";
     public static final String AGENT_SENSOR_RADIUS = "agent-sensor-radius";
     public static final String AGENT_IRRATIONALITY = "agent-irrationality";
     public static final String AGENT_MORTALITY = "agent-mortality";
@@ -119,6 +122,10 @@ public abstract class Agent
 
         //FIXME Agent identifier is static
         genotype.put(AGENT_IDENTIFIER, Color.BLACK);
+        Integer greed = Configuration.getParameter(AGENT_GREED,Integer.class);
+        genotype.put(AGENT_GREED, greed);
+        Double lust = Configuration.getParameter(AGENT_LUST,Double.class);
+        genotype.put(AGENT_LUST, lust);
         genotype.put(AGENT_SENSOR_RADIUS, initialSensorRadius);
         genotype.put(AGENT_IRRATIONALITY, initialIrrationality);
         genotype.put(AGENT_MORTALITY, initialMortality);

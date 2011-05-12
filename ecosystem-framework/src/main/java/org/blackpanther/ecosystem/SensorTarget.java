@@ -19,7 +19,7 @@ public class SensorTarget<T> {
         this.target = target;
     }
 
-    public double getDirection() {
+    public double getOrientation() {
         return direction;
     }
 

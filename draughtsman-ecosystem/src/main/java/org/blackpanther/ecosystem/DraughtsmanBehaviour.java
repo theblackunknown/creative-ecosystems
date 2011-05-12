@@ -3,9 +3,13 @@ package org.blackpanther.ecosystem;
 
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Random;
 import java.util.logging.Logger;
 
+import static org.blackpanther.ecosystem.Agent.AGENT_GREED;
+import static org.blackpanther.ecosystem.Agent.AGENT_LUST;
 import static org.blackpanther.ecosystem.Configuration.Configuration;
 import static org.blackpanther.ecosystem.Configuration.RANDOM;
 
@@ -38,6 +42,8 @@ public class DraughtsmanBehaviour
      */
     @Override
     public final void update(Environment env, Agent agent) {
+        sense(env, agent);
+        capt(env, agent);
         //Step 1 - spawn
         spawn(env, agent);
         //Step 2 - move ( and trace )
@@ -47,9 +53,84 @@ public class DraughtsmanBehaviour
     }
 
     /**
+     * Sense around him
+     */
+    protected void sense(Environment env, Agent that) {
+        SenseResult analysis = that.sense();
+        SensorTarget<Agent> closestAgent = getClosestAgent(
+                that.getLocation(), analysis.getNearAgents());
+        //TODO Handle predator-pray
+
+        SensorTarget<Resource> closestResource = getClosestResource(
+                that.getLocation(), analysis.getNearResources());
+        if (closestResource != null) {
+            double lust = that.getGene(AGENT_LUST, Double.class);
+            double angleGap = closestResource.getOrientation() - that.getOrientation();
+            that.setOrientation(
+                    that.getOrientation()
+                            + lust * angleGap);
+            double twoPI = 2.0 * Math.PI;
+            System.out.println(String.format(
+                    "%n old orientation : %.4fPI%n new orientation : %.4fPI%n resource orientation : %.4fPI%n",
+                    (closestResource.getOrientation() - angleGap) % twoPI,
+                    that.getOrientation() % twoPI,
+                    closestResource.getOrientation() % twoPI
+            ));
+        }
+    }
+
+    protected void capt(Environment env, Agent that) {
+        SenseResult analysis = that.sense();
+        int numberOfCrossedResource = 0;
+        Collection<SensorTarget<Resource>> closeResources = analysis.getNearResources();
+        for (SensorTarget<Resource> target : closeResources)
+            if (target.getTarget().contains(that.getLocation()))
+                numberOfCrossedResource++;
+        for (SensorTarget<Resource> target : closeResources)
+            if (target.getTarget().contains(that.getLocation()))
+                target.getTarget().consume(
+                        that.getGene(AGENT_GREED, Integer.class) / numberOfCrossedResource
+                );
+    }
+
+    private static SensorTarget<Resource> getClosestResource(Point2D source, Collection<SensorTarget<Resource>> resources) {
+        Iterator<SensorTarget<Resource>> it = resources.iterator();
+        if (it.hasNext()) {
+            SensorTarget<Resource> closest = it.next();
+            double closestDistance = source.distance(
+                    closest.getTarget().getCenter()) - closest.getTarget().getRadius();
+            while (it.hasNext()) {
+                SensorTarget<Resource> res = it.next();
+                double distance = source.distance(
+                        res.getTarget().getCenter()) - res.getTarget().getRadius();
+                if (distance < closestDistance) {
+                    closest = res;
+                    closestDistance = distance;
+                }
+            }
+            return closest;
+        } else return null;
+    }
+
+    private static SensorTarget<Agent> getClosestAgent(Point2D source, Collection<SensorTarget<Agent>> agents) {
+        Iterator<SensorTarget<Agent>> it = agents.iterator();
+        if (it.hasNext()) {
+            SensorTarget<Agent> closest = it.next();
+            double closestDistance = source.distance(closest.getTarget().getLocation());
+            while (it.hasNext()) {
+                SensorTarget<Agent> agent = it.next();
+                double distance = source.distance(closest.getTarget().getLocation());
+                if (distance < closestDistance) {
+                    closest = agent;
+                    closestDistance = distance;
+                }
+            }
+            return closest;
+        } else return null;
+    }
+
+    /**
      * Move according to current agent's movement's characteristics
-     *
-     * @param that currently updated agent
      */
     protected void move(Environment env, Agent that) {
         //Step 1 - Update location according to current orientation

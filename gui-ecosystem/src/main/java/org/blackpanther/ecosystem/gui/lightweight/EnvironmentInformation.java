@@ -20,7 +20,7 @@ public class EnvironmentInformation {
     private long id;
 
     public enum State {
-        NOT_YET_STARTED(""),
+        NOT_YET_STARTED("[NOT STARTED]"),
         RUNNING("[RUNNING]"),
         PAUSED("[PAUSED]"),
         FROZEN("[FROZEN]");

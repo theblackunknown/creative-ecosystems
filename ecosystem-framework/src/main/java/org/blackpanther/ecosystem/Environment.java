@@ -7,10 +7,7 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -150,8 +147,8 @@ public abstract class Environment
         eventSupport = new EnvironmentMonitor(this);
 
         //DEBUG Purpose
-        addResource(new Resource(50.0, 50.0, 100, 10.0));
-        addResource(new Resource(-50.0, -50.0, 65, 12.0));
+        addResource(new Resource(15.0, 10.0, Resource.MAX_AMOUNT, 8.0));
+        addResource(new Resource(-50.0, -50.0, 75, 12.0));
     }
 
     /**
@@ -227,6 +224,7 @@ public abstract class Environment
             final Resource resource) {
         getCorrespondingArea(resource.getCenter())
                 .addResource(resource);
+        resource.setEventSupport(eventSupport);
     }
 
 
@@ -274,10 +272,6 @@ public abstract class Environment
                 }
             }
         }
-
-//        require(crossedArea.size() > 0,
-//                Geometry.toString(line) + " cross no area");
-
         return crossedArea;
     }
 
@@ -314,6 +308,17 @@ public abstract class Environment
                 "%d comparisons made in this cycle",
                 totalComparison
         ));
+
+        //Clean empty resources pool
+        for (Area[] row : space)
+            for (Area area : row)
+                for (int i = 0; i < area.resourcePool.size();)
+                    if (area.resourcePool.get(i).getAmount() == 0) {
+                        eventSupport.fireResourceEvent(
+                                area.resourcePool.remove(i),
+                                ResourceEvent.Type.DEPLETED
+                        );
+                    } else i++;
 
         totalComparison = 0;
 
@@ -394,6 +399,14 @@ public abstract class Environment
         eventSupport.addEvolutionListener(listener);
     }
 
+    public void addResourceListener(ResourceListener listener) {
+        eventSupport.addResourceListener(listener);
+    }
+
+    public void removeResourceListener(ResourceListener listener) {
+        eventSupport.removeResourceListener(listener);
+    }
+
     public void nextGeneration(Agent child) {
         eventSupport.fireAgentEvent(AgentEvent.Type.BORN, child);
         child.attachTo(getCorrespondingArea(child.getLocation()));
@@ -449,8 +462,8 @@ public abstract class Environment
             extends Rectangle2D.Double
             implements Serializable, AreaListener {
 
-        private Set<Line2D> internalDrawHistory = new HashSet<Line2D>(100, 0.65f);
-        private Set<Resource> resourcePool = new HashSet<Resource>();
+        private Collection<Line2D> internalDrawHistory = new LinkedList<Line2D>();
+        private List<Resource> resourcePool = new LinkedList<Resource>();
 
         public Area(double x, double y, double w, double h) {
             super(x, y, w, h);
@@ -507,29 +520,24 @@ public abstract class Environment
 
         @Override
         public SenseResult aggregateInformation(Geometry.Circle circle) {
-            Set<SensorTarget<Agent>> detectedAgents = new HashSet<SensorTarget<Agent>>();
+            Collection<SensorTarget<Agent>> detectedAgents = new LinkedList<SensorTarget<Agent>>();
             for (Agent agent : pool)
-                if (!agent.getLocation().equals(circle.getCenter()) //Not himself
-                        && circle.contains(agent.getLocation())) {
-                    detectedAgents.add(detected(
+                if (circle.contains(agent.getLocation())
+                        && !(agent.getLocation().distance(circle.getCenter()) < EPSILON)) {//Not himself
+                    double agentOrientation =
                             computeOrientation(
                                     circle.getCenter(),
-                                    agent.getLocation()
-                                    , circle.getRadius()),
-                            agent
-                    ));
+                                    agent.getLocation());
+                    detectedAgents.add(detected(agentOrientation, agent));
                 }
-            Set<SensorTarget<Resource>> detectedResources = new HashSet<SensorTarget<Resource>>();
+            Collection<SensorTarget<Resource>> detectedResources = new LinkedList<SensorTarget<Resource>>();
             for (Resource resource : resourcePool)
                 if (circle.cross(resource)) {
-                    detectedResources.add(detected(
+                    double resourceOrientation =
                             computeOrientation(
                                     circle.getCenter(),
-                                    resource.getCenter(),
-                                    circle.getRadius()
-                            ),
-                            resource
-                    ));
+                                    resource.getCenter());
+                    detectedResources.add(detected(resourceOrientation, resource));
                 }
 
             return new SenseResult(detectedAgents, detectedResources);

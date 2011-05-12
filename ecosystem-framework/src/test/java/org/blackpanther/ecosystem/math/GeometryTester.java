@@ -1,6 +1,8 @@
 package org.blackpanther.ecosystem.math;
 
 import org.junit.BeforeClass;
+
+
 import org.junit.Test;
 
 import java.awt.geom.Line2D;
@@ -17,18 +19,6 @@ import static org.junit.Assert.assertNull;
  * @version 0.2 - Wed May 11 02:54:46 CEST 2011
  */
 public class GeometryTester {
-
-    @BeforeClass
-    public void setUpLogger() {
-        try {
-            LogManager.getLogManager().readConfiguration(
-                    GeometryTester.class.getClassLoader()
-                            .getResourceAsStream("logging.properties")
-            );
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     @Test
     public void intersectionPoint() {

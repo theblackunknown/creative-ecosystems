@@ -3,6 +3,9 @@ package org.blackpanther.ecosystem.app;
 import org.blackpanther.ecosystem.gui.WorldFrame;
 
 import javax.swing.*;
+import java.awt.geom.Point2D;
+
+import static org.blackpanther.ecosystem.helper.Helper.computeOrientation;
 
 /**
  * @author MACHIZAUD Andréa

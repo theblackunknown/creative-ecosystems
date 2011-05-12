@@ -128,7 +128,7 @@ public final class Geometry {
     public static class Circle extends Ellipse2D.Double {
 
         public Circle(double x, double y, double radius) {
-            super(x, y, radius, radius);
+            super(x-radius,y-radius,radius*2.0,radius*2.0);
         }
 
         public Circle(Point2D point, double radius){
@@ -140,7 +140,7 @@ public final class Geometry {
         }
 
         public java.lang.Double getRadius() {
-            return getHeight();
+            return getHeight() / 2.0;
         }
 
         public boolean cross(Circle that) {

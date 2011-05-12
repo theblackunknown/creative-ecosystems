@@ -1,6 +1,6 @@
 package org.blackpanther.ecosystem;
 
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * @author MACHIZAUD Andréa
@@ -8,21 +8,21 @@ import java.util.Set;
  */
 public class SenseResult {
 
-    private Set<SensorTarget<Agent>> nearAgents;
-    private Set<SensorTarget<Resource>> nearResources;
+    private Collection<SensorTarget<Agent>> nearAgents;
+    private Collection<SensorTarget<Resource>> nearResources;
 
     public SenseResult(
-            Set<SensorTarget<Agent>> nearAgents,
-            Set<SensorTarget<Resource>> nearResources) {
+            Collection<SensorTarget<Agent>> nearAgents,
+            Collection<SensorTarget<Resource>> nearResources) {
         this.nearAgents = nearAgents;
         this.nearResources = nearResources;
     }
 
-    public Set<SensorTarget<Agent>> getNearAgents() {
+    public Collection<SensorTarget<Agent>> getNearAgents() {
         return nearAgents;
     }
 
-    public Set<SensorTarget<Resource>> getNearResources() {
+    public Collection<SensorTarget<Resource>> getNearResources() {
         return nearResources;
     }
 }

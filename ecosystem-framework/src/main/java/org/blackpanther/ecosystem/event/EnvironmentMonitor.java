@@ -2,6 +2,7 @@ package org.blackpanther.ecosystem.event;
 
 import org.blackpanther.ecosystem.Agent;
 import org.blackpanther.ecosystem.Environment;
+import org.blackpanther.ecosystem.Resource;
 
 import java.awt.geom.Line2D;
 import java.util.HashSet;
@@ -21,6 +22,8 @@ public class EnvironmentMonitor {
             new HashSet<EvolutionListener>();
     private Set<AgentListener> agentListeners =
             new HashSet<AgentListener>();
+    private Set<ResourceListener> resourceListeners =
+            new HashSet<ResourceListener>();
 
     private Environment source;
 
@@ -42,6 +45,10 @@ public class EnvironmentMonitor {
 
     public void addEvolutionListener(EvolutionListener listener) {
         evolutionListeners.add(listener);
+    }
+
+    public void addResourceListener(ResourceListener listener) {
+        resourceListeners.add(listener);
     }
 
     /*=========================================================================
@@ -70,6 +77,13 @@ public class EnvironmentMonitor {
         }
     }
 
+    public void fireResourceEvent(Resource value, ResourceEvent.Type eventType) {
+        ResourceEvent event = new ResourceEvent(eventType, source, value);
+        for (ResourceListener listener : resourceListeners) {
+            listener.update(event);
+        }
+    }
+
     public void removeAgentListener(AgentListener listener) {
         agentListeners.remove(listener);
     }
@@ -80,5 +94,9 @@ public class EnvironmentMonitor {
 
     public void removeLineListener(LineListener listener) {
         lineListeners.remove(listener);
+    }
+
+    public void removeResourceListener(ResourceListener listener) {
+        resourceListeners.remove(listener);
     }
 }

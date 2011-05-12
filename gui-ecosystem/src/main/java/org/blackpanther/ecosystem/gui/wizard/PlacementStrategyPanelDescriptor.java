@@ -47,7 +47,7 @@ public class PlacementStrategyPanelDescriptor
 
     @Override
     public void aboutToDisplayPanel() {
-        panel.setStrategy(Strategy.GenerationType.STANDARD_POSITION_RANDOMIZED);
+        panel.setStrategy(Strategy.GenerationType.STANDARD_CIRCLE);
     }
 
     @Override
@@ -107,10 +107,10 @@ public class PlacementStrategyPanelDescriptor
             numberOfAgentRandom = new JSpinner(generatePositiveLongModel());
             numberOfAgentRandom.setValue(20L);
             numberOfAgentCircle = new JSpinner(generatePositiveLongModel());
-            numberOfAgentCircle.setValue(20L);
+            numberOfAgentCircle.setValue(45L);
 
             circleRadius = new JSpinner(generatePositiveDecimalModel());
-            circleRadius.setValue(10.0);
+            circleRadius.setValue(5.0);
 
             JPanel standardPositionProvided = new JPanel(new GridLayout(0, 1));
             JPanel standardPositionRandomized = new JPanel(new GridLayout(0, 1));
@@ -157,8 +157,6 @@ public class PlacementStrategyPanelDescriptor
                     Strategy.GenerationType.STANDARD_CIRCLE.toString());
             cardPanel.add(random,
                     Strategy.GenerationType.RANDOM.toString());
-
-            strategyList.setSelectedIndex(3);
 
             JPanel container = new JPanel(new BorderLayout());
             container.add(strategyList, BorderLayout.NORTH);

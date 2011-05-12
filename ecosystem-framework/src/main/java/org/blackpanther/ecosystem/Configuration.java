@@ -52,6 +52,8 @@ public enum Configuration {
         put(AGENT_ORIENTATION, Math.PI);
         put(AGENT_CURVATURE, 0.0);
         put(AGENT_SPEED, 5.0);
+        put(AGENT_LUST, 0.1);
+        put(AGENT_GREED, 20);
         put(AGENT_SENSOR_RADIUS, 0.4);
         put(AGENT_IRRATIONALITY, 0.35);
         put(AGENT_MORTALITY, 0.10);
@@ -241,6 +243,38 @@ public enum Configuration {
             }
         }
 
+        //update agent greed
+        String userAgentGreed = properties.getProperty(AGENT_GREED);
+        if (isValid(userAgentGreed)) {
+            try {
+                setParameter(
+                        AGENT_GREED,
+                        Integer.parseInt(userAgentGreed),
+                        Integer.class
+                );
+                logger.fine(AGENT_GREED + " parameter updated.");
+            } catch (NumberFormatException e) {
+                logger.log(Level.SEVERE,
+                        "Couldn't parse user agent greed, it must be a positive integer !", e);
+            }
+        }
+
+        //update agent lust
+        String userAgentLust = properties.getProperty(AGENT_LUST);
+        if (isValid(userAgentLust)) {
+            try {
+                setParameter(
+                        AGENT_LUST,
+                        Double.parseDouble(userAgentLust),
+                        Double.class
+                );
+                logger.fine(AGENT_LUST + " parameter updated.");
+            } catch (NumberFormatException e) {
+                logger.log(Level.SEVERE,
+                        "Couldn't parse user agent greed, it must be within [0,1] !", e);
+            }
+        }
+
         //update agent sensor radius
         String userAgentSensorRadius = properties.getProperty(AGENT_SENSOR_RADIUS);
         if (isValid(userAgentSensorRadius)) {
@@ -253,7 +287,7 @@ public enum Configuration {
                 logger.fine(AGENT_SENSOR_RADIUS + " parameter updated.");
             } catch (NumberFormatException e) {
                 logger.log(Level.SEVERE,
-                        "Couldn't parse user agent sensor radius, it must be positive !", e);
+                        "Couldn't parse user agent sensor radius, it must be within [0,1] !", e);
             }
         }
 
@@ -419,6 +453,7 @@ public enum Configuration {
                         "Invalid value for " + paramName + " : '" + paramValue + "'");
             }
         } else if (paramName.equals(AGENT_IRRATIONALITY)
+                || paramName.equals(AGENT_LUST)
                 || paramName.equals(AGENT_MORTALITY)
                 || paramName.equals(AGENT_FECUNDITY)
                 || paramName.equals(AGENT_MUTATION)) {
@@ -436,6 +471,16 @@ public enum Configuration {
                 throw new IllegalArgumentException(
                         "Invalid value this parameter, it must be a "
                                 + BehaviorManager.class.getCanonicalName() + " class");
+            }
+        } else if (paramName.equals(AGENT_GREED)) {
+            if (!paramType.equals(Integer.class)) {
+                throw new IllegalArgumentException(
+                        "Invalid value this parameter, it must be a "
+                                + Integer.class.getCanonicalName() + " class");
+            } else {
+                Integer value = (Integer) paramValue;
+                require(0 <= value,
+                        "Invalid value for " + paramName + " : '" + paramValue + "'");
             }
         } else {
             throw new IllegalArgumentException("Invalid parameter name : " + paramName);

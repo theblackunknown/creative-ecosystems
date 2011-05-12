@@ -1,5 +1,7 @@
 package org.blackpanther.ecosystem;
 
+import org.blackpanther.ecosystem.event.EnvironmentMonitor;
+import org.blackpanther.ecosystem.event.ResourceEvent;
 import org.blackpanther.ecosystem.math.Geometry;
 
 import java.awt.geom.Point2D;
@@ -13,7 +15,7 @@ public class Resource
         extends Geometry.Circle
         implements Serializable {
 
-    public static final Integer MAX_AMOUNT = 100;
+    public static final Integer MAX_AMOUNT = 300;
 
     private static int normalize(int amount) {
         if (amount > MAX_AMOUNT)
@@ -28,14 +30,15 @@ public class Resource
      * Amount of resources
      */
     private int amount;
+    private EnvironmentMonitor eventSupport;
 
     public Resource(Point2D location, int amount, double radius) {
-        super(location,radius);
+        super(location, radius);
         this.amount = normalize(amount);
     }
 
     public Resource(double x, double y, int amount, double radius) {
-        super(new Point2D.Double(x,y),radius);
+        super(new Point2D.Double(x, y), radius);
         this.amount = normalize(amount);
     }
 
@@ -43,11 +46,25 @@ public class Resource
         this(location, amount, 3.0);
     }
 
-    public void setAmount(int amount) {
-        this.amount = normalize(amount);
-    }
-
     public int getAmount() {
         return amount;
+    }
+
+    public int consume(int expected) {
+        if (expected <= amount) {
+            amount -= expected;
+            eventSupport.fireResourceEvent(this, ResourceEvent.Type.DECREASED);
+            return expected;
+        } else {
+            int remaining = amount;
+            if (remaining != 0)
+                eventSupport.fireResourceEvent(this, ResourceEvent.Type.DECREASED);
+            amount = 0;
+            return remaining;
+        }
+    }
+
+    void setEventSupport(EnvironmentMonitor eventSupport) {
+        this.eventSupport = eventSupport;
     }
 }
