@@ -41,7 +41,6 @@ public class LoadConfigurationAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
         Monitor.pauseEvolution();
-
         Component parent = ((Component) e.getSource()).getParent();
         switch (fileLoader.showOpenDialog(parent)) {
             case JFileChooser.APPROVE_OPTION:
@@ -73,7 +72,5 @@ public class LoadConfigurationAction extends AbstractAction {
                     );
                 }
         }
-        Monitor.resumeEvolution();
-
     }
 }

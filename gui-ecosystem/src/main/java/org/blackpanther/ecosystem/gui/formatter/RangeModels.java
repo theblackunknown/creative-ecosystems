@@ -35,21 +35,21 @@ public final class RangeModels {
                 1.0);
     }
 
-    public static final int PROBABILITY_APPROXIMATION = 100;
-
-    /**
-     * Probability approximation [0,100] -> [0,1.0]
-     */
-    public static final DefaultBoundedRangeModel generateProbabilityModel() {
-        return new DefaultBoundedRangeModel(0, 1, 0, PROBABILITY_APPROXIMATION);
+    // Domain : [0.0,1.0]
+    public static final SpinnerModel generateProbabilityModel() {
+        return new SpinnerNumberModel(
+                0.0,
+                0.0,
+                1.0,
+                0.1);
     }
 
-    public static final int ANGLE_APPROXIMATION = 10000;
-
-    /**
-     * Angle approximation [0,10000] -> [0,2PI]
-     */
-    public static final DefaultBoundedRangeModel generateAngleModel() {
-        return new DefaultBoundedRangeModel(0, 1, 0, ANGLE_APPROXIMATION);
+    // Domain : [0.0,2PI]
+    public static final SpinnerModel generateAngleModel() {
+        return new SpinnerNumberModel(
+                0.0,
+                0.0,
+                2.0*Math.PI,
+                0.1);
     }
 }

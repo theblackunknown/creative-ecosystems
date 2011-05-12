@@ -3,6 +3,7 @@ package org.blackpanther.ecosystem.gui;
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.Resource;
 import org.blackpanther.ecosystem.event.*;
+import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
@@ -49,6 +50,7 @@ public class GraphicEnvironment
     private Stack<Line2D> lineBuffer = new Stack<Line2D>();
     private Stack<Point2D> agentBuffer = new Stack<Point2D>();
     private Timer runEnvironment;
+    private Timer drawEnvironment;
     private boolean panelStructureHasChanged = false;
 
     public GraphicEnvironment() {
@@ -63,13 +65,14 @@ public class GraphicEnvironment
         //timer settings
         runEnvironment = new Timer(
                 DEFAULT_DELAY, internalEvolutionMonitor);
-        runEnvironment.setInitialDelay(1000);
+        drawEnvironment = new Timer(50, new GraphicMonitor());
 
         panelStructureHasChanged = true;
 
         setBorder(
                 BorderFactory.createBevelBorder(BevelBorder.LOWERED)
         );
+        validate();
     }
 
     @Override
@@ -95,33 +98,21 @@ public class GraphicEnvironment
                         (int) end.getY()
                 );
             }
-            while (!agentBuffer.isEmpty()) {
-                Point2D position = agentBuffer.pop();
-
-                g.setColor(Color.RED);
-
-                //TODO Handle diameter scale
-                Point2D center = internalScaler.environmentToPanel(position);
-
-                g.fillOval(
-                        (int) center.getX(),
-                        (int) center.getY(),
-                        2,
-                        2
-                );
-            }
         }
     }
 
     public void setEnvironment(Environment env) {
+        if (runEnvironment.isRunning())
+            runEnvironment.stop();
         //environment settings
         monitoredEnvironment = env;
         env.addLineListener(internalLineMonitor);
         env.addEvolutionListener(internalEvolutionMonitor);
         env.addAgentListener(internalAgentMonitor);
         panelStructureHasChanged = true;
-        paintImmediately(0, 0, getWidth(), getHeight());
+        paintImmediately(getBounds());
     }
+
 
     public void unsetEnvironment() {
         if (runEnvironment.isRunning())
@@ -132,7 +123,7 @@ public class GraphicEnvironment
             monitoredEnvironment.removeAgentListener(internalAgentMonitor);
             monitoredEnvironment = null;
             panelStructureHasChanged = true;
-            paintImmediately(0, 0, getWidth(), getHeight());
+            paintImmediately(getBounds());
         }
     }
 
@@ -140,12 +131,18 @@ public class GraphicEnvironment
         if (monitoredEnvironment != null
                 && !runEnvironment.isRunning())
             runEnvironment.start();
+        if (monitoredEnvironment != null
+                && !drawEnvironment.isRunning())
+            drawEnvironment.start();
     }
 
     public void stopSimulation() {
         if (monitoredEnvironment != null
                 && runEnvironment.isRunning())
             runEnvironment.stop();
+        if (monitoredEnvironment != null
+                && drawEnvironment.isRunning())
+            drawEnvironment.stop();
     }
 
     /**
@@ -187,6 +184,20 @@ public class GraphicEnvironment
                         (int) radius
                 );
             }
+            for (Point2D position : agentBuffer) {
+
+                g.setColor(Color.RED);
+
+                //TODO Handle diameter scale
+                Point2D center = internalScaler.environmentToPanel(position);
+
+                g.fillOval(
+                        (int) center.getX(),
+                        (int) center.getY(),
+                        2,
+                        2
+                );
+            }
         }
     }
 
@@ -205,6 +216,16 @@ public class GraphicEnvironment
             return null;
         }
 
+    }
+
+    /**
+     * Record every line added to environment history
+     */
+    class GraphicMonitor implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            repaint();
+        }
     }
 
     /**
@@ -245,14 +266,13 @@ public class GraphicEnvironment
         public void update(EvolutionEvent e) {
             switch (e.getType()) {
                 case STARTED:
-                    Monitor.updateEnvironmentInformation();
                 case CYCLE_END:
-                    Monitor.updateEnvironmentInformation();
-                    repaint();
+                    Monitor.updateEnvironmentInformation(
+                            monitoredEnvironment, EnvironmentInformation.State.RUNNING);
                     break;
                 case ENDED:
-                    Monitor.updateEnvironmentInformation();
-                    Monitor.environmentFrozen();
+                    Monitor.updateEnvironmentInformation(
+                            monitoredEnvironment, EnvironmentInformation.State.FROZEN);
                     repaint();
                     runEnvironment.stop();
             }
@@ -267,7 +287,9 @@ public class GraphicEnvironment
                 case BORN:
                     break;
                 case DEATH:
-                    //TODO Trace dead agent
+                    agentBuffer.push(e.getAgent().getLocation());
+                    if (agentBuffer.size() % 50 == 0)
+                        panelStructureHasChanged = true;
                     break;
             }
         }
@@ -366,7 +388,7 @@ public class GraphicEnvironment
                         }
                         break;
                 }
-                repaint();
+                paintImmediately(0, 0, getWidth(), getHeight());
             }
         }
 
@@ -382,7 +404,8 @@ public class GraphicEnvironment
                 panelOrdinateDifferential +=
                         (currentMousePoint.y - oldMouseLocation.y);
                 panelStructureHasChanged = true;
-                repaint();
+
+                paintImmediately(0, 0, getWidth(), getHeight());
             }
             oldMouseLocation = currentMousePoint;
         }
@@ -395,16 +418,12 @@ public class GraphicEnvironment
                     panelAbscissaDifferential,
                     panelOrdinateDifferential
             ));
-            repaint();
+
+            paintImmediately(0, 0, getWidth(), getHeight());
         }
     }
 
     class IconHandler extends MouseAdapter {
-
-        //TODO Closed hand
-        @Override
-        public void mousePressed(MouseEvent e) {
-        }
 
         @Override
         public void mouseEntered(MouseEvent e) {

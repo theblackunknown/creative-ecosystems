@@ -39,15 +39,17 @@ public class EnvironmentCreationAction
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        Monitor.pauseEvolution();
         switch (EnvironmentCreationWizard.getInstance().showModalDialog()) {
             case Wizard.FINISH_RETURN_CODE:
+                //update current configuration
                 Configuration.loadConfiguration(EnvironmentCreationWizard.getInstance()
                         .getModel().getEnvironmentProperties());
+                //create environment
                 Environment env = new DesignEnvironment();
                 env.addAgent(EnvironmentCreationWizard.getInstance()
                         .getModel().getPool());
-                Monitor.newEnvironment(env);
+                //notify
+                Monitor.setCurrentEnvironment(env);
                 break;
             case Wizard.CANCEL_RETURN_CODE:
                 //Nothing to do

@@ -23,20 +23,20 @@ public class ConfigurationInformation {
 
     public ConfigurationInformation(Configuration config) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<html><ul>");
-        sb.append("<li>" + RANDOM + "=").append(config.getRandomSeed()).append("</li>");
+        sb.append("<html><p>");
+        sb.append("<b>" + RANDOM + "</b>:<br/>   <i>").append(config.getRandomSeed()).append("</i><br/>");
         for (Map.Entry<Object, Object> parameter : config.parameters().entrySet()) {
             if (!parameter.getKey().equals(RANDOM)) {
+                sb.append("<b>").append(parameter.getKey()).append("</b>:<br/>   <i>");
                 if (parameter.getKey().equals(AGENT_BEHAVIOUR)) {
-                    sb.append("<li>").append(parameter.getKey()).append("=<br/>")
-                            .append(parameter.getValue().getClass().getSimpleName()).append("</li>");
+                    sb.append(parameter.getValue().getClass().getSimpleName());
                 } else {
-                    sb.append("<li>").append(parameter.getKey()).append("=")
-                            .append(parameter.getValue()).append("</li>");
+                    sb.append(parameter.getValue());
                 }
+                sb.append("</i><br/>");
             }
         }
-        sb.append("</ul></html>");
+        sb.append("</p></html>");
         representation = sb.toString();
     }
 

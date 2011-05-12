@@ -140,11 +140,11 @@ public class DraughtsmanBehaviour
                             speedVariation
                                     * applicationRandom.nextGaussian())),
                     //initial sensor radius
-                    mutate(
+                    normalizeSpeed(mutate(
                             that.getMutationRate(),
                             that.getSensorRadius(),
                             speedVariation
-                                    * applicationRandom.nextGaussian()),
+                                    * applicationRandom.nextGaussian())),
                     //irrationality rate
                     normalizeProbability(mutate(
                             that.getIrrationality(),

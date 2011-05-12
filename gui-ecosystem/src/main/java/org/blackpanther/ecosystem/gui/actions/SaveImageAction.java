@@ -43,7 +43,6 @@ public class SaveImageAction
     @Override
     public void actionPerformed(ActionEvent e) {
         Monitor.pauseEvolution();
-
         BufferedImage image = Monitor.dumpCurrentImage();
         if (image == null)
             return;
@@ -101,7 +100,5 @@ public class SaveImageAction
                     }
                 }
         }
-
-        Monitor.resumeEvolution();
     }
 }

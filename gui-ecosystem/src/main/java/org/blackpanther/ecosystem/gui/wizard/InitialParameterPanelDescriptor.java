@@ -93,15 +93,15 @@ public class InitialParameterPanelDescriptor
 
 
         private JSpinner randomSeedField;
-        private JSlider orientationField;
+        private JSpinner orientationField;
         private JSpinner curvatureField;
         private JSpinner speedField;
-        private JSlider irrationalityField;
-        private JSlider mortalityField;
-        private JSlider fecundityField;
-        private JSlider mutationField;
+        private JSpinner irrationalityField;
+        private JSpinner mortalityField;
+        private JSpinner fecundityField;
+        private JSpinner mutationField;
         private JComboBox behavioursField;
-        private JSlider orientationLauncherField;
+        private JSpinner orientationLauncherField;
         private JSpinner speedLauncherField;
 
         @Override
@@ -117,15 +117,15 @@ public class InitialParameterPanelDescriptor
 
             randomSeedField = new JSpinner(generatePositiveLongModel());
 
-            orientationField = new JSlider(generateAngleModel());
-            orientationLauncherField = new JSlider(generateAngleModel());
+            orientationField = new JSpinner(generateAngleModel());
+            orientationLauncherField = new JSpinner(generateAngleModel());
             curvatureField = new JSpinner(generateDecimalModel());
             speedField = new JSpinner(generatePositiveDecimalModel());
             speedLauncherField = new JSpinner(generatePositiveDecimalModel());
-            irrationalityField = new JSlider(generateProbabilityModel());
-            mortalityField = new JSlider(generateProbabilityModel());
-            fecundityField = new JSlider(generateProbabilityModel());
-            mutationField = new JSlider(generateProbabilityModel());
+            irrationalityField = new JSpinner(generateProbabilityModel());
+            mortalityField = new JSpinner(generateProbabilityModel());
+            fecundityField = new JSpinner(generateProbabilityModel());
+            mutationField = new JSpinner(generateProbabilityModel());
             behavioursField = new JComboBox(behavioursParameters);
 
             Box fields = new Box(Y_AXIS);
@@ -190,31 +190,16 @@ public class InitialParameterPanelDescriptor
         }
 
         public void setProperties(Properties configuration) {
-            Double value;
             randomSeedField.setValue(configuration.get(RANDOM));
-            value = (Double) configuration.get(AGENT_ORIENTATION);
-            orientationField.setValue(
-                    (int) ((value / (2.0 * Math.PI))
-                            * ANGLE_APPROXIMATION));
+            orientationField.setValue(configuration.get(AGENT_ORIENTATION));
             speedField.setValue(configuration.get(AGENT_SPEED));
             curvatureField.setValue(configuration.get(AGENT_CURVATURE));
-            value = (Double) configuration.get(AGENT_ORIENTATION_LAUNCHER);
-            orientationLauncherField.setValue(
-                    (int) ((value / (2.0 * Math.PI))
-                            * ANGLE_APPROXIMATION));
+            orientationLauncherField.setValue(configuration.get(AGENT_ORIENTATION_LAUNCHER));
             speedLauncherField.setValue(configuration.get(AGENT_SPEED_LAUNCHER));
-            value = (Double) configuration.get(AGENT_IRRATIONALITY);
-            irrationalityField.setValue(
-                    (int) (value * PROBABILITY_APPROXIMATION));
-            value = (Double) configuration.get(AGENT_MORTALITY);
-            mortalityField.setValue(
-                    (int) (value * PROBABILITY_APPROXIMATION));
-            value = (Double) configuration.get(AGENT_FECUNDITY);
-            fecundityField.setValue(
-                    (int) (value * PROBABILITY_APPROXIMATION));
-            value = (Double) configuration.get(AGENT_MUTATION);
-            mutationField.setValue(
-                    (int) (value * PROBABILITY_APPROXIMATION));
+            irrationalityField.setValue(configuration.get(AGENT_IRRATIONALITY));
+            mortalityField.setValue(configuration.get(AGENT_MORTALITY));
+            fecundityField.setValue(configuration.get(AGENT_FECUNDITY));
+            mutationField.setValue(configuration.get(AGENT_MUTATION));
 
             String behaviourClass = configuration.get(AGENT_BEHAVIOUR)
                     .getClass().getCanonicalName();
@@ -231,26 +216,17 @@ public class InitialParameterPanelDescriptor
         }
 
         public Properties getProperties() {
-            Double value;
             Properties parameters = new Properties();
             parameters.put(RANDOM, randomSeedField.getValue().toString());
-            value = (orientationField.getValue() / (double) ANGLE_APPROXIMATION)
-                    * 2.0 * Math.PI;
-            parameters.put(AGENT_ORIENTATION, value.toString());
+            parameters.put(AGENT_ORIENTATION, orientationField.getValue().toString());
             parameters.put(AGENT_SPEED, speedField.getValue().toString());
             parameters.put(AGENT_CURVATURE, curvatureField.getValue().toString());
-            value = (orientationLauncherField.getValue() / (double) ANGLE_APPROXIMATION)
-                    * 2.0 * Math.PI;
-            parameters.put(AGENT_ORIENTATION_LAUNCHER, value.toString());
+            parameters.put(AGENT_ORIENTATION_LAUNCHER, orientationLauncherField.getValue().toString());
             parameters.put(AGENT_SPEED_LAUNCHER, speedLauncherField.getValue().toString());
-            value = irrationalityField.getValue() / (double) PROBABILITY_APPROXIMATION;
-            parameters.put(AGENT_IRRATIONALITY, value.toString());
-            value = mortalityField.getValue() / (double) PROBABILITY_APPROXIMATION;
-            parameters.put(AGENT_MORTALITY, value.toString());
-            value = fecundityField.getValue() / (double) PROBABILITY_APPROXIMATION;
-            parameters.put(AGENT_FECUNDITY, value.toString());
-            value = mutationField.getValue() / (double) PROBABILITY_APPROXIMATION;
-            parameters.put(AGENT_MUTATION, value.toString());
+            parameters.put(AGENT_IRRATIONALITY, irrationalityField.getValue().toString());
+            parameters.put(AGENT_MORTALITY, mortalityField.getValue().toString());
+            parameters.put(AGENT_FECUNDITY, fecundityField.getValue().toString());
+            parameters.put(AGENT_MUTATION, mutationField.getValue().toString());
             parameters.put(AGENT_BEHAVIOUR, behavioursField.getSelectedItem().toString());
             return parameters;
         }

@@ -22,6 +22,7 @@ public class EnvironmentCommands
     public static final String STOP_ENVIRONMENT = "Pause";
     public static final String START_ENVIRONMENT = "Start";
     public static final String NO_ENVIRONMENT = "No environment set";
+    public static final String FROZEN_ENVIRONMENT = "Environment frozen";
 
     private JButton evolutionFlowButton;
 
@@ -31,6 +32,7 @@ public class EnvironmentCommands
         setLayout(new FlowLayout());
 
         evolutionFlowButton = new JButton(NO_ENVIRONMENT);
+        evolutionFlowButton.setEnabled(false);
         evolutionFlowButton.addActionListener(
                 EventHandler.create(
                         ActionListener.class,
@@ -51,7 +53,6 @@ public class EnvironmentCommands
                 BorderFactory.createEtchedBorder(EtchedBorder.RAISED)
         );
     }
-
     public void switchStartPause() {
         if (evolutionFlowButton.getText()
                 .equals(STOP_ENVIRONMENT)) {
@@ -66,9 +67,22 @@ public class EnvironmentCommands
 
     void environmentSet() {
         evolutionFlowButton.setText(START_ENVIRONMENT);
+        evolutionFlowButton.setEnabled(true);
     }
 
-    void environmentUnset(){
+    void environmentUnset() {
         evolutionFlowButton.setText(NO_ENVIRONMENT);
+        evolutionFlowButton.setEnabled(false);
+    }
+
+    public void environmentFrozen() {
+        evolutionFlowButton.setText(FROZEN_ENVIRONMENT);
+        evolutionFlowButton.setEnabled(false);
+    }
+
+    public void notifyPause() {
+        if (evolutionFlowButton.getText().equals(STOP_ENVIRONMENT)) {
+            evolutionFlowButton.setText(START_ENVIRONMENT);
+        }
     }
 }
