@@ -6,6 +6,10 @@ package org.blackpanther.ecosystem;
  */
 public class DesignEnvironment extends Environment {
 
+    public DesignEnvironment(Double width, Double height) {
+        super(width, height);    //To change body of overridden methods use File | Settings | File Templates.
+    }
+
     @Override
     protected void initializeSpace() {
         //Nothing special about space initialization

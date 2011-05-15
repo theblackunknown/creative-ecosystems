@@ -9,25 +9,26 @@ import java.awt.geom.Point2D;
 public class DesignerAgent extends Agent {
 
     public DesignerAgent(
-            final Point2D spawnLocation,
-            final Double initialOrientation,
-            final Double childOrientation,
-            final double initialCurvature,
-            final double initialSpeed,
-            final double childSpeed,
-            final double initialSensorRadius,
-            final double initialIrrationality,
-            final double initialMortality,
-            final double initialFecundity,
-            final double initialMutation,
-            final BehaviorManager manager) {
-        super(spawnLocation,
-                initialOrientation, childOrientation,
-                initialCurvature,
-                initialSpeed, childSpeed,
-                initialSensorRadius,
-                initialIrrationality, initialMortality, initialFecundity, initialMutation,
-                manager);
+            Point2D spawnLocation,
+            double energyAmount,
+            double movementCost,
+            double fecundationCost,
+            double fecundationLoss,
+            double orientation,
+            double launchOrientation,
+            double curvature,
+            double speed,
+            double launchSpeed,
+            double greed,
+            double sensorRadius,
+            double irrationality,
+            double mortality,
+            double fecundity,
+            double mutation,
+            BehaviorManager manager) {
+        super(spawnLocation, energyAmount, movementCost, fecundationCost,
+                fecundationLoss, orientation, launchOrientation, curvature,
+                speed, launchSpeed, greed, sensorRadius, irrationality, mortality,
+                fecundity, mutation, manager);
     }
-
 }

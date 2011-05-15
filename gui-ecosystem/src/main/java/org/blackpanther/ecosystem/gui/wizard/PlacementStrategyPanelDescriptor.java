@@ -2,7 +2,7 @@ package org.blackpanther.ecosystem.gui.wizard;
 
 import com.nexes.wizard.WizardPanelDescriptor;
 import org.blackpanther.ecosystem.Agent;
-import org.blackpanther.ecosystem.placement.Strategy;
+import org.blackpanther.ecosystem.placement.GenerationStrategy;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,7 +12,7 @@ import java.util.Collection;
 
 import static org.blackpanther.ecosystem.gui.formatter.RangeModels.*;
 import static org.blackpanther.ecosystem.helper.Helper.createLabeledField;
-import static org.blackpanther.ecosystem.placement.Strategy.generatePopulation;
+import static org.blackpanther.ecosystem.placement.GenerationStrategy.generatePopulation;
 
 /**
  * @author MACHIZAUD Andréa
@@ -47,7 +47,6 @@ public class PlacementStrategyPanelDescriptor
 
     @Override
     public void aboutToDisplayPanel() {
-        panel.setStrategy(Strategy.GenerationType.STANDARD_CIRCLE);
     }
 
     @Override
@@ -92,15 +91,15 @@ public class PlacementStrategyPanelDescriptor
             cardLayout = new CardLayout();
             cardPanel = new JPanel(cardLayout);
 
-            strategyList = new JComboBox(Strategy.GenerationType.values());
+            strategyList = new JComboBox(GenerationStrategy.GenerationType.values());
             strategyList.addActionListener(this);
 
             abscissaLimit = new JSpinner(generateDecimalModel());
-            abscissaLimit.setValue(400.0);
+            abscissaLimit.setValue(1.0);
             ordinateLimit = new JSpinner(generateDecimalModel());
-            ordinateLimit.setValue(300.0);
+            ordinateLimit.setValue(1.0);
             step = new JSpinner(generateDecimalModel());
-            step.setValue(100.0);
+            step.setValue(1.0);
 
             numberOfAgentRandomized = new JSpinner(generatePositiveLongModel());
             numberOfAgentRandomized.setValue(20L);
@@ -150,34 +149,37 @@ public class PlacementStrategyPanelDescriptor
             ));
 
             cardPanel.add(standardPositionProvided,
-                    Strategy.GenerationType.STANDARD_POSITION_PROVIDED.toString());
+                    GenerationStrategy.GenerationType.STANDARD_POSITION_PROVIDED.toString());
             cardPanel.add(standardPositionRandomized,
-                    Strategy.GenerationType.STANDARD_POSITION_RANDOMIZED.toString());
+                    GenerationStrategy.GenerationType.STANDARD_POSITION_RANDOMIZED.toString());
             cardPanel.add(standardCircle,
-                    Strategy.GenerationType.STANDARD_CIRCLE.toString());
+                    GenerationStrategy.GenerationType.STANDARD_CIRCLE.toString());
             cardPanel.add(random,
-                    Strategy.GenerationType.RANDOM.toString());
+                    GenerationStrategy.GenerationType.RANDOM.toString());
 
             JPanel container = new JPanel(new BorderLayout());
             container.add(strategyList, BorderLayout.NORTH);
             container.add(cardPanel, BorderLayout.CENTER);
 
+            strategyList.setSelectedItem(GenerationStrategy.GenerationType.STANDARD_CIRCLE);
+
             return container;
         }
 
-        public void setStrategy(Strategy.GenerationType strategy) {
+        public void setStrategy(GenerationStrategy.GenerationType strategy) {
             strategyList.setSelectedItem(strategy);
         }
 
         public Collection<Agent> getPool() {
             return generatePopulation(
-                    (Strategy.GenerationType) strategyList.getSelectedItem(),
+                    Agent.class,
+                    (GenerationStrategy.GenerationType) strategyList.getSelectedItem(),
                     aggregateAdditionalParameters()
             );
         }
 
         private Object[] aggregateAdditionalParameters() {
-            switch ((Strategy.GenerationType) strategyList.getSelectedItem()) {
+            switch ((GenerationStrategy.GenerationType) strategyList.getSelectedItem()) {
                 case STANDARD_POSITION_PROVIDED:
                     return new Object[]{
                             abscissaLimit.getValue(),
@@ -208,8 +210,8 @@ public class PlacementStrategyPanelDescriptor
                     strategyList.getSelectedItem().toString());
         }
 
-        public Strategy.GenerationType getStrategy() {
-            return (Strategy.GenerationType) strategyList.getSelectedItem();
+        public GenerationStrategy.GenerationType getStrategy() {
+            return (GenerationStrategy.GenerationType) strategyList.getSelectedItem();
         }
 
         public Object[] getAdditionalParameters() {

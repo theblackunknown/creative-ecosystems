@@ -73,8 +73,8 @@ public class InitialParameterPanelDescriptor
 
         private static final String[] initialParametersName = new String[]{
                 RANDOM,
-                SPAWN_ABSCISSA_THRESHOLD,
-                SPAWN_ORDINATE_THRESHOLD,
+                SPACE_WIDTH,
+                SPACE_HEIGHT,
                 AGENT_ORIENTATION,
                 AGENT_CURVATURE,
                 AGENT_SPEED,

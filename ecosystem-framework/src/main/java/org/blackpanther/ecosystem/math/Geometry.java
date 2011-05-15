@@ -1,5 +1,6 @@
 package org.blackpanther.ecosystem.math;
 
+import java.awt.*;
 import java.awt.geom.Dimension2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
@@ -22,6 +23,7 @@ public final class Geometry {
             );
 
     private static final Double COMPARISON_THRESHOLD = 0.000001;
+    public static final Double PI_2 = 2.0 * Math.PI;
 
     private Geometry() {
     }
@@ -128,11 +130,11 @@ public final class Geometry {
     public static class Circle extends Ellipse2D.Double {
 
         public Circle(double x, double y, double radius) {
-            super(x-radius,y-radius,radius*2.0,radius*2.0);
+            super(x - radius, y - radius, radius * 2.0, radius * 2.0);
         }
 
-        public Circle(Point2D point, double radius){
-            this(point.getX(),point.getY(), radius);
+        public Circle(Point2D point, double radius) {
+            this(point.getX(), point.getY(), radius);
         }
 
         public Point2D getCenter() {
@@ -141,11 +143,6 @@ public final class Geometry {
 
         public java.lang.Double getRadius() {
             return getHeight() / 2.0;
-        }
-
-        public boolean cross(Circle that) {
-            return getCenter().distance(that.getCenter())
-                    <= getRadius() + that.getRadius();
         }
     }
 

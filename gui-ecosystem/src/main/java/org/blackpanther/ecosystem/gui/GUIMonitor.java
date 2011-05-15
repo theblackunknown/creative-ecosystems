@@ -39,6 +39,14 @@ public enum GUIMonitor {
         this.environmentInformationPanel = environmentInformationPanel;
     }
 
+    public void removeEnvironment() {
+        require(drawPanel != null);
+        require(environmentInformationPanel != null);
+        drawPanel.unsetEnvironment();
+        environmentInformationPanel.clearBoard();
+        environmentCommandsPanel.environmentUnset();
+    }
+
     public void setCurrentEnvironment(Environment env) {
         require(drawPanel != null);
         require(environmentInformationPanel != null);

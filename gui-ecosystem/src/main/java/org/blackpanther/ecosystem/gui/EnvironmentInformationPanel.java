@@ -82,7 +82,7 @@ public class EnvironmentInformationPanel extends JPanel {
 
         public EnvironmentInformationInstance() {
             setName("Environment's information board");
-            setLayout(new GridBagLayout());
+            setLayout(new BorderLayout());
 
             environmentLabel =
                     new JLabel("No environment set");
@@ -97,23 +97,27 @@ public class EnvironmentInformationPanel extends JPanel {
             JButton resetEnvironment = new JButton(
                     EnvironmentCreationAction.getInstance());
 
+            JPanel container = new JPanel(new GridBagLayout());
             GridBagConstraints constraints = new GridBagConstraints();
             constraints.fill = GridBagConstraints.BOTH;
             constraints.gridwidth = GridBagConstraints.REMAINDER;
 
             //Environment Label
-            add(environmentLabel, constraints);
-            add(environmentAgentCounter, constraints);
-            add(environmentGenerationLabel, constraints);
+            container.add(environmentLabel, constraints);
+            container.add(environmentAgentCounter, constraints);
+            container.add(environmentGenerationLabel, constraints);
             constraints.insets = new Insets(10, 0, 0, 0);
-            add(initialParametersLabel, constraints);
+            container.add(initialParametersLabel, constraints);
 
 
             constraints.fill = GridBagConstraints.HORIZONTAL;
             constraints.weighty = 1.0;   //request any extra vertical space
             constraints.anchor = GridBagConstraints.PAGE_END; //bottom of space
             constraints.insets = new Insets(45, 0, 0, 0);  //top padding
-            add(resetEnvironment, constraints);
+            container.add(resetEnvironment, constraints);
+
+            setPreferredSize(new Dimension(200,1400));
+            add(new JScrollPane(container),BorderLayout.CENTER);
         }
 
         public void updateInformation(EnvironmentInformation information) {

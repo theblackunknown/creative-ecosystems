@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.util.logging.Logger;
 
 import static org.blackpanther.ecosystem.Configuration.Configuration;
+import static org.blackpanther.ecosystem.Configuration.*;
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
@@ -45,10 +46,14 @@ public class EnvironmentCreationAction
                 Configuration.loadConfiguration(EnvironmentCreationWizard.getInstance()
                         .getModel().getEnvironmentProperties());
                 //create environment
-                Environment env = new DesignEnvironment();
+                Environment env = new DesignEnvironment(
+                        Configuration.getParameter(SPACE_WIDTH,Double.class),
+                        Configuration.getParameter(SPACE_HEIGHT,Double.class)
+                );
                 env.addAgent(EnvironmentCreationWizard.getInstance()
                         .getModel().getPool());
                 //notify
+                Monitor.removeEnvironment();
                 Monitor.setCurrentEnvironment(env);
                 break;
             case Wizard.CANCEL_RETURN_CODE:

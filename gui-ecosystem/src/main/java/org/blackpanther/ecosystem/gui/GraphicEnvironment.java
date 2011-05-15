@@ -16,6 +16,8 @@ import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static org.blackpanther.ecosystem.Configuration.Configuration;
+import static org.blackpanther.ecosystem.Configuration.RESOURCE_AMOUNT_THRESHOLD;
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
@@ -30,7 +32,18 @@ public class GraphicEnvironment
             );
 
     private static final Dimension DEFAULT_DIMENSION = new Dimension(800, 600);
-    private static final Integer DEFAULT_DELAY = 400;
+    private static final Integer DEFAULT_DELAY = 100;
+
+    public static final int NO_OPTION = 0;
+    public static final int BOUNDS_OPTION = 1;
+    public static final int RESOURCE_OPTION = 1 << 1;
+    public static final int SCROLL_OPTION = 1 << 2;
+    public static final int ZOOM_OPTION = 1 << 3;
+
+    private int options = BOUNDS_OPTION
+//            | RESOURCE_OPTION
+            | SCROLL_OPTION
+            | ZOOM_OPTION;
 
     private Environment monitoredEnvironment;
     private MouseListener internalMouseHandler =
@@ -50,11 +63,9 @@ public class GraphicEnvironment
      * Buffer which retains next line to draw at the next repaint() call
      */
     private Stack<Line2D> lineBuffer = new Stack<Line2D>();
-    private Stack<Point2D> agentBuffer = new Stack<Point2D>();
     private Timer runEnvironment;
     private Timer drawEnvironment;
     private boolean panelStructureHasChanged = false;
-    private boolean initialPanel = true;
 
     public GraphicEnvironment() {
         //panel settings
@@ -73,24 +84,87 @@ public class GraphicEnvironment
         setBorder(
                 BorderFactory.createBevelBorder(BevelBorder.LOWERED)
         );
-        validate();
+    }
+
+    private boolean isActivated(int option) {
+        return (options & option) == option;
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
+    public void paintComponent(Graphics g) {
         if (panelStructureHasChanged) {
             redrawEnvironment(g);
             panelStructureHasChanged = false;
         } else {
-            if (initialPanel) {
-                g.setColor(Color.BLACK);
-                g.fillRect(0, 0, getWidth(), getHeight());
-                initialPanel = false;
-            }
             while (!lineBuffer.isEmpty()) {
                 Line2D line = lineBuffer.pop();
                 //TODO We will need to keep a record of line's color...
-                g.setColor(Color.WHITE);
+                g.setColor(Color.BLACK);
+                Point2D start = internalScaler.environmentToPanel(line.getP1());
+                Point2D end = internalScaler.environmentToPanel(line.getP2());
+                g.drawLine(
+                        (int) start.getX(),
+                        (int) start.getY(),
+                        (int) end.getX(),
+                        (int) end.getY()
+                );
+            }
+        }
+    }
+
+    /**
+     * Send a signal to redraw all environment due to
+     * panel's setting modification
+     *
+     * @param g
+     */
+    private void redrawEnvironment(Graphics g) {
+        //paint background
+        g.setColor(getBackground());
+        g.fillRect(0, 0, getWidth(), getHeight());
+
+        //repaint environment structure if it has been erased
+        if (monitoredEnvironment != null) {
+            //environment bounds painting activated
+            if ((options & BOUNDS_OPTION) == BOUNDS_OPTION) {
+                g.setColor(Color.BLACK);
+                //north line
+                Point2D top = internalScaler.environmentToPanel(new Point2D.Double(
+                        monitoredEnvironment.getBounds().getX(),
+                        -monitoredEnvironment.getBounds().getY()));
+                double width = internalScaler.environmentToPanel(
+                        monitoredEnvironment.getBounds().getWidth());
+                double height = internalScaler.environmentToPanel(
+                        monitoredEnvironment.getBounds().getHeight());
+                g.drawRect((int) top.getX(), (int) top.getY(), (int) width, (int) height);
+            }
+
+            //resource painting activated
+            if ((options & RESOURCE_OPTION) == RESOURCE_OPTION)
+                for (Resource resource : monitoredEnvironment.getResources()) {
+                    //TODO Resources related to color ?
+                    float bluePercentage = (float) (resource.getAmount()
+                            / Configuration.getParameter(RESOURCE_AMOUNT_THRESHOLD, Double.class));
+                    Color blueGradient = new Color(0f,
+                            0f,
+                            bluePercentage
+                    );
+                    g.setColor(blueGradient);
+                    Point2D center = internalScaler.environmentToPanel(resource);
+                    double radius = internalScaler.environmentToPanel(Resource.RADIUS);
+                    g.fillOval(
+                            (int) (center.getX() - radius),
+                            (int) (center.getY() - radius),
+                            (int) (radius * 2.0),
+                            (int) (radius * 2.0)
+                    );
+                }
+
+
+            //Draw all environment's lines
+            for (Line2D line : monitoredEnvironment.getHistory()) {
+                //TODO We will need to keep a record of line's color...
+                g.setColor(Color.BLACK);
                 // HELP Handle environment's coordinate vs panel's coordinates
                 Point2D start = internalScaler.environmentToPanel(line.getP1());
                 Point2D end = internalScaler.environmentToPanel(line.getP2());
@@ -105,8 +179,8 @@ public class GraphicEnvironment
     }
 
     public void setEnvironment(Environment env) {
-        if (runEnvironment.isRunning())
-            runEnvironment.stop();
+        drawEnvironment.stop();
+        runEnvironment.stop();
         //environment settings
         monitoredEnvironment = env;
         env.addLineListener(internalLineMonitor);
@@ -114,104 +188,35 @@ public class GraphicEnvironment
         env.addAgentListener(internalAgentMonitor);
         env.addResourceListener(internalResourceMonitor);
         panelStructureHasChanged = true;
-        if (!drawEnvironment.isRunning())
-            drawEnvironment.start();
+        repaint();
     }
 
 
     public void unsetEnvironment() {
-        if (runEnvironment.isRunning())
-            runEnvironment.stop();
-        if (drawEnvironment.isRunning())
-            drawEnvironment.stop();
         if (monitoredEnvironment != null) {
+            drawEnvironment.stop();
+            runEnvironment.stop();
             monitoredEnvironment.removeLineListener(internalLineMonitor);
             monitoredEnvironment.removeEvolutionListener(internalEvolutionMonitor);
             monitoredEnvironment.removeAgentListener(internalAgentMonitor);
             monitoredEnvironment.removeResourceListener(internalResourceMonitor);
             monitoredEnvironment = null;
             panelStructureHasChanged = true;
+            paintImmediately(getBounds());
         }
     }
 
     public void runSimulation() {
-        if (monitoredEnvironment != null
-                && !runEnvironment.isRunning())
-            runEnvironment.start();
-        if (monitoredEnvironment != null
-                && !drawEnvironment.isRunning())
+        if (monitoredEnvironment != null) {
             drawEnvironment.start();
+            runEnvironment.start();
+        }
     }
 
     public void stopSimulation() {
-        if (monitoredEnvironment != null
-                && runEnvironment.isRunning())
-            runEnvironment.stop();
-        if (monitoredEnvironment != null
-                && drawEnvironment.isRunning())
-            drawEnvironment.stop();
-    }
-
-    /**
-     * Send a signal to redraw all environment due to
-     * panel's setting modification
-     *
-     * @param g
-     */
-    private void redrawEnvironment(Graphics g) {
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, getWidth(), getHeight());
         if (monitoredEnvironment != null) {
-            for (Resource resource : monitoredEnvironment.getResources()) {
-                //TODO Resources related to color ?
-                Color blueGradient = new Color(0f, 0f,
-                        resource.getAmount() / (float) Resource.MAX_AMOUNT
-                );
-                g.setColor(blueGradient);
-                Point2D center = internalScaler.environmentToPanel(resource.getCenter());
-                double radius = internalScaler.environmentToPanel(resource.getRadius());
-                g.fillOval(
-                        (int) (center.getX() - radius),
-                        (int) (center.getY() - radius),
-                        (int) (radius * 2.0),
-                        (int) (radius * 2.0)
-                );
-                g.setColor(Color.WHITE);
-                g.fillOval(
-                        (int) (center.getX() - 2.0),
-                        (int) (center.getY() - 2.0),
-                        (int) 4.0,
-                        (int) 4.0
-                );
-            }
-            //Draw all environment's lines
-            for (Line2D line : monitoredEnvironment.getHistory()) {
-                //TODO We will need to keep a record of line's color...
-                g.setColor(Color.WHITE);
-                // HELP Handle environment's coordinate vs panel's coordinates
-                Point2D start = internalScaler.environmentToPanel(line.getP1());
-                Point2D end = internalScaler.environmentToPanel(line.getP2());
-                g.drawLine(
-                        (int) start.getX(),
-                        (int) start.getY(),
-                        (int) end.getX(),
-                        (int) end.getY()
-                );
-            }
-            for (Point2D position : agentBuffer) {
-
-                g.setColor(Color.RED);
-
-                //TODO Handle diameter scale
-                Point2D center = internalScaler.environmentToPanel(position);
-
-                g.fillOval(
-                        (int) (center.getX() - 2),
-                        (int) (center.getY() - 2),
-                        2,
-                        2
-                );
-            }
+            drawEnvironment.stop();
+            runEnvironment.stop();
         }
     }
 
@@ -238,7 +243,8 @@ public class GraphicEnvironment
     class GraphicMonitor implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            repaint();
+            if (runEnvironment.isRunning())
+                repaint();
         }
     }
 
@@ -280,6 +286,7 @@ public class GraphicEnvironment
         public void update(EvolutionEvent e) {
             switch (e.getType()) {
                 case STARTED:
+                    drawEnvironment.start();
                 case CYCLE_END:
                     Monitor.updateEnvironmentInformation(
                             monitoredEnvironment, EnvironmentInformation.State.RUNNING);
@@ -288,6 +295,7 @@ public class GraphicEnvironment
                     Monitor.updateEnvironmentInformation(
                             monitoredEnvironment, EnvironmentInformation.State.FROZEN);
                     repaint();
+                    drawEnvironment.stop();
                     runEnvironment.stop();
             }
         }
@@ -301,9 +309,6 @@ public class GraphicEnvironment
                 case BORN:
                     break;
                 case DEATH:
-                    agentBuffer.push(e.getAgent().getLocation());
-                    if (agentBuffer.size() % 50 == 0)
-                        panelStructureHasChanged = true;
                     break;
             }
         }
@@ -314,11 +319,9 @@ public class GraphicEnvironment
         @Override
         public void update(ResourceEvent e) {
             switch (e.getType()) {
-                case DECREASED:
-                    panelStructureHasChanged = true;
-                    break;
                 case DEPLETED:
-                    panelStructureHasChanged = true;
+                    if ((options & RESOURCE_OPTION) == RESOURCE_OPTION)
+                        panelStructureHasChanged = true;
                     break;
             }
         }
@@ -334,7 +337,7 @@ public class GraphicEnvironment
         private final int WHEEL_UP = -1;
         private final int WHEEL_DOWN = 1;
 
-        private double panelScale = 3.0;
+        private double panelScale = 1.0;
         private int panelAbscissaDifferential = 0;
         private int panelOrdinateDifferential = 0;
 
@@ -352,9 +355,9 @@ public class GraphicEnvironment
 
             //minus because environment is real mathematics cartesian coordinate
             double panelAbscissa =
-                    ((panelDimension.getWidth() / 2.0) + environmentPosition.getX() * panelScale);
+                    (panelDimension.getWidth() / 2.0) + environmentPosition.getX() * panelScale;
             double panelOrdinate =
-                    ((panelDimension.getHeight() / 2.0) - environmentPosition.getY() * panelScale);
+                    (panelDimension.getHeight() / 2.0) - environmentPosition.getY() * panelScale;
 
             logger.finest(String.format(
                     "(%.2f,%.2f) translated to (%.2f,%.2f) [panelDimension=%s]",
@@ -392,7 +395,8 @@ public class GraphicEnvironment
 
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
-            if (e.getModifiers() == InputEvent.CTRL_MASK) {
+            if (isActivated(ZOOM_OPTION)
+                    && e.getModifiers() == InputEvent.CTRL_MASK) {
                 switch (e.getWheelRotation()) {
                     case WHEEL_UP:
                         if (panelScale < UP_SCALE_THRESHOLD) {
@@ -425,41 +429,43 @@ public class GraphicEnvironment
 
         @Override
         public void mouseDragged(MouseEvent e) {
-            Point currentMousePoint = e.getPoint();
-            if (oldMouseLocation != null) {
-                //calculate diff
-                panelAbscissaDifferential +=
-                        (currentMousePoint.x - oldMouseLocation.x);
-                panelOrdinateDifferential +=
-                        (currentMousePoint.y - oldMouseLocation.y);
-                panelStructureHasChanged = true;
+            if (isActivated(SCROLL_OPTION)) {
+                Point currentMousePoint = e.getPoint();
+                if (oldMouseLocation != null) {
+                    //calculate diff
+                    panelAbscissaDifferential +=
+                            (currentMousePoint.x - oldMouseLocation.x);
+                    panelOrdinateDifferential +=
+                            (currentMousePoint.y - oldMouseLocation.y);
+                    panelStructureHasChanged = true;
 
-                paintImmediately(0, 0, getWidth(), getHeight());
+                    paintImmediately(0, 0, getWidth(), getHeight());
+                }
+                oldMouseLocation = currentMousePoint;
             }
-            oldMouseLocation = currentMousePoint;
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            oldMouseLocation = null;
-            logger.finer(String.format(
-                    "Panel differential updated to (%d,%d)",
-                    panelAbscissaDifferential,
-                    panelOrdinateDifferential
-            ));
+            if (isActivated(SCROLL_OPTION)) {
+                oldMouseLocation = null;
+                logger.finer(String.format(
+                        "Panel differential updated to (%d,%d)",
+                        panelAbscissaDifferential,
+                        panelOrdinateDifferential
+                ));
 
-            paintImmediately(0, 0, getWidth(), getHeight());
+                paintImmediately(0, 0, getWidth(), getHeight());
+            }
         }
     }
 
     class IconHandler extends MouseAdapter {
-
         @Override
         public void mouseEntered(MouseEvent e) {
             setCursor(
                     Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         }
-
         @Override
         public void mouseExited(MouseEvent e) {
             setCursor(

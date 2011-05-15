@@ -2,12 +2,12 @@ package org.blackpanther.ecosystem.gui.wizard;
 
 import com.nexes.wizard.WizardModel;
 import org.blackpanther.ecosystem.Agent;
-import org.blackpanther.ecosystem.placement.Strategy;
+import org.blackpanther.ecosystem.placement.GenerationStrategy;
 
 import java.util.Collection;
 import java.util.Properties;
 
-import static org.blackpanther.ecosystem.placement.Strategy.generatePopulation;
+import static org.blackpanther.ecosystem.placement.GenerationStrategy.generatePopulation;
 
 /**
  * @author MACHIZAUD Andréa
@@ -18,7 +18,7 @@ public class CreationModel
     //LATER - Restore a saved environment
 
     private Properties environmentProperties;
-    private Strategy.GenerationType placementStrategy;
+    private GenerationStrategy.GenerationType placementStrategy;
     private Object[] additionalParameters;
 
     public void setParameters(Properties properties) {
@@ -29,7 +29,7 @@ public class CreationModel
         return environmentProperties;
     }
 
-    public void setPlacementStrategy(Strategy.GenerationType placementStrategy) {
+    public void setPlacementStrategy(GenerationStrategy.GenerationType placementStrategy) {
         this.placementStrategy = placementStrategy;
     }
 
@@ -39,6 +39,7 @@ public class CreationModel
 
     public Collection<Agent> getPool() {
         return generatePopulation(
+                Agent.class,
                 placementStrategy,
                 additionalParameters
         );

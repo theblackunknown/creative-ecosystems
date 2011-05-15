@@ -1,5 +1,7 @@
 package org.blackpanther.ecosystem.helper;
 
+import org.blackpanther.ecosystem.math.Geometry;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -67,11 +69,31 @@ public final class Helper {
         return inf <= number && number < sup;
     }
 
+    public static Double normalizeAngle(double angle) {
+        return angle % Geometry.PI_2;
+    }
+
+    public static Double normalizeProbability(double probability) {
+        if (probability < 0.0)
+            return 0.0;
+        else if (probability > 1.0)
+            return 1.0;
+        else
+            return probability;
+    }
+
+    public static Double normalizePositiveDouble(double speed) {
+        if (speed < 0.0)
+            return 0.0;
+        else
+            return speed;
+    }
+
     public static URL getImage(String imagePath) {
         return Helper.class.getClassLoader().getResource(imagePath);
     }
 
-    private static final Dimension FIELD_DIMENSION = new Dimension(400, 50);
+    private static final Dimension FIELD_DIMENSION = new Dimension(160, 50);
 
     public static JPanel createLabeledField(final String labelName, final Component field) {
         return new JPanel(new GridLayout(2, 1)) {{
@@ -88,26 +110,11 @@ public final class Helper {
      * of the angle with source as center and target a point on the circle
      */
     public static Double computeOrientation(Point2D source, Point2D target) {
-        if (source.distance(target) < EPSILON) {
-            return 0.0;
-        } else {
-            double diffX = (target.getX() - source.getX());
-            double ratioX = diffX / source.distance(target);
-            double cosAngleX = Math.acos(ratioX);
-            double diffY = (target.getY() - source.getY());
-            double ratioY = diffY / source.distance(target);
-            double sinAngleY = Math.asin(ratioY);
-            System.out.println(String.format(
-                    "%n(%.2f,%.2f)-(%.2f,%.2f)%n" +
-                            "cosAngle X : %.4f%n" +
-                            "sinAngle Y : %.4f%n",
-                    source.getX(), source.getY(), target.getX(), target.getY(),
-                    cosAngleX,
-                    sinAngleY));
-            if( source.getY() < target.getY() )
-                return cosAngleX;
-            else
-                return -cosAngleX;
-        }
+        double angle = Math.atan2(
+                target.getY() - source.getY(),
+                target.getX() - source.getX());
+        return angle < 0.0
+                ? angle + Geometry.PI_2
+                : angle;
     }
 }

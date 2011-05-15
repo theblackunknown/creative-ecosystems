@@ -13,7 +13,6 @@ public class ResourceEvent extends EnvironmentEvent{
     private Type type;
 
     public enum Type {
-        DECREASED,
         DEPLETED;
     }
 

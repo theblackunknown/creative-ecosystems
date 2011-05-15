@@ -1,5 +1,7 @@
 package org.blackpanther.ecosystem;
 
+import org.blackpanther.ecosystem.event.AgentEvent;
+import org.blackpanther.ecosystem.event.EnvironmentMonitor;
 import org.blackpanther.ecosystem.math.Geometry;
 
 import java.awt.*;
@@ -9,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.blackpanther.ecosystem.helper.Helper.require;
-import static org.blackpanther.ecosystem.Configuration.Configuration;
 
 /**
  * <p>
@@ -34,13 +35,16 @@ public abstract class Agent
 
     public static final String AGENT_IDENTIFIER = "agent-identifier";
     public static final String AGENT_AGE = "agent-age";
+    public static final String AGENT_ENERGY = "agent-energy";
     public static final String AGENT_LOCATION = "agent-location";
     public static final String AGENT_ORIENTATION = "agent-orientation";
     public static final String AGENT_CURVATURE = "agent-curvature";
     public static final String AGENT_SPEED = "agent-speed";
 
+    public static final String AGENT_MOVEMENT_COST = "agent-movement-cost";
+    public static final String AGENT_FECUNDATION_COST = "agent-fecundation-cost";
+    public static final String AGENT_FECUNDATION_LOSS = "agent-fecundation-loss";
     public static final String AGENT_GREED = "agent-greed";
-    public static final String AGENT_LUST = "agent-lust";
     public static final String AGENT_SENSOR_RADIUS = "agent-sensor-radius";
     public static final String AGENT_IRRATIONALITY = "agent-irrationality";
     public static final String AGENT_MORTALITY = "agent-mortality";
@@ -69,79 +73,78 @@ public abstract class Agent
      * Agent's area listener
      */
     private AreaListener areaListener;
+    private EnvironmentMonitor eventSupport;
 
     /**
      * Create an agent
      *
-     * @param spawnLocation          initial location of the agent in the environment.
-     * @param launchOrientation      initial movement orientation
-     * @param childLaunchOrientation orientation initial value for next generation from this parent
-     * @param initialCurvature       initial curvature
-     * @param launchSpeed            initial speed
-     * @param childLaunchSpeed       orientation initial value for next generation from this parent
-     * @param initialMortality       initial mortality rate
-     * @param initialFecundity       initial fecundity rate
-     * @param initialMutation        initial mutation rate
-     * @param manager                Behaviour Strategy to use for this agent
+     * @param spawnLocation     initial location of the agent in the environment.
+     * @param orientation       initial movement orientation
+     * @param launchOrientation orientation initial value for next generation from this parent
+     * @param curvature         initial curvature
+     * @param speed             initial speed
+     * @param launchSpeed       orientation initial value for next generation from this parent
+     * @param mortality         initial mortality rate
+     * @param fecundity         initial fecundity rate
+     * @param mutation          initial mutation rate
+     * @param manager           Behaviour Strategy to use for this agent
      * @see java.awt.geom.Point2D.Double
      * @see org.blackpanther.ecosystem.BehaviorManager
      */
     public Agent(
             final Point2D spawnLocation,
-            final Double launchOrientation,
-            final Double childLaunchOrientation,
-            final Double initialCurvature,
-            final Double launchSpeed,
-            final Double childLaunchSpeed,
-            final Double initialSensorRadius,
-            final Double initialIrrationality,
-            final Double initialMortality,
-            final Double initialFecundity,
-            final Double initialMutation,
+            final double energyAmount,
+            final double movementCost,
+            final double fecundationCost,
+            final double fecundationLoss,
+            final double orientation,
+            final double launchOrientation,
+            final double curvature,
+            final double speed,
+            final double launchSpeed,
+            final double greed,
+            final double sensorRadius,
+            final double irrationality,
+            final double mortality,
+            final double fecundity,
+            final double mutation,
             final BehaviorManager manager
     ) {
-        require(spawnLocation != null,
-                "Initial position must be provided");
-        require(launchOrientation != null,
-                "Initial orientation must be provided");
-        require(initialCurvature != null,
-                "Initial curvature must be provided");
-        require(launchSpeed != null && launchSpeed >= 0.0,
-                "Initial speed must be provided and be positive");
-        require(initialSensorRadius != null && initialSensorRadius >= 0.0,
-                "Initial sensor radius must be provided and be positive");
-        require(0.0 <= initialIrrationality && initialIrrationality <= 1.0,
-                "irrationality rate is expressed in [0.0,1.0] interval not " + initialIrrationality);
-        require(0.0 <= initialMortality && initialMortality <= 1.0,
-                "mortality rate is expressed in [0.0,1.0] interval not " + initialMortality);
-        require(0.0 <= initialFecundity && initialFecundity <= 1.0,
-                "fecundity rate is expressed in [0.0,1.0] interval not " + initialFecundity);
-        require(0.0 <= initialMutation && initialMutation <= 1.0,
-                "mutation rate is expressed in [0.0,1.0] interval not " + initialMutation);
+        require(spawnLocation != null);
+        require(energyAmount >= 0.0, String.valueOf(energyAmount));
+        require(movementCost >= 0.0, String.valueOf(movementCost));
+        require(0.0 <= fecundationCost, String.valueOf(fecundationCost));
+        require(0.0 <= fecundationLoss && fecundationLoss <= 1.0, String.valueOf(fecundationLoss));
+        require(speed >= 0.0, String.valueOf(speed));
+        require(0.0 <= greed && greed <= 1.0, String.valueOf(greed));
+        require(sensorRadius >= 0.0, String.valueOf(sensorRadius));
+        require(0.0 <= irrationality && irrationality <= 1.0, String.valueOf(irrationality));
+        require(0.0 <= mortality && mortality <= 1.0, String.valueOf(mortality));
+        require(0.0 <= fecundity && fecundity <= 1.0, String.valueOf(fecundity));
+        require(0.0 <= mutation && mutation <= 1.0, String.valueOf(mutation));
         require(manager != null, "You must provide a BehaviourManager");
 
-        //FIXME Agent identifier is static
         genotype.put(AGENT_IDENTIFIER, Color.BLACK);
-        Integer greed = Configuration.getParameter(AGENT_GREED,Integer.class);
+        genotype.put(AGENT_MOVEMENT_COST, movementCost);
+        genotype.put(AGENT_FECUNDATION_COST, fecundationCost);
+        genotype.put(AGENT_FECUNDATION_LOSS, fecundationLoss);
         genotype.put(AGENT_GREED, greed);
-        Double lust = Configuration.getParameter(AGENT_LUST,Double.class);
-        genotype.put(AGENT_LUST, lust);
-        genotype.put(AGENT_SENSOR_RADIUS, initialSensorRadius);
-        genotype.put(AGENT_IRRATIONALITY, initialIrrationality);
-        genotype.put(AGENT_MORTALITY, initialMortality);
-        genotype.put(AGENT_FECUNDITY, initialFecundity);
-        genotype.put(AGENT_MUTATION, initialMutation);
-        genotype.put(AGENT_ORIENTATION_LAUNCHER, childLaunchOrientation);
-        genotype.put(AGENT_SPEED_LAUNCHER, childLaunchSpeed);
+        genotype.put(AGENT_SENSOR_RADIUS, sensorRadius);
+        genotype.put(AGENT_IRRATIONALITY, irrationality);
+        genotype.put(AGENT_MORTALITY, mortality);
+        genotype.put(AGENT_FECUNDITY, fecundity);
+        genotype.put(AGENT_MUTATION, mutation);
+        genotype.put(AGENT_ORIENTATION_LAUNCHER, launchOrientation);
+        genotype.put(AGENT_SPEED_LAUNCHER, launchSpeed);
         genotype.put(AGENT_BEHAVIOUR, manager);
 
-        currentState.put(AGENT_AGE, 0);
+        setAge(0);
         currentState.put(AGENT_LOCATION,
-                new Point2D.Double(spawnLocation.getX(), spawnLocation.getY())
-        );
-        currentState.put(AGENT_ORIENTATION, launchOrientation);
-        currentState.put(AGENT_CURVATURE, initialCurvature);
-        currentState.put(AGENT_SPEED, launchSpeed);
+                new Point2D.Double(spawnLocation.getX(), spawnLocation.getY()));
+        setEnergy(energyAmount);
+        setOrientation(orientation);
+        setCurvature(curvature);
+        setSpeed(speed);
     }
 
     /**
@@ -163,6 +166,11 @@ public abstract class Agent
         return areaListener != null;
     }
 
+    public void setEventSupport(EnvironmentMonitor monitor) {
+        this.eventSupport = monitor;
+        eventSupport.fireAgentEvent(AgentEvent.Type.BORN, this);
+    }
+
     /**
      * Set the {@link AreaListener}
      *
@@ -176,6 +184,8 @@ public abstract class Agent
      * Unset the current area listener if any
      */
     final void detachFromEnvironment() {
+        if (eventSupport != null)
+            eventSupport.fireAgentEvent(AgentEvent.Type.DEATH, this);
         areaListener = null;
     }
 
@@ -190,7 +200,6 @@ public abstract class Agent
 
     /* ================================================
      *               GETTERS
-     * TODO Implement general setters
      * ================================================
      */
 
@@ -244,6 +253,10 @@ public abstract class Agent
      */
     public Point2D getLocation() {
         return getState(AGENT_LOCATION, Point2D.class);
+    }
+
+    public double getEnergy() {
+        return getState(AGENT_ENERGY, Double.class);
     }
 
     /**
@@ -355,13 +368,17 @@ public abstract class Agent
         getState(AGENT_LOCATION, Point2D.class).setLocation(abscissa, ordinate);
     }
 
+    final void setEnergy(Double energy) {
+        currentState.put(AGENT_ENERGY, energy);
+    }
+
     /**
      * Setter for the agent's orientation
      *
      * @param orientation the new orientation
      */
     void setOrientation(Double orientation) {
-        currentState.put(AGENT_ORIENTATION, orientation);
+        currentState.put(AGENT_ORIENTATION, orientation % Geometry.PI_2);
     }
 
     /**
