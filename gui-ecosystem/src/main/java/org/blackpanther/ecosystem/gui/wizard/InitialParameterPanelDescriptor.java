@@ -1,11 +1,17 @@
 package org.blackpanther.ecosystem.gui.wizard;
 
 import com.nexes.wizard.WizardPanelDescriptor;
+import org.blackpanther.ecosystem.Agent;
 import org.blackpanther.ecosystem.DraughtsmanBehaviour;
+import org.blackpanther.ecosystem.Resource;
+import org.blackpanther.ecosystem.gui.GUIMonitor;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -200,6 +206,8 @@ public class InitialParameterPanelDescriptor
             mortalityField.setValue(configuration.get(AGENT_MORTALITY));
             fecundityField.setValue(configuration.get(AGENT_FECUNDITY));
             mutationField.setValue(configuration.get(AGENT_MUTATION));
+
+            randomSeedField.addP
 
             String behaviourClass = (String) configuration.get(AGENT_BEHAVIOUR);
             Set<String> behaviours =

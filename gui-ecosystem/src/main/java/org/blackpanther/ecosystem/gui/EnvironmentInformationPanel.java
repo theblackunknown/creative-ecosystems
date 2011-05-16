@@ -1,5 +1,7 @@
 package org.blackpanther.ecosystem.gui;
 
+import org.blackpanther.ecosystem.Agent;
+import org.blackpanther.ecosystem.Resource;
 import org.blackpanther.ecosystem.gui.actions.EnvironmentCreationAction;
 import org.blackpanther.ecosystem.gui.lightweight.ConfigurationInformation;
 import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
@@ -7,6 +9,10 @@ import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import java.awt.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Collection;
+import java.util.Properties;
 
 /**
  * @author MACHIZAUD Andréa
@@ -20,8 +26,13 @@ public class EnvironmentInformationPanel extends JPanel {
     private static final String NO_ENVIRONMENT = "No Environment Set";
 
     private final JPanel DEFAULT_PANEL = new NoEnvironmentInformationPanel();
+
+    private EnvironmentConfigurationModel model =
+            new EnvironmentConfigurationModel();
     private EnvironmentInformationInstance informationBoard =
             new EnvironmentInformationInstance();
+
+
     private boolean defaultPanelIsSet = true;
 
     public EnvironmentInformationPanel() {
@@ -157,6 +168,64 @@ public class EnvironmentInformationPanel extends JPanel {
                                 + EnvironmentInformation.State.RUNNING
                 );
             }
+        }
+    }
+
+    /**
+     * Handle panel switching by a card layout
+     */
+
+    class ApplicationParameterPanel extends JPanel {
+
+    }
+
+    class AgentParameterPanel extends JPanel {
+
+    }
+
+    class PlacementAgentPanel extends JPanel {
+
+    }
+
+    class PlacementResourcePanel extends JPanel {
+
+    }
+
+    /**
+     * Monitor every little change and re-create an environment if anything has changes
+     */
+
+    class ParametersMonitor implements PropertyChangeListener {
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (!evt.getOldValue().equals(evt.getNewValue())) {
+                model.update();
+            }
+        }
+    }
+
+    /**
+     * A model in a backend keep records of everey parameters data
+     */
+
+    class EnvironmentConfigurationModel {
+
+        private Properties currentProperties;
+        private Collection<Agent> agentPool;
+        private Collection<Resource> ressourcePool;
+
+        private void notifyChanges() {
+            GUIMonitor.Monitor.resetEnvironment(
+                    currentProperties,
+                    agentPool,
+                    ressourcePool
+            );
+        }
+
+        void update() {
+            //TODO Fetch all fields
+            notifyChanges();
         }
     }
 }
