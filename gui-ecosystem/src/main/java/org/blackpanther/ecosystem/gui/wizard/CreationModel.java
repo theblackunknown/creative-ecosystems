@@ -15,7 +15,6 @@ import static org.blackpanther.ecosystem.placement.GenerationStrategy.generatePo
  */
 public class CreationModel
         extends WizardModel {
-    //LATER - Restore a saved environment
 
     private Properties environmentProperties;
     private GenerationStrategy.GenerationType placementStrategy;

@@ -1,5 +1,6 @@
 package org.blackpanther.ecosystem.gui.actions;
 
+import org.blackpanther.ecosystem.Configuration;
 import org.blackpanther.ecosystem.Environment;
 
 import javax.swing.*;
@@ -10,6 +11,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.Map;
+import java.util.Properties;
 
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
@@ -33,13 +36,13 @@ public class EnvironmentSaveAction
         fileSaver.setMultiSelectionEnabled(false);
     }
 
-    private static class SaveEnvironmentActionHolder {
+    private static class EnvironmentSaveActionHolder {
         private static final EnvironmentSaveAction instance =
                 new EnvironmentSaveAction();
     }
 
     public static EnvironmentSaveAction getInstance() {
-        return SaveEnvironmentActionHolder.instance;
+        return EnvironmentSaveActionHolder.instance;
     }
 
     @Override
@@ -86,6 +89,7 @@ public class EnvironmentSaveAction
                                 new FileOutputStream(
                                         file));
                         os.writeObject(env);
+                        os.writeObject(textify(Configuration.Configuration.parameters()));
                         os.close();
                         JOptionPane.showMessageDialog(
                                 parent,
@@ -106,5 +110,11 @@ public class EnvironmentSaveAction
                     }
                 }
         }
+    }
+
+    private static Properties textify(Properties props) {
+        for (Map.Entry<Object, Object> entry : props.entrySet())
+            props.put(entry.getKey(), String.valueOf(entry.getValue()));
+        return props;
     }
 }

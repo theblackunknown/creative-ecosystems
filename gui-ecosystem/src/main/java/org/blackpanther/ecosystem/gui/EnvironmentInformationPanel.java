@@ -17,6 +17,7 @@ public class EnvironmentInformationPanel extends JPanel {
     private static final String LABEL_ENVIRONMENT_ID = "Environment #%s %s";
     private static final String LABEL_ENVIRONMENT_AGENT = "Agent number : %d";
     private static final String LABEL_ENVIRONMENT_GENERATION = "#Generation %d";
+    private static final String NO_ENVIRONMENT = "No Environment Set";
 
     private final JPanel DEFAULT_PANEL = new NoEnvironmentInformationPanel();
     private EnvironmentInformationInstance informationBoard =
@@ -68,7 +69,7 @@ public class EnvironmentInformationPanel extends JPanel {
 
     class NoEnvironmentInformationPanel extends JPanel {
         NoEnvironmentInformationPanel() {
-            setName("No environment is set");
+            setName(NO_ENVIRONMENT);
             JButton createEnvironment =
                     new JButton(EnvironmentCreationAction.getInstance());
             add(createEnvironment);
@@ -87,15 +88,15 @@ public class EnvironmentInformationPanel extends JPanel {
             setLayout(new GridBagLayout());
 
             environmentLabel =
-                    new JLabel("No environment set");
+                    new JLabel(NO_ENVIRONMENT);
 
             environmentAgentCounter =
-                    new JLabel("No environment set");
+                    new JLabel(NO_ENVIRONMENT);
 
             environmentGenerationLabel =
-                    new JLabel("No environment set");
+                    new JLabel(NO_ENVIRONMENT);
             initialParametersLabel =
-                    new JLabel("No environment set");
+                    new JLabel(NO_ENVIRONMENT);
             JButton resetEnvironment = new JButton(
                     EnvironmentCreationAction.getInstance());
 

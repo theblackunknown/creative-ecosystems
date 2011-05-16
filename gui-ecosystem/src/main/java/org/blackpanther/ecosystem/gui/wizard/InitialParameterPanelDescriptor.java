@@ -201,8 +201,7 @@ public class InitialParameterPanelDescriptor
             fecundityField.setValue(configuration.get(AGENT_FECUNDITY));
             mutationField.setValue(configuration.get(AGENT_MUTATION));
 
-            String behaviourClass = configuration.get(AGENT_BEHAVIOUR)
-                    .getClass().getCanonicalName();
+            String behaviourClass = (String) configuration.get(AGENT_BEHAVIOUR);
             Set<String> behaviours =
                     new HashSet<String>(behavioursField.getModel().getSize());
             behavioursField.removeAllItems();

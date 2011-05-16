@@ -396,6 +396,9 @@ public enum Configuration {
         for (Map.Entry<String, Object> entry : applicationProperties.entrySet())
             if (entry.getKey().equals(RANDOM))
                 parameters.put(entry.getKey(), getRandomSeed());
+            else if(entry.getKey().equals(AGENT_BEHAVIOUR))
+                parameters.put(entry.getKey(),
+                        getParameter(AGENT_BEHAVIOUR,BehaviorManager.class).getClass().getCanonicalName());
             else
                 parameters.put(entry.getKey(), entry.getValue());
         return parameters;

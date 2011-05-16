@@ -1,12 +1,17 @@
 package org.blackpanther.ecosystem.gui.actions;
 
+import org.blackpanther.ecosystem.Configuration;
 import org.blackpanther.ecosystem.Environment;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.Properties;
 
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
@@ -30,13 +35,13 @@ public class EnvironmentLoadAction
         fileSaver.setMultiSelectionEnabled(false);
     }
 
-    private static class LoadEnvironmentActionHolder {
+    private static class EnvironmentLoadActionHolder {
         private static final EnvironmentLoadAction instance =
                 new EnvironmentLoadAction();
     }
 
     public static EnvironmentLoadAction getInstance() {
-        return LoadEnvironmentActionHolder.instance;
+        return EnvironmentLoadActionHolder.instance;
     }
 
     @Override
@@ -54,9 +59,11 @@ public class EnvironmentLoadAction
                     ObjectInputStream os = new ObjectInputStream(
                             new FileInputStream(
                                     selectedFile));
-                    Environment env = (Environment) os.readObject();
+                    Environment environment = (Environment) os.readObject();
+                    Properties environmentProperties = (Properties) os.readObject();
                     os.close();
-                    Monitor.setCurrentEnvironment(env);
+                    Configuration.Configuration.loadConfiguration(environmentProperties);
+                    Monitor.setCurrentEnvironment(environment);
                     JOptionPane.showMessageDialog(
                             parent,
                             "File loaded : " + selectedFile.getName(),
