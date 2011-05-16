@@ -5,16 +5,18 @@ import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.Resource;
 
 import java.awt.geom.Line2D;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Set;
 
 /**
  * @author MACHIZAUD Andréa
  * @version 0.2 - Wed May 11 02:54:46 CEST 2011
  */
-public class EnvironmentMonitor {
+public class EnvironmentMonitor
+        implements Serializable {
     /**
      * Line's event listeners
      */
@@ -24,13 +26,27 @@ public class EnvironmentMonitor {
             new HashSet<EvolutionListener>();
     private Set<AgentListener> agentListeners =
             new HashSet<AgentListener>();
-    private List<ResourceListener> resourceListeners =
-            new ArrayList<ResourceListener>();
+    private Set<ResourceListener> resourceListeners =
+            new HashSet<ResourceListener>();
 
     private Environment source;
 
     public EnvironmentMonitor(Environment sourceEnvironment) {
         this.source = sourceEnvironment;
+    }
+
+    /*=========================================================================
+                               SERIALIZATION
+      =========================================================================*/
+
+    public void clearAllExternalsListeners(){
+        lineListeners.clear();
+        evolutionListeners.clear();
+        agentListeners.clear();
+        Iterator<ResourceListener> it = resourceListeners.iterator();
+        while (it.hasNext())
+            if (!(it.next() instanceof Environment.Area))
+                it.remove();
     }
 
     /*=========================================================================

@@ -41,7 +41,7 @@ public class GraphicEnvironment
     public static final int ZOOM_OPTION = 1 << 3;
 
     private int options = BOUNDS_OPTION
-//            | RESOURCE_OPTION
+            | RESOURCE_OPTION
             | SCROLL_OPTION
             | ZOOM_OPTION;
 
@@ -235,6 +235,32 @@ public class GraphicEnvironment
             return null;
         }
 
+    }
+
+    public void setOption(int boundsOption, boolean shouldBePainted) {
+        if (shouldBePainted)
+            options |= boundsOption;
+        else
+            options &= ~boundsOption;
+        switch (boundsOption) {
+            case BOUNDS_OPTION:
+            case RESOURCE_OPTION:
+                panelStructureHasChanged = true;
+                repaint();
+        }
+    }
+
+    public Environment dumpCurrentEnvironment() {
+        try {
+            Environment env =  monitoredEnvironment != null
+                    ? monitoredEnvironment.clone()
+                    : null;
+            if(env != null)
+                env.clearAllExternalsListeners();
+            return env;
+        } catch (CloneNotSupportedException e1) {
+            throw new Error("Model is not cloneable");
+        }
     }
 
     /**
@@ -466,6 +492,7 @@ public class GraphicEnvironment
             setCursor(
                     Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         }
+
         @Override
         public void mouseExited(MouseEvent e) {
             setCursor(

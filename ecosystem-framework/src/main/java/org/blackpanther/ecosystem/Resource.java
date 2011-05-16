@@ -1,6 +1,5 @@
 package org.blackpanther.ecosystem;
 
-import org.blackpanther.ecosystem.event.EnvironmentMonitor;
 import org.blackpanther.ecosystem.event.ResourceEvent;
 import org.blackpanther.ecosystem.event.ResourceListener;
 
@@ -16,14 +15,13 @@ public class Resource
         extends Point2D.Double
         implements Serializable {
 
-    public static final java.lang.Double RADIUS = 3.0;
+    public static final java.lang.Double RADIUS = 1.5;
 
     /**
      * Amount of resources
      */
     private double amount;
-    private EnvironmentMonitor eventSupport;
-    private Stack<ResourceListener> toBeCleared;
+    private Environment environment;
 
     public Resource(double x, double y, double amount) {
         super(x, y);
@@ -35,12 +33,11 @@ public class Resource
     }
 
     public java.lang.Double consume() {
-        toBeCleared = new Stack<ResourceListener>();
-        eventSupport.fireResourceEvent(this, ResourceEvent.Type.DEPLETED);
+        environment.getEventSupport().fireResourceEvent(this, ResourceEvent.Type.DEPLETED);
         return amount;
     }
 
-    void setEventSupport(EnvironmentMonitor eventSupport) {
-        this.eventSupport = eventSupport;
+    void attachTo(Environment env) {
+        this.environment = env;
     }
 }

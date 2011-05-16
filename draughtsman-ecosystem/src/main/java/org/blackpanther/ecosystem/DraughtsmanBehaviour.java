@@ -106,7 +106,7 @@ public class DraughtsmanBehaviour
         if (closestResource != null) {
             //check if we can still move
             if (that.getEnergy() >=
-                    that.getGene(AGENT_MOVEMENT_COST, Double.class) * that.getSpeed()) {
+                    that.getGene(AGENT_MOVEMENT_COST, Double.class) ){//* that.getSpeed()) {
                 //if we cross the resource
                 double distance = that.getLocation().distance(closestResource.getTarget());
                 if (distance < Configuration.getParameter(CONSUMMATION_RADIUS, Double.class)) {
@@ -159,11 +159,11 @@ public class DraughtsmanBehaviour
     protected void move(Environment env, Agent that) {
         boolean hasDied;
         if (that.getEnergy() >=
-                that.getGene(AGENT_MOVEMENT_COST, Double.class) * that.getSpeed()) {
+                that.getGene(AGENT_MOVEMENT_COST, Double.class) ){//* that.getSpeed()) {
 
             //Step 1 - Consume energy
             that.setEnergy(
-                    that.getEnergy() - that.getGene(AGENT_MOVEMENT_COST, Double.class) * that.getSpeed()
+                    that.getEnergy() - that.getGene(AGENT_MOVEMENT_COST, Double.class) //* that.getSpeed()
             );
 
             //Step 2 - Update location according to current orientation

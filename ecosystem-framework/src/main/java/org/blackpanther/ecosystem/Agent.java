@@ -1,7 +1,6 @@
 package org.blackpanther.ecosystem;
 
 import org.blackpanther.ecosystem.event.AgentEvent;
-import org.blackpanther.ecosystem.event.EnvironmentMonitor;
 import org.blackpanther.ecosystem.math.Geometry;
 
 import java.awt.*;
@@ -23,7 +22,7 @@ import static org.blackpanther.ecosystem.helper.Helper.require;
  * @version 0.2 - Wed May 11 02:54:46 CEST 2011
  */
 public abstract class Agent
-        implements Serializable {
+        implements Serializable, Cloneable {
 
     /**
      * Serializable identifier
@@ -73,7 +72,7 @@ public abstract class Agent
      * Agent's area listener
      */
     private AreaListener areaListener;
-    private EnvironmentMonitor eventSupport;
+    private Environment environment;
 
     /**
      * Create an agent
@@ -166,26 +165,26 @@ public abstract class Agent
         return areaListener != null;
     }
 
-    public void setEventSupport(EnvironmentMonitor monitor) {
-        this.eventSupport = monitor;
-        eventSupport.fireAgentEvent(AgentEvent.Type.BORN, this);
-    }
-
     /**
      * Set the {@link AreaListener}
      *
      * @param listener the new area listener
      */
-    final void attachTo(final AreaListener listener) {
+    final void attachTo(Environment env, final AreaListener listener) {
+        require(env != null);
+        require(listener != null);
+        environment = env;
         areaListener = listener;
+        environment.getEventSupport().fireAgentEvent(AgentEvent.Type.BORN, this);
     }
 
     /**
      * Unset the current area listener if any
      */
     final void detachFromEnvironment() {
-        if (eventSupport != null)
-            eventSupport.fireAgentEvent(AgentEvent.Type.DEATH, this);
+        if (environment != null)
+            environment.getEventSupport().fireAgentEvent(AgentEvent.Type.DEATH, this);
+        environment = null;
         areaListener = null;
     }
 

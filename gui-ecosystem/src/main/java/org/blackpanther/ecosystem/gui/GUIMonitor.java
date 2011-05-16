@@ -85,9 +85,22 @@ public enum GUIMonitor {
         }
     }
 
+    public void paintBounds(boolean shouldBePainted) {
+        require(drawPanel != null);
+        drawPanel.setOption(GraphicEnvironment.BOUNDS_OPTION, shouldBePainted);
+    }
+
+    public void paintResources(boolean shouldBePainted) {
+        require(drawPanel != null);
+        drawPanel.setOption(GraphicEnvironment.RESOURCE_OPTION, shouldBePainted);
+    }
+
     public BufferedImage dumpCurrentImage() {
-        logger.info("Dump image action delegated to draw panel");
         return drawPanel.dumpCurrentImage();
+    }
+
+    public Environment dumpCurrentEnvironment() {
+        return drawPanel.dumpCurrentEnvironment();
     }
 
     public void pauseEvolution() {

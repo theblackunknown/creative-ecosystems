@@ -31,7 +31,7 @@ import static org.blackpanther.ecosystem.math.Geometry.getIntersection;
  * @version 0.2 - Wed May 11 02:54:46 CEST 2011
  */
 public abstract class Environment
-        implements Serializable {
+        implements Serializable, Cloneable {
 
     /*
      *=========================================================================
@@ -116,7 +116,6 @@ public abstract class Environment
         this.id = ++idGenerator;
 
         //initialize environment monitor
-        eventSupport = new EnvironmentMonitor(this);
 
         this.bounds = dimension == null
                 ? new Rectangle2D.Double(
@@ -253,16 +252,15 @@ public abstract class Environment
      */
     public final void addAgent(
             final Agent agent) {
-        agent.attachTo(getCorrespondingArea(agent.getLocation()));
-        agent.setEventSupport(eventSupport);
+        agent.attachTo(this, getCorrespondingArea(agent.getLocation()));
         pool.add(agent);
     }
 
     public final void addResource(
             final Resource resource) {
-        getCorrespondingArea(resource)
-                .addResource(resource);
-        resource.setEventSupport(eventSupport);
+        Area area = getCorrespondingArea(resource);
+        resource.attachTo(this);
+        area.addResource(resource);
     }
 
 
@@ -339,7 +337,7 @@ public abstract class Environment
         require(!endReached, "This environment has been frozen");
 
         if (timetracker == 0)
-            eventSupport.fireEvolutionEvent(EvolutionEvent.Type.STARTED);
+            getEventSupport().fireEvolutionEvent(EvolutionEvent.Type.STARTED);
 
         long start = System.nanoTime();
         //update environment state
@@ -364,15 +362,13 @@ public abstract class Environment
                     timetracker,
                     pool.size()));
             timetracker++;
-            eventSupport.fireEvolutionEvent(EvolutionEvent.Type.CYCLE_END);
+            getEventSupport().fireEvolutionEvent(EvolutionEvent.Type.CYCLE_END);
         }
     }
 
     /**
      * Update the environment's state
      * Internal process.
-     *
-     * @return if any any agents remain in the environment
      */
     private void updatePool() {
 
@@ -398,12 +394,17 @@ public abstract class Environment
     public final void endThisWorld() {
         endReached = true;
         logger.info(String.format("The evolution's game ended. %s's statistics[%d cycle]", this, timetracker));
-        eventSupport.fireEvolutionEvent(EvolutionEvent.Type.ENDED);
+        getEventSupport().fireEvolutionEvent(EvolutionEvent.Type.ENDED);
     }
 
     @Override
     public String toString() {
         return String.format("Environment#%s", Long.toHexString(id));
+    }
+
+    @Override
+    public Environment clone() throws CloneNotSupportedException {
+        return (Environment) super.clone();
     }
 
     /*=====================================================================
@@ -412,28 +413,27 @@ public abstract class Environment
     */
 
     public void addAgentListener(AgentListener listener) {
-        eventSupport.addAgentListener(listener);
+        getEventSupport().addAgentListener(listener);
     }
 
     public void addLineListener(LineListener listener) {
-        eventSupport.addLineListener(listener);
+        getEventSupport().addLineListener(listener);
     }
 
     public void addEvolutionListener(EvolutionListener listener) {
-        eventSupport.addEvolutionListener(listener);
+        getEventSupport().addEvolutionListener(listener);
     }
 
     public void addResourceListener(ResourceListener listener) {
-        eventSupport.addResourceListener(listener);
+        getEventSupport().addResourceListener(listener);
     }
 
     public void removeResourceListener(ResourceListener listener) {
-        eventSupport.removeResourceListener(listener);
+        getEventSupport().removeResourceListener(listener);
     }
 
     public void nextGeneration(Agent child) {
-        child.attachTo(getCorrespondingArea(child.getLocation()));
-        child.setEventSupport(eventSupport);
+        child.attachTo(this, getCorrespondingArea(child.getLocation()));
         nextGenerationBuffer.push(child);
     }
 
@@ -456,6 +456,7 @@ public abstract class Environment
         //it means line has crossed more than one area
         if (!collision && crossedAreas.size() > 1) {
             that.attachTo(
+                    this,
                     getCorrespondingArea(to)
             );
         }
@@ -463,17 +464,26 @@ public abstract class Environment
     }
 
     public void removeAgentListener(AgentListener listener) {
-        eventSupport.removeAgentListener(listener);
+        getEventSupport().removeAgentListener(listener);
     }
 
     public void removeEvolutionListener(EvolutionListener listener) {
-        eventSupport.removeEvolutionListener(listener);
+        getEventSupport().removeEvolutionListener(listener);
     }
 
     public void removeLineListener(LineListener listener) {
-        eventSupport.removeLineListener(listener);
+        getEventSupport().removeLineListener(listener);
     }
 
+    EnvironmentMonitor getEventSupport() {
+        if (eventSupport == null)
+            eventSupport = new EnvironmentMonitor(this);
+        return eventSupport;
+    }
+
+    public void clearAllExternalsListeners() {
+        eventSupport.clearAllExternalsListeners();
+    }
 
     /**
      * <p>
@@ -500,7 +510,7 @@ public abstract class Environment
 
         public Area(double x, double y, double w, double h) {
             super(x, y, w, h);
-            eventSupport.addResourceListener(this);
+            getEventSupport().addResourceListener(this);
         }
 
         public Collection<Line2D> getHistory() {
@@ -534,7 +544,8 @@ public abstract class Environment
                         );
                         //We add a drawn line from agent's old location till intersection
                         internalDrawHistory.add(realLine);
-                        eventSupport.fireLineEvent(LineEvent.Type.ADDED, realLine);
+
+                        getEventSupport().fireLineEvent(LineEvent.Type.ADDED, realLine);
                         //Yes, unfortunately, the agent died - this is Sparta here dude
                         return true;
                     }
@@ -554,14 +565,14 @@ public abstract class Environment
                     );
                     //We add a drawn line from agent's old location till intersection
                     internalDrawHistory.add(realLine);
-                    eventSupport.fireLineEvent(LineEvent.Type.ADDED, realLine);
+                    getEventSupport().fireLineEvent(LineEvent.Type.ADDED, realLine);
                     //Yes, unfortunately, the agent died - this is Sparta here dude
                     return true;
                 }
             }
             //Everything went better than expected
             internalDrawHistory.add(line);
-            eventSupport.fireLineEvent(LineEvent.Type.ADDED, line);
+            getEventSupport().fireLineEvent(LineEvent.Type.ADDED, line);
             return false;
         }
 
@@ -591,7 +602,6 @@ public abstract class Environment
         }
 
         public void addResource(Resource resource) {
-            resource.setEventSupport(eventSupport);
             resourcePool.add(resource);
         }
 

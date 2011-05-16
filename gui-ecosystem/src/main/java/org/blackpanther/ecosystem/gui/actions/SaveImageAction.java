@@ -21,7 +21,7 @@ public class SaveImageAction
     private JFileChooser fileSaver = new JFileChooser(".");
 
     private SaveImageAction() {
-        super("Save current image.");
+        super("Save current image");
         fileSaver.setFileFilter(
                 new FileNameExtensionFilter(
                         "Image files", "png", "bmp", "gif", "jpeg"
@@ -76,18 +76,19 @@ public class SaveImageAction
                                 : "png";
 
 
+                File file = gotExtension ?
+                        selectedFile
+                        : new File(selectedFile.getAbsolutePath() + ".png");
+
                 if (returnVal == JOptionPane.OK_OPTION) {
                     try {
                         ImageIO.write(
                                 image,
                                 extension,
-                                fileSaver.getSelectedFile());
+                                file);
                         JOptionPane.showMessageDialog(
                                 parent,
-                                "File saved : " + selectedFile.getName() + (
-                                        gotExtension
-                                                ? ""
-                                                : ".png"),
+                                "File saved : " + file.getName(),
                                 "Save operation",
                                 JOptionPane.INFORMATION_MESSAGE);
                     } catch (IOException e1) {

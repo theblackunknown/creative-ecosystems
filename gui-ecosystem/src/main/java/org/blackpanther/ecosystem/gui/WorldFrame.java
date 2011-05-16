@@ -1,9 +1,7 @@
 package org.blackpanther.ecosystem.gui;
 
 import com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel;
-import org.blackpanther.ecosystem.gui.actions.EnvironmentCreationAction;
-import org.blackpanther.ecosystem.gui.actions.LoadConfigurationAction;
-import org.blackpanther.ecosystem.gui.actions.SaveImageAction;
+import org.blackpanther.ecosystem.gui.actions.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -105,13 +103,13 @@ public class WorldFrame
         JMenu file = new JMenu("File");
         JMenu environment = new JMenu("Environment");
 
-        JMenuItem createEnvironment = new JMenuItem(
-                EnvironmentCreationAction.getInstance());
-
         file.add(LoadConfigurationAction.getInstance());
         file.add(SaveImageAction.getInstance());
 
-        environment.add(createEnvironment);
+        environment.add(EnvironmentCreationAction.getInstance());
+        environment.add(new JSeparator(JSeparator.VERTICAL));
+        environment.add(EnvironmentSaveAction.getInstance());
+        environment.add(EnvironmentLoadAction.getInstance());
 
         menuBar.add(file);
         menuBar.add(environment);
