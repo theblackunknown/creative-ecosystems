@@ -18,7 +18,7 @@ public final class RangeModels {
     }
 
     // Domain : Real
-    public static final SpinnerModel generateDecimalModel() {
+    public static final SpinnerModel generateDoubleModel() {
         return new SpinnerNumberModel(
                 0.0,
                 null,
@@ -27,7 +27,7 @@ public final class RangeModels {
     }
 
     // Domain : [0.0,POS_INF]
-    public static final SpinnerModel generatePositiveDecimalModel() {
+    public static final SpinnerModel generatePositiveDoubleModel() {
         return new SpinnerNumberModel(
                 0.0,
                 0.0,
@@ -36,7 +36,7 @@ public final class RangeModels {
     }
 
     // Domain : [0.0,1.0]
-    public static final SpinnerModel generateProbabilityModel() {
+    public static final SpinnerModel generatePercentageModel() {
         return new SpinnerNumberModel(
                 0.0,
                 0.0,

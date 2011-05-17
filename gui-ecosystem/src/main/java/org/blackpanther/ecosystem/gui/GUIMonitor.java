@@ -1,13 +1,16 @@
 package org.blackpanther.ecosystem.gui;
 
-import org.blackpanther.ecosystem.Configuration;
+import org.blackpanther.ecosystem.Agent;
+import org.blackpanther.ecosystem.DesignEnvironment;
 import org.blackpanther.ecosystem.Environment;
+import org.blackpanther.ecosystem.Resource;
 import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
 
 import java.awt.image.BufferedImage;
-import java.util.logging.Logger;
+import java.util.Collection;
+import java.util.Properties;
 
-import static org.blackpanther.ecosystem.gui.lightweight.ConfigurationInformation.dump;
+import static org.blackpanther.ecosystem.Configuration.*;
 import static org.blackpanther.ecosystem.helper.Helper.require;
 
 /**
@@ -16,11 +19,6 @@ import static org.blackpanther.ecosystem.helper.Helper.require;
  */
 public enum GUIMonitor {
     Monitor;
-
-    private static final Logger logger =
-            Logger.getLogger(
-                    GUIMonitor.class.getCanonicalName()
-            );
 
     private GraphicEnvironment drawPanel;
     private EnvironmentInformationPanel environmentInformationPanel;
@@ -53,7 +51,7 @@ public enum GUIMonitor {
         drawPanel.setEnvironment(env);
         environmentInformationPanel.updateInformation(
                 EnvironmentInformation.dump(env, EnvironmentInformation.State.NOT_YET_STARTED));
-        environmentInformationPanel.updateInformation(dump(Configuration.Configuration));
+        environmentInformationPanel.updateInformation(Configuration);
         environmentCommandsPanel.environmentSet();
     }
 
@@ -110,5 +108,20 @@ public enum GUIMonitor {
         drawPanel.stopSimulation();
         environmentInformationPanel.notifyPause();
         environmentCommandsPanel.notifyPause();
+    }
+
+    public void resetEnvironment(
+            Properties newProperties,
+            Collection<Agent> agentPool,
+            Collection<Resource> resourcePool) {
+        Configuration.loadConfiguration(newProperties);
+        Environment env = new DesignEnvironment(
+                Configuration.getParameter(SPACE_WIDTH, Double.class),
+                Configuration.getParameter(SPACE_HEIGHT, Double.class)
+        );
+        env.addAgent(agentPool);
+        env.addResource(resourcePool);
+        removeEnvironment();
+        setCurrentEnvironment(env);
     }
 }

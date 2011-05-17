@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp
+        spec="1.0+"
+        codebase="https://github.com/blackpanther/creative-ecosystems/raw/master/gui-ecosystem/"
+        href="gui-ecosystem-dev.jnlp">
+    <information>
+        <title>GUI Ecosystem</title>
+        <vendor>MACHIZAUD Andréa</vendor>
+        <homepage>https://github.com/blackpanther/creative-ecosystems/tree/devel</homepage>
+        <description>GUI to visualize evolution fo draugthsman's ecosystem</description>
+        <icon
+                href="src/main/resources/org/blackpanther/black-cat-icon.png"
+                kind="splash"/>
+        <offline-allowed/>
+        <desktop/>
+    </information>
+     <update
+             check="always"
+             policy="prompt-update"/>
+    <security>
+        <all-permissions/>
+    </security>
+    <resources>
+        <!-- Application Resources -->
+        <java
+                version="1.6+"/>
+        <jar
+                href="target/signed-gui-ecosystem-0.5.jar"
+                main="true"/>
+    </resources>
+    <application-desc
+         name="Ecosystem Evolution Visualisation Application"/>
+</jnlp>

@@ -40,14 +40,12 @@ public enum Configuration {
     public static final String ENERGY_AMOUNT_THRESHOLD = "energy-randomized-threshold";
     public static final String SENSOR_THRESHOLD = "sensor-radius-randomized-threshold";
     public static final String CURVATURE_THRESHOLD = "curvature-randomized-threshold";
-    public static final String FECUNDATION_CONSUMMATION_THRESHOLD = "fecundation-consummation-randomized-threshold";
-    public static final String MOVEMENT_CONSUMMATION_THRESHOLD = "movement-consummation-randomized-threshold";
+    public static final String FECUNDATION_CONSUMMATION_THRESHOLD = "fecundation-cons-randomized-threshold";
 
     public static final String PROBABILITY_VARIATION = "probability-variation";
     public static final String CURVATURE_VARIATION = "curvature-variation";
     public static final String ANGLE_VARIATION = "angle-variation";
     public static final String SPEED_VARIATION = "speed-variation";
-    public static final String CONSUMMATION_VARIATION = "consummation-variation";
 
     private String[] DOUBLE_UNBOUNDED;
     private String[] ANGLE;
@@ -78,7 +76,6 @@ public enum Configuration {
                 CURVATURE_VARIATION,
                 ANGLE_VARIATION,
                 SPEED_VARIATION,
-                CONSUMMATION_VARIATION,
                 AGENT_CURVATURE
         };
         ANGLE = new String[]{
@@ -90,7 +87,6 @@ public enum Configuration {
                 SPEED_THRESHOLD,
                 SENSOR_THRESHOLD,
                 ENERGY_AMOUNT_THRESHOLD,
-                MOVEMENT_CONSUMMATION_THRESHOLD,
                 FECUNDATION_CONSUMMATION_THRESHOLD,
                 CONSUMMATION_RADIUS,
                 RESOURCE_AMOUNT,
@@ -402,5 +398,11 @@ public enum Configuration {
             else
                 parameters.put(entry.getKey(), entry.getValue());
         return parameters;
+    }
+
+    public static Properties textify(Properties props) {
+        for (Map.Entry<Object, Object> entry : props.entrySet())
+            props.put(entry.getKey(), String.valueOf(entry.getValue()));
+        return props;
     }
 }

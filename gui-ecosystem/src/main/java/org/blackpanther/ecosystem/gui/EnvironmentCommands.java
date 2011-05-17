@@ -34,37 +34,33 @@ public class EnvironmentCommands
         setLayout(new FlowLayout());
 
         evolutionFlowButton = new JButton(NO_ENVIRONMENT);
-        drawBounds = new JCheckBox("Paint bounds",true);
-        drawResources = new JCheckBox("Paint resources",true);
+        drawBounds = new JCheckBox("Paint bounds", true);
+        drawResources = new JCheckBox("Paint resources", true);
 
         evolutionFlowButton.setEnabled(false);
-        evolutionFlowButton.addActionListener(
-                EventHandler.create(
-                        ActionListener.class,
-                        this,
-                        "switchStartPause"
-                ));
-        evolutionFlowButton.addActionListener(
-                EventHandler.create(
-                        ActionListener.class,
-                        Monitor,
-                        "interceptEnvironmentEvolutionFlow",
-                        "source.text"
-                ));
-        drawBounds.addActionListener(
-                EventHandler.create(
-                        ActionListener.class,
-                        Monitor,
-                        "paintBounds",
-                        "source.selected"
-                ));
-        drawResources.addActionListener(
-                EventHandler.create(
-                        ActionListener.class,
-                        Monitor,
-                        "paintResources",
-                        "source.selected"
-                ));
+        evolutionFlowButton.addActionListener(EventHandler.create(
+                ActionListener.class,
+                this,
+                "switchStartPause"
+        ));
+        evolutionFlowButton.addActionListener(EventHandler.create(
+                ActionListener.class,
+                Monitor,
+                "interceptEnvironmentEvolutionFlow",
+                "source.text"
+        ));
+        drawBounds.addActionListener(EventHandler.create(
+                ActionListener.class,
+                Monitor,
+                "paintBounds",
+                "source.selected"
+        ));
+        drawResources.addActionListener(EventHandler.create(
+                ActionListener.class,
+                Monitor,
+                "paintResources",
+                "source.selected"
+        ));
 
         add(evolutionFlowButton);
         add(drawBounds);
@@ -74,6 +70,7 @@ public class EnvironmentCommands
                 BorderFactory.createEtchedBorder(EtchedBorder.RAISED)
         );
     }
+
     public void switchStartPause() {
         if (evolutionFlowButton.getText()
                 .equals(STOP_ENVIRONMENT)) {

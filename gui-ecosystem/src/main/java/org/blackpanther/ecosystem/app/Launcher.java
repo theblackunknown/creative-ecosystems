@@ -32,31 +32,31 @@ public class Launcher {
             public void run() {
                 WorldFrame.getInstance().setVisible(true);
                 WorldFrame.getInstance().validate();
-                Environment env = new DesignEnvironment(
-                        Configuration.getParameter(SPACE_WIDTH, Double.class),
-                        Configuration.getParameter(SPACE_HEIGHT, Double.class)
-                );
-                for (double x = -400.0, y = 0.0;
-                     x < 400.0 && y > -400.0;
-                     x += 1.0, y -= 1.0)
-                    env.addAgent(AgentFactory.StandardAgent(x, y, Math.PI/4));
-//                env.addAgent(
+//                Environment env = new DesignEnvironment(
+//                        Configuration.getParameter(SPACE_WIDTH, Double.class),
+//                        Configuration.getParameter(SPACE_HEIGHT, Double.class)
+//                );
+//                for (double x = -400.0, y = 0.0;
+//                     x < 400.0 && y > -400.0;
+//                     x += 1.0, y -= 1.0)
+//                    env.addAgent(AgentFactory.StandardAgent(x, y, Math.PI/4));
+////                env.addAgent(
+////                        generatePopulation(
+////                                Agent.class,
+////                                GenerationType.RANDOM,
+////                                1000L
+////                        )
+////                );
+//                env.addResource(
 //                        generatePopulation(
-//                                Agent.class,
-//                                GenerationType.RANDOM,
-//                                1000L
+//                                Resource.class,
+//                                GenerationStrategy.GenerationType.STANDARD_POSITION_PROVIDED,
+//                                200.0,
+//                                200.0,
+//                                10.0
 //                        )
 //                );
-                env.addResource(
-                        generatePopulation(
-                                Resource.class,
-                                GenerationStrategy.GenerationType.STANDARD_POSITION_PROVIDED,
-                                200.0,
-                                200.0,
-                                10.0
-                        )
-                );
-                Monitor.setCurrentEnvironment(env);
+//                Monitor.setCurrentEnvironment(env);
             }
         });
     }

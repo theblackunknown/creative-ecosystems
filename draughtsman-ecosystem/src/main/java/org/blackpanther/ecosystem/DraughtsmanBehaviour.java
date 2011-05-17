@@ -44,10 +44,11 @@ public class DraughtsmanBehaviour
      */
     @Override
     public final void update(Environment env, Agent agent) {
+        SenseResult analysis = agent.sense();
         //Step 1 - react with anything detected
-        react(env, agent);
+        react(env, agent,analysis);
         //Step 1 - sense around myself
-        sense(env, agent);
+        sense(env, agent,analysis);
         //Step 1 - spawn
         spawn(env, agent);
         //Step 2 - move ( and trace )
@@ -59,11 +60,7 @@ public class DraughtsmanBehaviour
     /**
      * Sense around him
      */
-    protected void sense(Environment env, Agent that) {
-        SenseResult analysis = that.sense();
-        SensorTarget<Agent> closestAgent = getClosestAgent(
-                that.getLocation(), analysis.getNearAgents());
-        //TODO Handle predator-pray
+    protected void sense(Environment env, Agent that, SenseResult analysis) {
 
         SensorTarget<Resource> closestResource = getClosestResource(
                 that.getLocation(), analysis.getNearResources());
@@ -98,15 +95,14 @@ public class DraughtsmanBehaviour
         }
     }
 
-    protected void react(Environment env, Agent that) {
-        SenseResult analysis = that.sense();
+    protected void react(Environment env, Agent that, SenseResult analysis) {
         //fetch closest resource
         SensorTarget<Resource> closestResource =
                 getClosestResource(that.getLocation(), analysis.getNearResources());
         if (closestResource != null) {
             //check if we can still move
             if (that.getEnergy() >=
-                    that.getGene(AGENT_MOVEMENT_COST, Double.class) ){//* that.getSpeed()) {
+                    that.getGene(AGENT_MOVEMENT_COST, Double.class)) {//* that.getSpeed()) {
                 //if we cross the resource
                 double distance = that.getLocation().distance(closestResource.getTarget());
                 if (distance < Configuration.getParameter(CONSUMMATION_RADIUS, Double.class)) {
@@ -159,11 +155,11 @@ public class DraughtsmanBehaviour
     protected void move(Environment env, Agent that) {
         boolean hasDied;
         if (that.getEnergy() >=
-                that.getGene(AGENT_MOVEMENT_COST, Double.class) ){//* that.getSpeed()) {
+                that.getGene(AGENT_MOVEMENT_COST, Double.class)* that.getSpeed()) {
 
             //Step 1 - Consume energy
             that.setEnergy(
-                    that.getEnergy() - that.getGene(AGENT_MOVEMENT_COST, Double.class) //* that.getSpeed()
+                    that.getEnergy() - that.getGene(AGENT_MOVEMENT_COST, Double.class) * that.getSpeed()
             );
 
             //Step 2 - Update location according to current orientation
@@ -235,24 +231,15 @@ public class DraughtsmanBehaviour
                 double curvatureVariation = Configuration.getParameter(CURVATURE_VARIATION, Double.class);
                 double orientationVariation = Configuration.getParameter(ANGLE_VARIATION, Double.class);
                 double speedVariation = Configuration.getParameter(SPEED_VARIATION, Double.class);
-                double consummationVariation = Configuration.getParameter(CONSUMMATION_VARIATION, Double.class);
                 Agent child = new DesignerAgent(
                         //initial position
                         that.getLocation(),
                         //initial amount of energy
                         that.getEnergy() * that.getGene(AGENT_FECUNDATION_LOSS, Double.class),
-                        //movement cost
-                        normalizePositiveDouble(mutate(
-                                that.getMutationRate(),
-                                that.getGene(AGENT_MOVEMENT_COST, Double.class),
-                                consummationVariation
-                                        * applicationRandom.nextGaussian())),
-                        //fecundation cost
-                        normalizePositiveDouble(mutate(
-                                that.getMutationRate(),
-                                that.getGene(AGENT_FECUNDATION_COST, Double.class),
-                                consummationVariation
-                                        * applicationRandom.nextGaussian())),
+                        //movement cost - non mutable
+                        that.getGene(AGENT_MOVEMENT_COST, Double.class),
+                        //fecundation cost - non mutable
+                        that.getGene(AGENT_FECUNDATION_COST, Double.class),
                         //fecundation loss
                         normalizeProbability(mutate(
                                 that.getMutationRate(),
@@ -322,7 +309,8 @@ public class DraughtsmanBehaviour
 
                 //Step 2 - loss of energy
                 that.setEnergy(
-                        that.getEnergy() * that.getGene(AGENT_FECUNDATION_LOSS, Double.class)
+                        that.getEnergy() *
+                                (1 - that.getGene(AGENT_FECUNDATION_LOSS, Double.class))
                 );
 
                 //Add into environment

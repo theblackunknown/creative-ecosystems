@@ -82,8 +82,7 @@ public final class AgentFactory {
                 applicationRandom.nextDouble()
                         * Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class),
                 //movement consummation
-                applicationRandom.nextDouble()
-                        * Configuration.getParameter(MOVEMENT_CONSUMMATION_THRESHOLD, Double.class),
+                applicationRandom.nextDouble(),
                 //fecundation consummation
                 applicationRandom.nextDouble()
                         * Configuration.getParameter(FECUNDATION_CONSUMMATION_THRESHOLD, Double.class),

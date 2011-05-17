@@ -20,19 +20,10 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
  * @version 16/05/11
  */
 public class EnvironmentLoadAction
-        extends AbstractAction {
-
-    private JFileChooser fileSaver = new JFileChooser(".");
+        extends FileBrowserAction {
 
     private EnvironmentLoadAction() {
-        super("Load an environment");
-        fileSaver.setFileFilter(
-                new FileNameExtensionFilter(
-                        "Environment files", "env"
-                )
-        );
-        fileSaver.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileSaver.setMultiSelectionEnabled(false);
+        super("Load external environment", "Environment files", "env");
     }
 
     private static class EnvironmentLoadActionHolder {
@@ -51,9 +42,9 @@ public class EnvironmentLoadAction
         Component parent = e.getSource() instanceof Component
                 ? ((Component) e.getSource()).getParent()
                 : null;
-        switch (fileSaver.showOpenDialog(parent)) {
+        switch (fc.showOpenDialog(parent)) {
             case JFileChooser.APPROVE_OPTION:
-                File selectedFile = fileSaver.getSelectedFile();
+                File selectedFile = fc.getSelectedFile();
 
                 try {
                     ObjectInputStream os = new ObjectInputStream(

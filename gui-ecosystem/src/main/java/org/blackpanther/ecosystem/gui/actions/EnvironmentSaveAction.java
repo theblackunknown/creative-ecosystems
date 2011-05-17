@@ -14,6 +14,7 @@ import java.io.ObjectOutputStream;
 import java.util.Map;
 import java.util.Properties;
 
+import static org.blackpanther.ecosystem.Configuration.textify;
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
@@ -21,19 +22,10 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
  * @version 16/05/11
  */
 public class EnvironmentSaveAction
-        extends AbstractAction {
-
-    private JFileChooser fileSaver = new JFileChooser(".");
+        extends FileBrowserAction {
 
     private EnvironmentSaveAction() {
-        super("Save current environment");
-        fileSaver.setFileFilter(
-                new FileNameExtensionFilter(
-                        "Environment files", "env"
-                )
-        );
-        fileSaver.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileSaver.setMultiSelectionEnabled(false);
+        super("Save current environment", "Environment files", "env");
     }
 
     private static class EnvironmentSaveActionHolder {
@@ -60,10 +52,9 @@ public class EnvironmentSaveAction
                     "Save operation",
                     JOptionPane.ERROR_MESSAGE);
 
-
-        switch (fileSaver.showSaveDialog(parent)) {
+        switch (fc.showSaveDialog(parent)) {
             case JFileChooser.APPROVE_OPTION:
-                File selectedFile = fileSaver.getSelectedFile();
+                File selectedFile = fc.getSelectedFile();
                 int returnVal = JOptionPane.OK_OPTION;
                 if (selectedFile.exists()) {
                     returnVal = JOptionPane.showConfirmDialog(
@@ -110,11 +101,5 @@ public class EnvironmentSaveAction
                     }
                 }
         }
-    }
-
-    private static Properties textify(Properties props) {
-        for (Map.Entry<Object, Object> entry : props.entrySet())
-            props.put(entry.getKey(), String.valueOf(entry.getValue()));
-        return props;
     }
 }

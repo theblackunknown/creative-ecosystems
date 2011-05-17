@@ -1,49 +1,47 @@
 package org.blackpanther.ecosystem.gui.actions;
 
-import javax.imageio.ImageIO;
+import org.blackpanther.ecosystem.Configuration;
+import org.blackpanther.ecosystem.Environment;
+
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 
+import static org.blackpanther.ecosystem.Configuration.textify;
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 0.2 - Wed May 11 02:54:46 CEST 2011
+ * @version 5/18/11
  */
-public class SaveImageAction
+public class ConfigurationSaveAction
         extends FileBrowserAction {
 
-    private SaveImageAction() {
-        super("Save current image",
-                "Image files",
-                "png", "bmp", "gif", "jpeg"
-                );
+    private ConfigurationSaveAction() {
+        super("Save current configuration",
+                "Configuration files",
+                "environment-conf");
     }
 
-    private static class SaveImageHolder {
-        private static final SaveImageAction instance =
-                new SaveImageAction();
+    private static class ConfigurationSaveActionHolder {
+        private static final ConfigurationSaveAction instance =
+                new ConfigurationSaveAction();
     }
 
-    public static SaveImageAction getInstance() {
-        return SaveImageHolder.instance;
+    public static ConfigurationSaveAction getInstance() {
+        return ConfigurationSaveActionHolder.instance;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        Monitor.pauseEvolution();
-        BufferedImage image = Monitor.dumpCurrentImage();
-        if (image == null)
-            return;
-
         Component parent = e.getSource() instanceof Component
                 ? ((Component) e.getSource()).getParent()
                 : null;
+
         switch (fc.showSaveDialog(parent)) {
             case JFileChooser.APPROVE_OPTION:
                 File selectedFile = fc.getSelectedFile();
@@ -61,25 +59,18 @@ public class SaveImageAction
 
                 boolean gotExtension = selectedFile.getName().contains(".");
 
-                String extension =
-                        gotExtension
-                                ? selectedFile.getName().substring(
-                                selectedFile.getName().lastIndexOf(".") + 1,
-                                selectedFile.getName().length()
-                        )
-                                : "png";
-
-
                 File file = gotExtension ?
                         selectedFile
-                        : new File(selectedFile.getAbsolutePath() + ".png");
+                        : new File(selectedFile.getAbsolutePath() + ".environment-conf");
+                boolean toDelete = !file.exists();
 
                 if (returnVal == JOptionPane.OK_OPTION) {
                     try {
-                        ImageIO.write(
-                                image,
-                                extension,
-                                file);
+                        ObjectOutputStream os = new ObjectOutputStream(
+                                new FileOutputStream(
+                                        file));
+                        os.writeObject(textify(Configuration.Configuration.parameters()));
+                        os.close();
                         JOptionPane.showMessageDialog(
                                 parent,
                                 "File saved : " + file.getName(),
@@ -88,10 +79,14 @@ public class SaveImageAction
                     } catch (IOException e1) {
                         JOptionPane.showMessageDialog(
                                 parent,
-                                "Couldn't save image file : "
+                                "Couldn't save environment file :\n"
                                         + e1.getLocalizedMessage(),
                                 "Save operation",
                                 JOptionPane.ERROR_MESSAGE);
+                        e1.printStackTrace();
+                        if (toDelete) {
+                            file.delete();
+                        }
                     }
                 }
         }

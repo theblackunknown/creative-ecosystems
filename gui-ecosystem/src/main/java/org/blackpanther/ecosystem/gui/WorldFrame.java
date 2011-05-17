@@ -106,8 +106,9 @@ public class WorldFrame
         file.add(LoadConfigurationAction.getInstance());
         file.add(SaveImageAction.getInstance());
 
-        environment.add(EnvironmentCreationAction.getInstance());
-        environment.add(new JSeparator(JSeparator.VERTICAL));
+        environment.add(ConfigurationSaveAction.getInstance());
+        environment.add(ConfigurationLoadAction.getInstance());
+        environment.addSeparator();
         environment.add(EnvironmentSaveAction.getInstance());
         environment.add(EnvironmentLoadAction.getInstance());
 
