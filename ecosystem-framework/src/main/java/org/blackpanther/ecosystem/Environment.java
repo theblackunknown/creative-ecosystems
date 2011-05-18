@@ -46,8 +46,8 @@ public abstract class Environment
     private static final Long serialVersionUID = 1L;
 
     private static long idGenerator = 0L;
-    private static int AREA_COLUMN_NUMBER = 3;
-    private static int AREA_ROW_NUMBER = 3;
+    private static int AREA_COLUMN_NUMBER = 5;
+    private static int AREA_ROW_NUMBER = 5;
 
     /**
      * Simple check for a environment space
@@ -219,7 +219,7 @@ public abstract class Environment
      * @return copy of agent's pool
      */
     public final Set<Agent> getPool() {
-        return new HashSet<Agent>(pool);
+        return pool;
     }
 
     /**
@@ -395,6 +395,8 @@ public abstract class Environment
         endReached = true;
         logger.info(String.format("The evolution's game ended. %s's statistics[%d cycle]", this, timetracker));
         getEventSupport().fireEvolutionEvent(EvolutionEvent.Type.ENDED);
+        pool.clear();
+        nextGenerationBuffer.clear();
     }
 
     @Override

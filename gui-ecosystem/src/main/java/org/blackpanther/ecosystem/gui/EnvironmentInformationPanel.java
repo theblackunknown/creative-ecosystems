@@ -9,7 +9,10 @@ import javax.swing.border.BevelBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.beans.EventHandler;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import static org.blackpanther.ecosystem.Agent.*;
 import static org.blackpanther.ecosystem.Configuration.*;
@@ -227,14 +230,14 @@ public class EnvironmentInformationPanel extends JPanel {
             return internalResourcePlacementPanel.generatePopulation();
         }
 
-        public Collection<Map.Entry<Object, Object>> getParameters() {
-            Set<Map.Entry<Object, Object>> allParameters = new HashSet<Map.Entry<Object, Object>>();
-            allParameters.addAll(internalApplicationParametersPanel.getParameters().entrySet());
-            allParameters.addAll(internalAgentParametersPanel.getParameters().entrySet());
+        public Map<Object, Object> getParameters() {
+            Map<Object, Object> allParameters = new HashMap<Object, Object>();
+            allParameters.putAll(internalApplicationParametersPanel.getParameters());
+            allParameters.putAll(internalAgentParametersPanel.getParameters());
             return allParameters;
         }
 
-        private void activate(){
+        private void activate() {
             panelSelector.setEnabled(true);
             internalApplicationParametersPanel.activate();
             internalAgentParametersPanel.activate();
@@ -315,12 +318,12 @@ public class EnvironmentInformationPanel extends JPanel {
             return externalisedParameters;
         }
 
-        void activate(){
+        void activate() {
             for (JSpinner components : parameters.values())
                 components.setEnabled(true);
         }
 
-        void deactivate(){
+        void deactivate() {
             for (JSpinner components : parameters.values())
                 components.setEnabled(false);
         }
@@ -414,6 +417,8 @@ public class EnvironmentInformationPanel extends JPanel {
             String behaviourClass =
                     information.getParameter(AGENT_BEHAVIOUR, BehaviorManager.class)
                             .getClass().getCanonicalName();
+            if (behaviourClass.equals(DraughtsmanBehaviour.class.getCanonicalName()))
+                behaviourClass = PASSIVE;
             //trick to avoid doubles
             //FIXME event fired
             behaviours.removeItem(behaviourClass);
@@ -462,7 +467,7 @@ public class EnvironmentInformationPanel extends JPanel {
         private JSpinner circleRadius;
         private JSpinner numberOfItemCircle;
 
-        public PlacementPanel(String name) {
+        public PlacementPanel(String name, String itemName) {
             super();
             setName(name);
 
@@ -473,12 +478,12 @@ public class EnvironmentInformationPanel extends JPanel {
 
             layout.add(presentation);
 
-            generateContent(layout);
+            generateContent(layout,itemName);
 
             add(layout);
         }
 
-        private void generateContent(Box layout) {
+        private void generateContent(Box layout, String itemName) {
             cardPanel = new JPanel(new CardLayout());
 
             strategyList = new JComboBox(GenerationStrategy.GenerationType.values());
@@ -525,12 +530,12 @@ public class EnvironmentInformationPanel extends JPanel {
             ));
 
             standardPositionRandomized.add(createLabeledField(
-                    "Number of agent",
+                    "Number of " + itemName,
                     numberOfItemRandomized
             ));
 
             standardCircle.add(createLabeledField(
-                    "Number of agent",
+                    "Number of " + itemName,
                     numberOfItemCircle
             ));
             standardCircle.add(createLabeledField(
@@ -539,7 +544,7 @@ public class EnvironmentInformationPanel extends JPanel {
             ));
 
             random.add(createLabeledField(
-                    "Number of agent",
+                    "Number of " + itemName,
                     numberOfItemRandom
             ));
 
@@ -597,7 +602,7 @@ public class EnvironmentInformationPanel extends JPanel {
     public class PlacementAgentPanel extends PlacementPanel<Agent> {
 
         public PlacementAgentPanel(String name) {
-            super(name);
+            super(name,"agent");
         }
 
         @Override
@@ -612,7 +617,7 @@ public class EnvironmentInformationPanel extends JPanel {
 
     public class PlacementResourcePanel extends PlacementPanel<Resource> {
         public PlacementResourcePanel(String name) {
-            super(name);
+            super(name,"resource");
         }
 
         @Override
@@ -630,22 +635,20 @@ public class EnvironmentInformationPanel extends JPanel {
      */
     public class EnvironmentConfigurationModel {
 
-        private Properties currentProperties = new Properties();
         private Collection<Agent> agentPool;
         private Collection<Resource> resourcePool;
 
         private void notifyChanges() {
             GUIMonitor.Monitor.resetEnvironment(
-                    currentProperties,
                     agentPool,
                     resourcePool
             );
         }
 
         public void update() {
-            currentProperties.clear();
-            for (Map.Entry<Object, Object> parameter : informationBoard.getParameters())
-                currentProperties.put(parameter.getKey(), parameter.getValue());
+            Properties props = new Properties();
+            props.putAll(informationBoard.getParameters());
+            Configuration.loadConfiguration(props);
             agentPool = informationBoard.getAgentPool();
             resourcePool = informationBoard.getResourcePool();
             notifyChanges();

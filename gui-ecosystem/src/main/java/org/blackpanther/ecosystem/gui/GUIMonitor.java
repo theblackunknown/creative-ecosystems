@@ -72,6 +72,11 @@ public enum GUIMonitor {
         }
     }
 
+    public void notifyConfigurationUpdate() {
+        require(environmentInformationPanel != null);
+        environmentInformationPanel.updateInformation(Configuration);
+    }
+
     public void interceptEnvironmentEvolutionFlow(String buttonLabel) {
         require(drawPanel != null);
         if (buttonLabel.equals(EnvironmentCommands.START_ENVIRONMENT)) {
@@ -111,10 +116,8 @@ public enum GUIMonitor {
     }
 
     public void resetEnvironment(
-            Properties newProperties,
             Collection<Agent> agentPool,
             Collection<Resource> resourcePool) {
-        Configuration.loadConfiguration(newProperties);
         Environment env = new DesignEnvironment(
                 Configuration.getParameter(SPACE_WIDTH, Double.class),
                 Configuration.getParameter(SPACE_HEIGHT, Double.class)

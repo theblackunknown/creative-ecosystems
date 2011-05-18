@@ -6,6 +6,9 @@ import org.blackpanther.ecosystem.gui.actions.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.awt.event.WindowStateListener;
 import java.io.IOException;
 import java.net.URL;
 
@@ -16,7 +19,8 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
  * @version 0.2 - Wed May 11 02:54:46 CEST 2011
  */
 public class WorldFrame
-        extends JFrame {
+        extends JFrame
+implements WindowStateListener {
 
     public static final String ICON_PATH = "org/blackpanther/black-cat-icon.png";
     public static final Image APPLICATION_ICON = fetchApplicationIcon();
@@ -83,9 +87,15 @@ public class WorldFrame
         );
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        //setLocationRelativeTo(null);
+        addWindowStateListener(this);
         pack();
         setExtendedState(MAXIMIZED_BOTH);
+    }
+
+    @Override
+    public void windowStateChanged(WindowEvent e) {
+        validate();
+        validateTree();
     }
 
     private static class WorldFrameHolder {

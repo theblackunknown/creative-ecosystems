@@ -40,10 +40,7 @@ public class GraphicEnvironment
     public static final int SCROLL_OPTION = 1 << 2;
     public static final int ZOOM_OPTION = 1 << 3;
 
-    private int options = BOUNDS_OPTION
-            | RESOURCE_OPTION
-            | SCROLL_OPTION
-            | ZOOM_OPTION;
+    private int options = SCROLL_OPTION | ZOOM_OPTION;
 
     private Environment monitoredEnvironment;
     private MouseListener internalMouseHandler =
@@ -54,8 +51,6 @@ public class GraphicEnvironment
             new EnvironmentLineMonitor();
     private EnvironmentEvolutionMonitor internalEvolutionMonitor =
             new EnvironmentEvolutionMonitor();
-    private AgentMonitor internalAgentMonitor =
-            new AgentMonitor();
     private ResourceMonitor internalResourceMonitor =
             new ResourceMonitor();
 
@@ -185,7 +180,6 @@ public class GraphicEnvironment
         monitoredEnvironment = env;
         env.addLineListener(internalLineMonitor);
         env.addEvolutionListener(internalEvolutionMonitor);
-        env.addAgentListener(internalAgentMonitor);
         env.addResourceListener(internalResourceMonitor);
         panelStructureHasChanged = true;
         repaint();
@@ -198,7 +192,6 @@ public class GraphicEnvironment
             runEnvironment.stop();
             monitoredEnvironment.removeLineListener(internalLineMonitor);
             monitoredEnvironment.removeEvolutionListener(internalEvolutionMonitor);
-            monitoredEnvironment.removeAgentListener(internalAgentMonitor);
             monitoredEnvironment.removeResourceListener(internalResourceMonitor);
             monitoredEnvironment = null;
             panelStructureHasChanged = true;
@@ -323,19 +316,6 @@ public class GraphicEnvironment
                     repaint();
                     drawEnvironment.stop();
                     runEnvironment.stop();
-            }
-        }
-    }
-
-    class AgentMonitor implements AgentListener {
-
-        @Override
-        public void update(AgentEvent e) {
-            switch (e.getType()) {
-                case BORN:
-                    break;
-                case DEATH:
-                    break;
             }
         }
     }

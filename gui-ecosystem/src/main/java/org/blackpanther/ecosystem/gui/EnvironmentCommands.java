@@ -25,8 +25,6 @@ public class EnvironmentCommands
     public static final String FROZEN_ENVIRONMENT = "Environment frozen";
 
     private JButton evolutionFlowButton;
-    private JCheckBox drawBounds;
-    private JCheckBox drawResources;
 
     public EnvironmentCommands() {
         super();
@@ -34,8 +32,8 @@ public class EnvironmentCommands
         setLayout(new FlowLayout());
 
         evolutionFlowButton = new JButton(NO_ENVIRONMENT);
-        drawBounds = new JCheckBox("Paint bounds", true);
-        drawResources = new JCheckBox("Paint resources", true);
+        JCheckBox drawBounds = new JCheckBox("Paint bounds", false);
+        JCheckBox drawResources = new JCheckBox("Paint resources", false);
 
         evolutionFlowButton.setEnabled(false);
         evolutionFlowButton.addActionListener(EventHandler.create(
