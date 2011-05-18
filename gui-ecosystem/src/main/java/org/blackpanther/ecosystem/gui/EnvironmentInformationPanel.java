@@ -8,6 +8,8 @@ import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.beans.EventHandler;
 import java.util.Collection;
 import java.util.HashMap;
@@ -42,11 +44,14 @@ public class EnvironmentInformationPanel extends JPanel {
         setBorder(
                 BorderFactory.createBevelBorder(BevelBorder.RAISED)
         );
-        clearBoard();
     }
 
     public void clearBoard() {
         informationBoard.deadactivate();
+    }
+
+    public void recreateEnvironment() {
+        model.update();
     }
 
     public void updateInformation(EnvironmentInformation information) {
@@ -115,15 +120,7 @@ public class EnvironmentInformationPanel extends JPanel {
 
             environmentGenerationLabel =
                     new JLabel(NO_ENVIRONMENT);
-            environmentGenerationLabel.setAlignmentX(CENTER_ALIGNMENT);
-
-            JButton resetEnvironment = new JButton("Reset Environment");
-            resetEnvironment.setAlignmentX(LEFT_ALIGNMENT);
-            resetEnvironment.addActionListener(EventHandler.create(
-                    ActionListener.class,
-                    model,
-                    "update"
-            ));
+            environmentGenerationLabel.setAlignmentX(LEFT_ALIGNMENT);
 
             //parameters panels
             parametersPanel = new JPanel(new CardLayout());
@@ -155,10 +152,8 @@ public class EnvironmentInformationPanel extends JPanel {
             Box information = Box.createVerticalBox();
 
             information.add(environmentLabel);
+            information.add(environmentGenerationLabel);
             information.add(environmentAgentCounter);
-            information.add(environmentAgentCounter);
-            information.add(Box.createVerticalStrut(10));
-            information.add(resetEnvironment);
             information.add(Box.createVerticalStrut(20));
 
             //initialize layout objects
@@ -297,10 +292,7 @@ public class EnvironmentInformationPanel extends JPanel {
          */
         void updateInformation(Configuration information) {
             for (Map.Entry<String, JSpinner> entry : parameters.entrySet()) {
-                if (entry.getKey().equals(RANDOM))
-                    parameters.get(entry.getKey()).setValue(
-                            information.getRandomSeed());
-                else if (entry.getKey().equals(MAX_AGENT_NUMBER))
+                if (entry.getKey().equals(MAX_AGENT_NUMBER))
                     parameters.get(entry.getKey()).setValue(
                             information.getParameter(entry.getKey(), Integer.class));
                 else
@@ -346,7 +338,6 @@ public class EnvironmentInformationPanel extends JPanel {
         @Override
         Map<String, JSpinner> generateParameters() {
             return new HashMap<String, JSpinner>() {{
-                put(RANDOM, new JSpinner(generatePositiveLongModel()));
                 put(SPACE_WIDTH, new JSpinner(generatePositiveDoubleModel()));
                 put(SPACE_HEIGHT, new JSpinner(generatePositiveDoubleModel()));
                 put(RESOURCE_AMOUNT, new JSpinner(generatePositiveDoubleModel()));
@@ -364,13 +355,17 @@ public class EnvironmentInformationPanel extends JPanel {
                 put(CURVATURE_VARIATION, new JSpinner(generateDoubleModel()));
                 put(ANGLE_VARIATION, new JSpinner(generateDoubleModel()));
                 put(SPEED_VARIATION, new JSpinner(generateDoubleModel()));
+                put(COLOR_VARIATION, new JSpinner(generateDoubleModel()));
             }};
         }
     }
 
-    class AgentParameterPanel extends ParametersPanel {
+    public class AgentParameterPanel
+            extends ParametersPanel
+            implements MouseListener {
 
         private JComboBox behaviours;
+        private JLabel colorDisplayer;
 
         public AgentParameterPanel(String name) {
             super(name);
@@ -379,6 +374,9 @@ public class EnvironmentInformationPanel extends JPanel {
         @Override
         void setUpComponents() {
             behaviours = new JComboBox(BEHAVIOURS_NAME);
+            colorDisplayer = new JLabel();
+            colorDisplayer.setOpaque(true);
+            colorDisplayer.addMouseListener(this);
         }
 
         @Override
@@ -404,6 +402,10 @@ public class EnvironmentInformationPanel extends JPanel {
 
         @Override
         void generateContent(Box layout) {
+            layout.add(createLabeledField(
+                    AGENT_IDENTIFIER,
+                    colorDisplayer
+            ));
             super.generateContent(layout);
             layout.add(createLabeledField(
                     AGENT_BEHAVIOUR,
@@ -414,13 +416,14 @@ public class EnvironmentInformationPanel extends JPanel {
         @Override
         void updateInformation(Configuration information) {
             super.updateInformation(information);
+            colorDisplayer.setBackground(information.getParameter(AGENT_IDENTIFIER, Color.class));
+
             String behaviourClass =
                     information.getParameter(AGENT_BEHAVIOUR, BehaviorManager.class)
                             .getClass().getCanonicalName();
             if (behaviourClass.equals(DraughtsmanBehaviour.class.getCanonicalName()))
                 behaviourClass = PASSIVE;
             //trick to avoid doubles
-            //FIXME event fired
             behaviours.removeItem(behaviourClass);
             behaviours.addItem(behaviourClass);
         }
@@ -432,8 +435,34 @@ public class EnvironmentInformationPanel extends JPanel {
             if (selectedBehaviour.equals(PASSIVE))
                 externalisedParameters.put(
                         AGENT_BEHAVIOUR, DraughtsmanBehaviour.class.getCanonicalName());
+            Color color = colorDisplayer.getBackground();
+            externalisedParameters.put(RED_COLOR, String.valueOf(color.getRed()));
+            externalisedParameters.put(GREEN_COLOR, String.valueOf(color.getGreen()));
+            externalisedParameters.put(BLUE_COLOR, String.valueOf(color.getBlue()));
             return externalisedParameters;
         }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            Color selectedColor = JColorChooser.showDialog(
+                    WorldFrame.getInstance(),
+                    "Choose agent identifier",
+                    colorDisplayer.getBackground());
+            if (selectedColor != null)
+                colorDisplayer.setBackground(selectedColor);
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) { }
+
+        @Override
+        public void mouseReleased(MouseEvent e) { }
+
+        @Override
+        public void mouseEntered(MouseEvent e) { }
+
+        @Override
+        public void mouseExited(MouseEvent e) { }
     }
 
     public abstract class PlacementPanel<T> extends JPanel {
@@ -441,31 +470,31 @@ public class EnvironmentInformationPanel extends JPanel {
         /**
          * Panel management
          */
-        private JComboBox strategyList;
-        private JPanel cardPanel;
+        protected JComboBox strategyList;
+        protected JPanel cardPanel;
 
         /**
          * Standard provided
          */
-        private JSpinner abscissaLimit;
-        private JSpinner ordinateLimit;
-        private JSpinner step;
+        protected JSpinner abscissaLimit;
+        protected JSpinner ordinateLimit;
+        protected JSpinner step;
 
         /**
          * Standard random position
          */
-        private JSpinner numberOfItemRandomized;
+        protected JSpinner numberOfItemRandomized;
 
         /**
          * Full random
          */
-        private JSpinner numberOfItemRandom;
+        protected JSpinner numberOfItemRandom;
 
         /**
          * Circle placement
          */
-        private JSpinner circleRadius;
-        private JSpinner numberOfItemCircle;
+        protected JSpinner circleRadius;
+        protected JSpinner numberOfItemCircle;
 
         public PlacementPanel(String name, String itemName) {
             super();
@@ -478,7 +507,7 @@ public class EnvironmentInformationPanel extends JPanel {
 
             layout.add(presentation);
 
-            generateContent(layout,itemName);
+            generateContent(layout, itemName);
 
             add(layout);
         }
@@ -495,21 +524,21 @@ public class EnvironmentInformationPanel extends JPanel {
             ));
 
             abscissaLimit = new JSpinner(generateDoubleModel());
-            abscissaLimit.setValue(1.0);
+            abscissaLimit.setValue(400.0);
             ordinateLimit = new JSpinner(generateDoubleModel());
-            ordinateLimit.setValue(1.0);
+            ordinateLimit.setValue(400.0);
             step = new JSpinner(generateDoubleModel());
-            step.setValue(1.0);
+            step.setValue(60.0);
 
             numberOfItemRandomized = new JSpinner(generatePositiveLongModel());
-            numberOfItemRandomized.setValue(20L);
+            numberOfItemRandomized.setValue(200L);
             numberOfItemRandom = new JSpinner(generatePositiveLongModel());
-            numberOfItemRandom.setValue(20L);
+            numberOfItemRandom.setValue(200L);
             numberOfItemCircle = new JSpinner(generatePositiveLongModel());
-            numberOfItemCircle.setValue(45L);
+            numberOfItemCircle.setValue(200L);
 
             circleRadius = new JSpinner(generatePositiveDoubleModel());
-            circleRadius.setValue(5.0);
+            circleRadius.setValue(120.0);
 
             JPanel standardPositionProvided = new JPanel(new GridLayout(0, 1));
             JPanel standardPositionRandomized = new JPanel(new GridLayout(0, 1));
@@ -602,7 +631,7 @@ public class EnvironmentInformationPanel extends JPanel {
     public class PlacementAgentPanel extends PlacementPanel<Agent> {
 
         public PlacementAgentPanel(String name) {
-            super(name,"agent");
+            super(name, "agent");
         }
 
         @Override
@@ -617,7 +646,9 @@ public class EnvironmentInformationPanel extends JPanel {
 
     public class PlacementResourcePanel extends PlacementPanel<Resource> {
         public PlacementResourcePanel(String name) {
-            super(name,"resource");
+            super(name, "resource");
+            numberOfItemRandom.setValue(0L);
+            strategyList.setSelectedItem(GenerationStrategy.GenerationType.RANDOM);
         }
 
         @Override

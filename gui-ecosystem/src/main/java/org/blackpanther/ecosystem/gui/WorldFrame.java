@@ -7,7 +7,6 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.awt.event.WindowStateListener;
 import java.io.IOException;
 import java.net.URL;
@@ -19,8 +18,7 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
  * @version 1.0-alpha - Wed May 18 02:01:10 CEST 2011
  */
 public class WorldFrame
-        extends JFrame
-implements WindowStateListener {
+        extends JFrame {
 
     public static final String ICON_PATH = "org/blackpanther/black-cat-icon.png";
     public static final Image APPLICATION_ICON = fetchApplicationIcon();
@@ -55,19 +53,20 @@ implements WindowStateListener {
 
         setJMenuBar(buildMenuBar());
 
-        EnvironmentInformationPanel environmentInformationPanel =
-                new EnvironmentInformationPanel();
         GraphicEnvironment graphicEnvironment =
                 new GraphicEnvironment();
-        EnvironmentCommands environmentCommands =
-                new EnvironmentCommands();
-
         Monitor.registerDrawPanel(
                 graphicEnvironment
         );
-        Monitor.registerEnvironmentSettingsPanel(
+
+        EnvironmentInformationPanel environmentInformationPanel =
+                new EnvironmentInformationPanel();
+        Monitor.registerEnvironmentInformationPanel(
                 environmentInformationPanel
         );
+
+        EnvironmentCommands environmentCommands =
+                new EnvironmentCommands();
         Monitor.registerEnvironmentCommandsPanel(
                 environmentCommands
         );
@@ -87,15 +86,10 @@ implements WindowStateListener {
         );
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        addWindowStateListener(this);
         pack();
         setExtendedState(MAXIMIZED_BOTH);
-    }
 
-    @Override
-    public void windowStateChanged(WindowEvent e) {
-        validate();
-        validateTree();
+        environmentInformationPanel.recreateEnvironment();
     }
 
     private static class WorldFrameHolder {

@@ -14,5 +14,4 @@ public class DesignEnvironment extends Environment {
     protected void initializeSpace() {
         //Nothing special about space initialization
     }
-
 }

@@ -73,6 +73,15 @@ public final class Helper {
         return angle % Geometry.PI_2;
     }
 
+    public static Integer normalizeColor(double colorAmount) {
+        if (colorAmount < 0.0)
+            return 0;
+        else if (colorAmount > 255.0)
+            return 255;
+        else
+            return (int) colorAmount;
+    }
+
     public static Double normalizeProbability(double probability) {
         if (probability < 0.0)
             return 0.0;
@@ -93,7 +102,7 @@ public final class Helper {
         return Helper.class.getClassLoader().getResource(imagePath);
     }
 
-    private static final Dimension FIELD_DIMENSION = new Dimension(160, 50);
+    private static final Dimension FIELD_DIMENSION = new Dimension(130, 50);
 
     public static JPanel createLabeledField(final String labelName, final Component field) {
         return new JPanel(new GridLayout(2, 1)) {{

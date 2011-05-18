@@ -227,7 +227,7 @@ public abstract class Environment
      *
      * @return environment's draw history
      */
-    public final Set<Line2D> getHistory() {
+    public Set<Line2D> getHistory() {
         Set<Line2D> wholeHistory = new HashSet<Line2D>();
         for (Area[] row : space)
             for (Area area : row)
@@ -441,12 +441,11 @@ public abstract class Environment
 
     long comparison = 0;
 
-    public boolean move(Agent that, Point2D from, Point2D to) {
-        Line2D line = new Line2D.Double(from, to);
-        Set<Area> crossedAreas = getCrossedArea(line);
+    public boolean move(Agent that, ColorfulTrace trace) {
+        Set<Area> crossedAreas = getCrossedArea(trace);
         boolean collision = false;
         for (Area area : crossedAreas) {
-            collision = area.trace(line) || collision;
+            collision = area.trace(trace) || collision;
         }
         logger.finer(String.format(
                 "%d comparison to place a line",
@@ -459,7 +458,7 @@ public abstract class Environment
         if (!collision && crossedAreas.size() > 1) {
             that.attachTo(
                     this,
-                    getCorrespondingArea(to)
+                    getCorrespondingArea(trace.getP2())
             );
         }
         return collision;
@@ -504,10 +503,9 @@ public abstract class Environment
      */
     public class Area
             extends Rectangle2D.Double
-            implements Serializable, AreaListener,
-            ResourceListener {
+            implements Serializable, AreaListener, ResourceListener {
 
-        private Collection<Line2D> internalDrawHistory = new LinkedList<Line2D>();
+        private Collection<ColorfulTrace> internalDrawHistory = new LinkedList<ColorfulTrace>();
         private Collection<Resource> resourcePool = new LinkedList<Resource>();
 
         public Area(double x, double y, double w, double h) {
@@ -515,7 +513,7 @@ public abstract class Environment
             getEventSupport().addResourceListener(this);
         }
 
-        public Collection<Line2D> getHistory() {
+        public Collection<ColorfulTrace> getHistory() {
             return internalDrawHistory;
         }
 
@@ -533,16 +531,17 @@ public abstract class Environment
          *         <code>false</code> otherwise.
          */
         @Override
-        public boolean trace(Line2D line) {
+        public boolean trace(ColorfulTrace line) {
             //go fly away little birds, you no longer belong to me ...
             if (!bounds.contains(line.getP2())) {
                 //detect which border has been crossed and where
                 for (Line2D border : boundLines) {
                     Point2D intersection = getIntersection(border, line);
                     if (intersection != null) {
-                        Line2D realLine = new Line2D.Double(
+                        ColorfulTrace realLine = new ColorfulTrace(
                                 line.getP1(),
-                                intersection
+                                intersection,
+                                line.getColor()
                         );
                         //We add a drawn line from agent's old location till intersection
                         internalDrawHistory.add(realLine);
@@ -555,15 +554,16 @@ public abstract class Environment
                 throw new RuntimeException("Border detection failed");
             }
 
-            for (Line2D historyLine : internalDrawHistory) {
+            for (ColorfulTrace historyLine : internalDrawHistory) {
                 comparison++;
                 Point2D intersection = getIntersection(historyLine, line);
                 if (intersection != null
                         //Intersection with the line's start is not an intersection
                         && !intersection.equals(line.getP1())) {
-                    Line2D realLine = new Line2D.Double(
+                    ColorfulTrace realLine = new ColorfulTrace(
                             line.getP1(),
-                            intersection
+                            intersection,
+                            line.getColor()
                     );
                     //We add a drawn line from agent's old location till intersection
                     internalDrawHistory.add(realLine);

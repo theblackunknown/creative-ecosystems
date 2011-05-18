@@ -2,6 +2,7 @@ package org.blackpanther.ecosystem;
 
 import org.blackpanther.ecosystem.math.Geometry;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
@@ -25,6 +26,8 @@ import static org.blackpanther.ecosystem.helper.Helper.require;
 public enum Configuration {
     Configuration;
 
+    private static final Long serialVersionUID = 2L;
+
     /**
      * Random application parameters
      */
@@ -37,7 +40,7 @@ public enum Configuration {
 
     public static final String SPEED_THRESHOLD = "speed-randomized-threshold";
     public static final String RESOURCE_AMOUNT_THRESHOLD = "resource-randomized-threshold";
-    public static final String ENERGY_AMOUNT_THRESHOLD = "energy-randomized-threshold";
+    public static final String ENERGY_AMOUNT_THRESHOLD = "energy-amount-threshold";
     public static final String SENSOR_THRESHOLD = "sensor-radius-randomized-threshold";
     public static final String CURVATURE_THRESHOLD = "curvature-randomized-threshold";
     public static final String FECUNDATION_CONSUMMATION_THRESHOLD = "fecundation-cons-randomized-threshold";
@@ -46,21 +49,24 @@ public enum Configuration {
     public static final String CURVATURE_VARIATION = "curvature-variation";
     public static final String ANGLE_VARIATION = "angle-variation";
     public static final String SPEED_VARIATION = "speed-variation";
+    public static final String COLOR_VARIATION = "color-variation";
+
+    public static final String RED_COLOR = "agent-color-red";
+    public static final String GREEN_COLOR = "agent-color-green";
+    public static final String BLUE_COLOR = "agent-color-blue";
 
     private String[] DOUBLE_UNBOUNDED;
     private String[] ANGLE;
     private String[] POSITIVE_DOUBLE;
     private String[] PROBABILITY;
     private String[] POSITIVE_INTEGER;
-
-    private long randomSeed;
+    private String[] COLOR;
 
     /**
      * Application's parameters with default loaded
      */
     protected final Map<String, Object> applicationProperties = new HashMap<String, Object>() {{
-        randomSeed = 42L;
-        put(RANDOM, new Random(42L));
+        put(RANDOM, new Random());
     }};
 
     /**
@@ -76,6 +82,7 @@ public enum Configuration {
                 CURVATURE_VARIATION,
                 ANGLE_VARIATION,
                 SPEED_VARIATION,
+                COLOR_VARIATION,
                 AGENT_CURVATURE
         };
         ANGLE = new String[]{
@@ -107,6 +114,9 @@ public enum Configuration {
         };
         POSITIVE_INTEGER = new String[]{
                 MAX_AGENT_NUMBER
+        };
+        COLOR = new String[]{
+                AGENT_IDENTIFIER
         };
 
         //pre-sort arrays
@@ -142,10 +152,6 @@ public enum Configuration {
         return getParameter(RANDOM, Random.class);
     }
 
-    public long getRandomSeed() {
-        return randomSeed;
-    }
-
     /**
      * Load properties from a configuration file
      *
@@ -155,20 +161,6 @@ public enum Configuration {
     public void loadConfiguration(Properties properties) {
         Logger logger = Logger.getLogger(Configuration.class.getCanonicalName());
         String value;
-
-        value = properties.getProperty(RANDOM);
-        if (isValid(value)) {
-            try {
-                randomSeed = Long.parseLong(value);
-                getParameter(
-                        RANDOM,
-                        Random.class)
-                        .setSeed(randomSeed);
-            } catch (NumberFormatException e) {
-                logger.log(Level.WARNING,
-                        "Couldn't parse random parameter : '" + value + "'", e);
-            }
-        }
 
         for (String parameter : DOUBLE_UNBOUNDED) {
             value = properties.getProperty(parameter);
@@ -255,6 +247,27 @@ public enum Configuration {
             }
         }
 
+        String redValue = properties.getProperty(RED_COLOR);
+        String greenValue = properties.getProperty(GREEN_COLOR);
+        String blueValue = properties.getProperty(BLUE_COLOR);
+        if (isValid(redValue) && isValid(greenValue) && isValid(blueValue)) {
+            try {
+                setParameter(
+                        AGENT_IDENTIFIER,
+                        new Color(
+                                Integer.parseInt(redValue),
+                                Integer.parseInt(greenValue),
+                                Integer.parseInt(blueValue)
+                        ),
+                        Color.class
+                );
+            } catch (NumberFormatException e) {
+                logger.log(Level.SEVERE,
+                        "Couldn't parse " + RED_COLOR + ", " + GREEN_COLOR + " and " + BLUE_COLOR
+                                + ", they must be all within [0-255]!", e);
+            }
+        }
+
         //update default behavior class
         value = properties.getProperty(AGENT_BEHAVIOUR);
         if (isValid(value)) {
@@ -308,15 +321,8 @@ public enum Configuration {
             T paramValue,
             Class<T> paramType
     ) {
-        //random seed
-        if (paramName.equals(RANDOM)) {
-            if (!paramType.equals(Random.class)) {
-                throw new IllegalArgumentException(
-                        "Invalid value this parameter, it must be an "
-                                + Random.class.getCanonicalName());
-            }
-            //double unbounded
-        } else if (Arrays.binarySearch(DOUBLE_UNBOUNDED, paramName) >= 0) {
+        //double unbounded
+        if (Arrays.binarySearch(DOUBLE_UNBOUNDED, paramName) >= 0) {
             if (!paramType.equals(Double.class)) {
                 throw new IllegalArgumentException(
                         "Invalid value this parameter, it must be an "
@@ -355,6 +361,13 @@ public enum Configuration {
                 require(0.0 <= value && value <= 1.0,
                         "Invalid value for " + paramName + " : '" + paramValue + "'");
             }
+            //color
+        }else if (Arrays.binarySearch(COLOR, paramName) >= 0) {
+            if (!paramType.equals(Color.class)) {
+                throw new IllegalArgumentException(
+                        "Invalid value this parameter, it must be an "
+                                + Color.class.getCanonicalName());
+            }
             //behaviour
         } else if (paramName.equals(AGENT_BEHAVIOUR)) {
             if (!paramType.equals(BehaviorManager.class)) {
@@ -390,12 +403,15 @@ public enum Configuration {
     public Properties parameters() {
         Properties parameters = new Properties();
         for (Map.Entry<String, Object> entry : applicationProperties.entrySet())
-            if (entry.getKey().equals(RANDOM))
-                parameters.put(entry.getKey(), getRandomSeed());
-            else if(entry.getKey().equals(AGENT_BEHAVIOUR))
+            if (entry.getKey().equals(AGENT_BEHAVIOUR))
                 parameters.put(entry.getKey(),
-                        getParameter(AGENT_BEHAVIOUR,BehaviorManager.class).getClass().getCanonicalName());
-            else
+                        getParameter(AGENT_BEHAVIOUR, BehaviorManager.class).getClass().getCanonicalName());
+            else if( entry.getKey().equals(AGENT_IDENTIFIER)){
+                Color agentIdentifier = getParameter(AGENT_IDENTIFIER,Color.class);
+                parameters.put(RED_COLOR, agentIdentifier.getRed());
+                parameters.put(GREEN_COLOR, agentIdentifier.getGreen());
+                parameters.put(BLUE_COLOR, agentIdentifier.getBlue());
+            } else
                 parameters.put(entry.getKey(), entry.getValue());
         return parameters;
     }

@@ -17,7 +17,7 @@ import java.awt.geom.Line2D;
  */
 public interface AreaListener {
 
-    boolean trace(Line2D to);
+    boolean trace(ColorfulTrace to);
 
     SenseResult aggregateInformation(Geometry.Circle circle);
 }
