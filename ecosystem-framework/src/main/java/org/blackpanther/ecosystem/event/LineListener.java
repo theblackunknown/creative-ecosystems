@@ -2,7 +2,7 @@ package org.blackpanther.ecosystem.event;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 0.2 - Wed May 11 02:54:46 CEST 2011
+ * @version 1.0-alpha - Wed May 18 02:01:09 CEST 2011
  */
 public interface LineListener{
     public void update(LineEvent e);

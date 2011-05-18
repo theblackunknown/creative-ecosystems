@@ -17,7 +17,7 @@ import static org.blackpanther.ecosystem.helper.ResourceFactory.StandardResource
 
 /**
  * @author MACHIZAUD Andréa
- * @version 0.2 - Wed May 11 02:54:45 CEST 2011
+ * @version 1.0-alpha - Wed May 18 02:01:08 CEST 2011
  */
 public class GenerationStrategy {
 

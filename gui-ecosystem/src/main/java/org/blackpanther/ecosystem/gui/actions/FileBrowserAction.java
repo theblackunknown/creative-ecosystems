@@ -5,7 +5,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/18/11
+ * @version 1.0-alpha - Wed May 18 02:01:10 CEST 2011
  */
 public abstract class FileBrowserAction
         extends AbstractAction {

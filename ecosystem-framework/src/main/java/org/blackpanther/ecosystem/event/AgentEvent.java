@@ -5,7 +5,7 @@ import org.blackpanther.ecosystem.Environment;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/11/11
+ * @version 1.0-alpha - Wed May 18 02:01:08 CEST 2011
  */
 public class AgentEvent
         extends EnvironmentEvent {

@@ -2,7 +2,7 @@ package org.blackpanther.ecosystem;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/11/11
+ * @version 1.0-alpha - Wed May 18 02:01:09 CEST 2011
  */
 public class SensorTarget<T> {
 
