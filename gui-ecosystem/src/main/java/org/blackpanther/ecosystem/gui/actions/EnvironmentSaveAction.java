@@ -19,7 +19,7 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 16/05/11
+ * @version 1.0-alpha - Wed May 18 02:01:10 CEST 2011
  */
 public class EnvironmentSaveAction
         extends FileBrowserAction {

@@ -13,7 +13,7 @@ import java.util.Set;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 0.2 - Wed May 11 02:54:46 CEST 2011
+ * @version 1.0-alpha - Wed May 18 02:01:09 CEST 2011
  */
 public class EnvironmentMonitor
         implements Serializable {
