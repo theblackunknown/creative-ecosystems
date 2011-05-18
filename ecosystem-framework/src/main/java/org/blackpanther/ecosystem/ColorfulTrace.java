@@ -6,7 +6,7 @@ import java.awt.geom.Point2D;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/18/11
+ * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
  */
 public class ColorfulTrace
         extends Line2D.Double {

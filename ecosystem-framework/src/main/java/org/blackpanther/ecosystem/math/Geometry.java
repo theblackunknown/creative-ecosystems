@@ -13,7 +13,7 @@ import static org.blackpanther.ecosystem.helper.Helper.within;
  * Helper to use mathematical data
  *
  * @author MACHIZAUD Andréa
- * @version 1.0-alpha - Wed May 18 02:01:09 CEST 2011
+ * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
  */
 public final class Geometry {
 
