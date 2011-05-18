@@ -17,7 +17,7 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 1.0-alpha - Wed May 18 02:01:10 CEST 2011
+ * @version 1.1-alpha - Thu May 19 01:22:55 CEST 2011
  */
 public class EnvironmentLoadAction
         extends FileBrowserAction {
