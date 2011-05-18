@@ -6,6 +6,7 @@ import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.Resource;
 import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
 import java.util.Properties;
@@ -15,7 +16,7 @@ import static org.blackpanther.ecosystem.helper.Helper.require;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 1.0-alpha - Wed May 18 02:01:10 CEST 2011
+ * @version 1.1-alpha - Thu May 19 01:22:55 CEST 2011
  */
 public enum GUIMonitor {
     Monitor;
@@ -33,8 +34,13 @@ public enum GUIMonitor {
         this.drawPanel = panel;
     }
 
-    public void registerEnvironmentSettingsPanel(EnvironmentInformationPanel environmentInformationPanel) {
+    public void registerEnvironmentInformationPanel(EnvironmentInformationPanel environmentInformationPanel) {
         this.environmentInformationPanel = environmentInformationPanel;
+    }
+
+    public void recreateEnvironment(){
+        require(environmentInformationPanel != null);
+        environmentInformationPanel.recreateEnvironment();
     }
 
     public void removeEnvironment() {
@@ -118,13 +124,20 @@ public enum GUIMonitor {
     public void resetEnvironment(
             Collection<Agent> agentPool,
             Collection<Resource> resourcePool) {
+        removeEnvironment();
+        //pray for that instruction to make things more delightful
+        System.gc();
         Environment env = new DesignEnvironment(
                 Configuration.getParameter(SPACE_WIDTH, Double.class),
                 Configuration.getParameter(SPACE_HEIGHT, Double.class)
         );
         env.addAgent(agentPool);
         env.addResource(resourcePool);
-        removeEnvironment();
         setCurrentEnvironment(env);
+    }
+
+    public void setBackgroundColor(Color color) {
+        require(drawPanel != null);
+        drawPanel.applyBackgroundColor(color);
     }
 }

@@ -9,6 +9,8 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.blackpanther.ecosystem.Configuration.Configuration;
+import static org.blackpanther.ecosystem.Configuration.ENERGY_AMOUNT_THRESHOLD;
 import static org.blackpanther.ecosystem.helper.Helper.require;
 
 /**
@@ -19,7 +21,7 @@ import static org.blackpanther.ecosystem.helper.Helper.require;
  * </p>
  *
  * @author MACHIZAUD Andréa
- * @version 1.0-alpha - Wed May 18 02:01:09 CEST 2011
+ * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
  */
 public abstract class Agent
         implements Serializable, Cloneable {
@@ -27,10 +29,9 @@ public abstract class Agent
     /**
      * Serializable identifier
      */
-    private static final Long serialVersionUID = 1L;
+    private static final Long serialVersionUID = 2L;
     private static final Integer DEFAULT_GENOTYPE_LENGTH = 6;
     private static final Integer DEFAULT_STATE_LENGTH = 4;
-
 
     public static final String AGENT_IDENTIFIER = "agent-identifier";
     public static final String AGENT_AGE = "agent-age";
@@ -91,6 +92,7 @@ public abstract class Agent
      * @see org.blackpanther.ecosystem.BehaviorManager
      */
     public Agent(
+            final Color identifier,
             final Point2D spawnLocation,
             final double energyAmount,
             final double movementCost,
@@ -109,6 +111,7 @@ public abstract class Agent
             final double mutation,
             final BehaviorManager manager
     ) {
+        require(identifier != null);
         require(spawnLocation != null);
         require(energyAmount >= 0.0, String.valueOf(energyAmount));
         require(movementCost >= 0.0, String.valueOf(movementCost));
@@ -123,7 +126,7 @@ public abstract class Agent
         require(0.0 <= mutation && mutation <= 1.0, String.valueOf(mutation));
         require(manager != null, "You must provide a BehaviourManager");
 
-        genotype.put(AGENT_IDENTIFIER, Color.BLACK);
+        genotype.put(AGENT_IDENTIFIER, identifier);
         genotype.put(AGENT_MOVEMENT_COST, movementCost);
         genotype.put(AGENT_FECUNDATION_COST, fecundationCost);
         genotype.put(AGENT_FECUNDATION_LOSS, fecundationLoss);
@@ -174,8 +177,9 @@ public abstract class Agent
         require(env != null);
         require(listener != null);
         environment = env;
+        if (areaListener != null)
+            environment.getEventSupport().fireAgentEvent(AgentEvent.Type.BORN, this);
         areaListener = listener;
-        environment.getEventSupport().fireAgentEvent(AgentEvent.Type.BORN, this);
     }
 
     /**
@@ -368,7 +372,10 @@ public abstract class Agent
     }
 
     final void setEnergy(Double energy) {
-        currentState.put(AGENT_ENERGY, energy);
+        Double maxEnergyAmount = Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class);
+        currentState.put(AGENT_ENERGY, energy > maxEnergyAmount
+                ? maxEnergyAmount
+                : energy);
     }
 
     /**

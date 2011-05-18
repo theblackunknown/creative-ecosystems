@@ -1,5 +1,6 @@
 package org.blackpanther.ecosystem.gui;
 
+import org.blackpanther.ecosystem.ColorfulTrace;
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.Resource;
 import org.blackpanther.ecosystem.event.*;
@@ -16,9 +17,9 @@ import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.blackpanther.ecosystem.Configuration.Configuration;
-import static org.blackpanther.ecosystem.Configuration.RESOURCE_AMOUNT_THRESHOLD;
+import static org.blackpanther.ecosystem.Configuration.*;
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
+import static org.blackpanther.ecosystem.helper.Helper.normalizeProbability;
 
 /**
  * @author MACHIZAUD Andréa
@@ -57,10 +58,12 @@ public class GraphicEnvironment
     /**
      * Buffer which retains next line to draw at the next repaint() call
      */
-    private Stack<Line2D> lineBuffer = new Stack<Line2D>();
+    private Stack<ColorfulTrace> lineBuffer = new Stack<ColorfulTrace>();
     private Timer runEnvironment;
     private Timer drawEnvironment;
     private boolean panelStructureHasChanged = false;
+    private Color currentBackground;
+    private Color originalBackground;
 
     public GraphicEnvironment() {
         //panel settings
@@ -75,6 +78,7 @@ public class GraphicEnvironment
         runEnvironment = new Timer(
                 DEFAULT_DELAY, internalEvolutionMonitor);
         drawEnvironment = new Timer(50, new GraphicMonitor());
+        currentBackground = originalBackground = getBackground();
 
         setBorder(
                 BorderFactory.createBevelBorder(BevelBorder.LOWERED)
@@ -92,11 +96,12 @@ public class GraphicEnvironment
             panelStructureHasChanged = false;
         } else {
             while (!lineBuffer.isEmpty()) {
-                Line2D line = lineBuffer.pop();
-                //TODO We will need to keep a record of line's color...
-                g.setColor(Color.BLACK);
-                Point2D start = internalScaler.environmentToPanel(line.getP1());
-                Point2D end = internalScaler.environmentToPanel(line.getP2());
+                ColorfulTrace graphicalLine = lineBuffer.pop();
+
+                g.setColor(graphicalLine.getColor());
+
+                Point2D start = internalScaler.environmentToPanel(graphicalLine.getP1());
+                Point2D end = internalScaler.environmentToPanel(graphicalLine.getP2());
                 g.drawLine(
                         (int) start.getX(),
                         (int) start.getY(),
@@ -114,39 +119,43 @@ public class GraphicEnvironment
      * @param g
      */
     private void redrawEnvironment(Graphics g) {
-        //paint background
-        g.setColor(getBackground());
+        g.setColor(originalBackground);
         g.fillRect(0, 0, getWidth(), getHeight());
 
         //repaint environment structure if it has been erased
         if (monitoredEnvironment != null) {
+            //paint background
+            g.setColor(currentBackground);
+            Point2D top = internalScaler.environmentToPanel(new Point2D.Double(
+                    monitoredEnvironment.getBounds().getX(),
+                    -monitoredEnvironment.getBounds().getY()));
+            double width = internalScaler.environmentToPanel(
+                    monitoredEnvironment.getBounds().getWidth());
+            double height = internalScaler.environmentToPanel(
+                    monitoredEnvironment.getBounds().getHeight());
+            g.fillRect((int) top.getX(), (int) top.getY(), (int) width, (int) height);
+
             //environment bounds painting activated
             if ((options & BOUNDS_OPTION) == BOUNDS_OPTION) {
                 g.setColor(Color.BLACK);
                 //north line
-                Point2D top = internalScaler.environmentToPanel(new Point2D.Double(
-                        monitoredEnvironment.getBounds().getX(),
-                        -monitoredEnvironment.getBounds().getY()));
-                double width = internalScaler.environmentToPanel(
-                        monitoredEnvironment.getBounds().getWidth());
-                double height = internalScaler.environmentToPanel(
-                        monitoredEnvironment.getBounds().getHeight());
                 g.drawRect((int) top.getX(), (int) top.getY(), (int) width, (int) height);
             }
 
             //resource painting activated
             if ((options & RESOURCE_OPTION) == RESOURCE_OPTION)
                 for (Resource resource : monitoredEnvironment.getResources()) {
-                    //TODO Resources related to color ?
-                    float bluePercentage = (float) (resource.getAmount()
-                            / Configuration.getParameter(RESOURCE_AMOUNT_THRESHOLD, Double.class));
+                    Double bluePercentage = normalizeProbability(
+                            resource.getAmount()
+                                    / Configuration.getParameter(RESOURCE_AMOUNT_THRESHOLD, Double.class));
                     Color blueGradient = new Color(0f,
                             0f,
-                            bluePercentage
+                            bluePercentage.floatValue()
                     );
                     g.setColor(blueGradient);
                     Point2D center = internalScaler.environmentToPanel(resource);
-                    double radius = internalScaler.environmentToPanel(Resource.RADIUS);
+                    double radius = internalScaler.environmentToPanel(
+                            Configuration.getParameter(CONSUMMATION_RADIUS, Double.class));
                     g.fillOval(
                             (int) (center.getX() - radius),
                             (int) (center.getY() - radius),
@@ -158,11 +167,12 @@ public class GraphicEnvironment
 
             //Draw all environment's lines
             for (Line2D line : monitoredEnvironment.getHistory()) {
-                //TODO We will need to keep a record of line's color...
-                g.setColor(Color.BLACK);
-                // HELP Handle environment's coordinate vs panel's coordinates
-                Point2D start = internalScaler.environmentToPanel(line.getP1());
-                Point2D end = internalScaler.environmentToPanel(line.getP2());
+                ColorfulTrace graphicalLine = (ColorfulTrace) line;
+
+                g.setColor(graphicalLine.getColor());
+
+                Point2D start = internalScaler.environmentToPanel(graphicalLine.getP1());
+                Point2D end = internalScaler.environmentToPanel(graphicalLine.getP2());
                 g.drawLine(
                         (int) start.getX(),
                         (int) start.getY(),
@@ -170,6 +180,8 @@ public class GraphicEnvironment
                         (int) end.getY()
                 );
             }
+        } else {
+            g.fillRect(0, 0, getWidth(), getHeight());
         }
     }
 
@@ -245,15 +257,20 @@ public class GraphicEnvironment
 
     public Environment dumpCurrentEnvironment() {
         try {
-            Environment env =  monitoredEnvironment != null
+            Environment env = monitoredEnvironment != null
                     ? monitoredEnvironment.clone()
                     : null;
-            if(env != null)
+            if (env != null)
                 env.clearAllExternalsListeners();
             return env;
         } catch (CloneNotSupportedException e1) {
             throw new Error("Model is not cloneable");
         }
+    }
+
+    public void applyBackgroundColor(Color color) {
+        currentBackground = color;
+        panelStructureHasChanged = true;
     }
 
     /**
@@ -278,7 +295,7 @@ public class GraphicEnvironment
                 case ADDED:
                     //if a line has been added to monitored environment,
                     // add it to lineBuffer
-                    lineBuffer.add(e.getValue());
+                    lineBuffer.add((ColorfulTrace) e.getValue());
                     logger.log(Level.FINEST, "{0} added to line buffer, lineBuffer size : {1}",
                             new Object[]{e.getValue(), lineBuffer.size()});
                     break;

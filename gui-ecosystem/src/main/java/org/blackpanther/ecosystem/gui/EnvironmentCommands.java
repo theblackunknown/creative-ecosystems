@@ -9,15 +9,11 @@ import java.beans.EventHandler;
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
- * TODO Slider to manage evolution speed
- *
  * @author MACHIZAUD Andréa
- * @version 1.0-alpha - Wed May 18 02:01:10 CEST 2011
+ * @version 1.1-alpha - Thu May 19 01:22:55 CEST 2011
  */
 public class EnvironmentCommands
         extends JPanel {
-
-    private static final Dimension DEFAULT_DIMENSION = new Dimension(200, 40);
 
     public static final String STOP_ENVIRONMENT = "Pause";
     public static final String START_ENVIRONMENT = "Start";
@@ -28,13 +24,20 @@ public class EnvironmentCommands
 
     public EnvironmentCommands() {
         super();
-        setPreferredSize(DEFAULT_DIMENSION);
         setLayout(new FlowLayout());
 
+
+        JButton resetEnvironment = new JButton("Generate new environment");
         evolutionFlowButton = new JButton(NO_ENVIRONMENT);
         JCheckBox drawBounds = new JCheckBox("Paint bounds", false);
         JCheckBox drawResources = new JCheckBox("Paint resources", false);
+        JButton backgroundColor = new JButton("Choose background color");
 
+        resetEnvironment.addActionListener(EventHandler.create(
+                ActionListener.class,
+                Monitor,
+                "recreateEnvironment"
+        ));
         evolutionFlowButton.setEnabled(false);
         evolutionFlowButton.addActionListener(EventHandler.create(
                 ActionListener.class,
@@ -59,10 +62,19 @@ public class EnvironmentCommands
                 "paintResources",
                 "source.selected"
         ));
+        backgroundColor.addActionListener(EventHandler.create(
+                ActionListener.class,
+                this,
+                "notifyBackgroundColorChanged"
+        ));
 
+        add(resetEnvironment);
         add(evolutionFlowButton);
+        add(Box.createVerticalStrut(40));
         add(drawBounds);
         add(drawResources);
+        add(Box.createVerticalStrut(40));
+        add(backgroundColor);
 
         setBorder(
                 BorderFactory.createEtchedBorder(EtchedBorder.RAISED)
@@ -101,4 +113,15 @@ public class EnvironmentCommands
             evolutionFlowButton.setText(START_ENVIRONMENT);
         }
     }
+
+    public void notifyBackgroundColorChanged() {
+        Color selectedColor = JColorChooser.showDialog(
+                WorldFrame.getInstance(),
+                "Choose agent identifier",
+                Color.LIGHT_GRAY);
+        if (selectedColor != null) {
+            Monitor.setBackgroundColor(selectedColor);
+        }
+    }
+
 }

@@ -1,6 +1,7 @@
 package org.blackpanther.ecosystem;
 
 
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.Collection;
 import java.util.Iterator;
@@ -11,8 +12,7 @@ import static java.lang.Math.*;
 import static org.blackpanther.ecosystem.Agent.*;
 import static org.blackpanther.ecosystem.Configuration.*;
 import static org.blackpanther.ecosystem.Configuration.Configuration;
-import static org.blackpanther.ecosystem.helper.Helper.normalizePositiveDouble;
-import static org.blackpanther.ecosystem.helper.Helper.normalizeProbability;
+import static org.blackpanther.ecosystem.helper.Helper.*;
 import static org.blackpanther.ecosystem.math.Geometry.PI_2;
 
 /**
@@ -23,7 +23,7 @@ import static org.blackpanther.ecosystem.math.Geometry.PI_2;
  * </p>
  *
  * @author MACHIZAUD Andréa
- * @version 1.0-alpha - Wed May 18 02:01:08 CEST 2011
+ * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
  */
 public class DraughtsmanBehaviour
         implements BehaviorManager {
@@ -46,53 +46,13 @@ public class DraughtsmanBehaviour
     public final void update(Environment env, Agent agent) {
         SenseResult analysis = agent.sense();
         //Step 1 - react with anything detected
-        react(env, agent,analysis);
-        //Step 1 - sense around myself
-        sense(env, agent,analysis);
-        //Step 1 - spawn
+        react(env, agent, analysis);
+        //Step 2 - spawn
         spawn(env, agent);
-        //Step 2 - move ( and trace )
+        //Step 3 - move ( and trace )
         move(env, agent);
-        //Step 3 - grow up
+        //Step 4 - grow up
         growUp(env, agent);
-    }
-
-    /**
-     * Sense around him
-     */
-    protected void sense(Environment env, Agent that, SenseResult analysis) {
-
-        SensorTarget<Resource> closestResource = getClosestResource(
-                that.getLocation(), analysis.getNearResources());
-        if (closestResource != null) {
-            double lust = that.getGene(AGENT_GREED, Double.class);
-            double alpha = (that.getOrientation() % PI_2); // 0 - 2PI
-            double beta = closestResource.getOrientation();//
-            double resourceRelativeOrientation = (beta - alpha);
-            if (resourceRelativeOrientation > PI)
-                resourceRelativeOrientation -= PI_2;
-            else if (resourceRelativeOrientation < -PI)
-                resourceRelativeOrientation += PI_2;
-            double newOrientation = (alpha + resourceRelativeOrientation * lust) % PI_2;
-
-            that.setOrientation(newOrientation);
-
-            String format = String.format(
-                    "%n (%.2f,%.2f)-(%.2f,%.2f)%n " +
-                            "old orientation : %.2fPI%n " +
-                            "resource orientation : %.2fPI%n " +
-                            "resource relative orientation : %.2fPI%n " +
-                            "new orientation : %.2fPI%n ",
-                    that.getLocation().getX(), that.getLocation().getY(),
-                    closestResource.getTarget().getX(),
-                    closestResource.getTarget().getY(),
-                    alpha / PI,
-                    beta / PI,
-                    resourceRelativeOrientation / PI,
-                    newOrientation / PI
-            );
-            logger.fine(format);
-        }
     }
 
     protected void react(Environment env, Agent that, SenseResult analysis) {
@@ -100,19 +60,47 @@ public class DraughtsmanBehaviour
         SensorTarget<Resource> closestResource =
                 getClosestResource(that.getLocation(), analysis.getNearResources());
         if (closestResource != null) {
-            //check if we can still move
+
+            //check if we can still move and reach resource
+            double resourceDistance = that.getLocation().distance(closestResource.getTarget());
             if (that.getEnergy() >=
-                    that.getGene(AGENT_MOVEMENT_COST, Double.class)) {//* that.getSpeed()) {
-                //if we cross the resource
-                double distance = that.getLocation().distance(closestResource.getTarget());
-                if (distance < Configuration.getParameter(CONSUMMATION_RADIUS, Double.class)) {
-                    //we eat it
-                    that.setEnergy(that.getEnergy() + closestResource.getTarget().consume());
-                }
+                    that.getGene(AGENT_MOVEMENT_COST, Double.class) * that.getSpeed()
+                    && resourceDistance < Configuration.getParameter(CONSUMMATION_RADIUS, Double.class)) {
+                //we eat it
+                that.setEnergy(that.getEnergy() + closestResource.getTarget().consume());
+            }
+
+            //otherwise get closer
+            else {
+                double lust = that.getGene(AGENT_GREED, Double.class);
+                double alpha = (that.getOrientation() % PI_2); // 0 - 2PI
+                double beta = closestResource.getOrientation();//
+                double resourceRelativeOrientation = (beta - alpha);
+                if (resourceRelativeOrientation > PI)
+                    resourceRelativeOrientation -= PI_2;
+                else if (resourceRelativeOrientation < -PI)
+                    resourceRelativeOrientation += PI_2;
+                double newOrientation = (alpha + resourceRelativeOrientation * lust) % PI_2;
+
+                that.setOrientation(newOrientation);
+
+                String format = String.format(
+                        "%n (%.2f,%.2f)-(%.2f,%.2f)%n " +
+                                "old orientation : %.2fPI%n " +
+                                "resource orientation : %.2fPI%n " +
+                                "resource relative orientation : %.2fPI%n " +
+                                "new orientation : %.2fPI%n ",
+                        that.getLocation().getX(), that.getLocation().getY(),
+                        closestResource.getTarget().getX(),
+                        closestResource.getTarget().getY(),
+                        alpha / PI,
+                        beta / PI,
+                        resourceRelativeOrientation / PI,
+                        newOrientation / PI
+                );
+                logger.fine(format);
             }
         }
-
-
     }
 
     private static SensorTarget<Resource> getClosestResource(Point2D source, Collection<SensorTarget<Resource>> resources) {
@@ -155,14 +143,9 @@ public class DraughtsmanBehaviour
     protected void move(Environment env, Agent that) {
         boolean hasDied;
         if (that.getEnergy() >=
-                that.getGene(AGENT_MOVEMENT_COST, Double.class)* that.getSpeed()) {
+                that.getGene(AGENT_MOVEMENT_COST, Double.class) * that.getSpeed()) {
 
-            //Step 1 - Consume energy
-            that.setEnergy(
-                    that.getEnergy() - that.getGene(AGENT_MOVEMENT_COST, Double.class) * that.getSpeed()
-            );
-
-            //Step 2 - Update location according to current orientation
+            //Step 1 - Update location according to current orientation
             Point2D oldLocation = (Point2D) that.getLocation().clone();
             that.setLocation(
                     that.getLocation().getX()
@@ -173,13 +156,22 @@ public class DraughtsmanBehaviour
                             * sin(that.getOrientation())
             );
 
+            //Step 2 - Consume energy
+            that.setEnergy(
+                    that.getEnergy() - that.getGene(AGENT_MOVEMENT_COST, Double.class) * that.getSpeed()
+            );
+
             logger.finer(String.format("Changed %s 's location from %s to %s",
                     that, oldLocation, that.getLocation()));
 
             //Step 3 - Notify AreaListener that we moved, agent can died if it cross an other line
             //It dies if it didn't move
+
+            ColorfulTrace trace = new ColorfulTrace(oldLocation, that.getLocation(), that.getGene(AGENT_IDENTIFIER, Color.class));
+
             hasDied = oldLocation.equals(that.getLocation()) ||
-                    env.move(that, oldLocation, that.getLocation());
+                    env.move(that, trace);
+
         } else {
             logger.finer(String.format("%s's has no enough energy (%s) to move with his current speed (%s)",
                     that, that.getEnergy(), that.getSpeed()));
@@ -225,13 +217,36 @@ public class DraughtsmanBehaviour
                     && that.getEnergy() >= that.getGene(AGENT_FECUNDATION_COST, Double.class)) {
 
                 //Create child
-                //HELP Gaussian variation of baby's genotype
-                //TODO Parametrize gaussian variation
                 double probabilityVariation = Configuration.getParameter(PROBABILITY_VARIATION, Double.class);
                 double curvatureVariation = Configuration.getParameter(CURVATURE_VARIATION, Double.class);
                 double orientationVariation = Configuration.getParameter(ANGLE_VARIATION, Double.class);
                 double speedVariation = Configuration.getParameter(SPEED_VARIATION, Double.class);
+                double colorVariation = Configuration.getParameter(COLOR_VARIATION, Double.class);
+
+                Color parentColor = that.getGene(AGENT_IDENTIFIER, Color.class);
+                Color childColor = new Color(
+                        normalizeColor(mutate(
+                                that.getMutationRate(),
+                                parentColor.getRed(),
+                                colorVariation * applicationRandom.nextGaussian()
+                        )),
+                        normalizeColor(mutate(
+                                that.getMutationRate(),
+                                parentColor.getGreen(),
+                                colorVariation * applicationRandom.nextGaussian()
+
+                        )),
+                        normalizeColor(mutate(
+                                that.getMutationRate(),
+                                parentColor.getBlue(),
+                                colorVariation * applicationRandom.nextGaussian()
+
+                        ))
+                );
+
                 Agent child = new DesignerAgent(
+                        //color
+                        childColor,
                         //initial position
                         that.getLocation(),
                         //initial amount of energy
@@ -325,7 +340,7 @@ public class DraughtsmanBehaviour
         double randomValue = Configuration.getParameter(RANDOM, Random.class)
                 .nextDouble();
         //TODO update phenotype death's chance according to age and mortality rate
-        double deathChance = that.getMortalityRate() * (that.getAge() / 10);
+        double deathChance = that.getMortalityRate();// * (that.getAge() / 10);
         logger.finer(String.format("[Random mortality's value = %f, death's chance = %f]", randomValue, deathChance));
         if (randomValue < deathChance) {
             that.detachFromEnvironment();
@@ -346,6 +361,19 @@ public class DraughtsmanBehaviour
             return normalValue + mutationVariation;
         } else {
             return normalValue;
+        }
+    }
+
+    private static Double mutate(
+            Double mutationRate,
+            Integer normalValue,
+            Double mutationVariation
+    ) {
+        if (Configuration.getParameter(RANDOM, Random.class)
+                .nextDouble() <= mutationRate) {
+            return normalValue + mutationVariation;
+        } else {
+            return (double) normalValue;
         }
     }
 

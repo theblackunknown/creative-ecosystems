@@ -4,6 +4,7 @@ import org.blackpanther.ecosystem.Agent;
 import org.blackpanther.ecosystem.BehaviorManager;
 import org.blackpanther.ecosystem.DesignerAgent;
 
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.Random;
 
@@ -15,12 +16,13 @@ import static org.blackpanther.ecosystem.Configuration.*;
  * TODO Why not generate a random agent ?
  *
  * @author MACHIZAUD Andréa
- * @version 1.0-alpha - Wed May 18 02:01:08 CEST 2011
+ * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
  */
 public final class AgentFactory {
 
     public static Agent StandardAgent(double abscissa, double ordinate) {
         return new DesignerAgent(
+                Configuration.getParameter(AGENT_IDENTIFIER, Color.class),
                 new Point2D.Double(abscissa, ordinate),
                 Configuration.getParameter(AGENT_ENERGY, Double.class),
                 Configuration.getParameter(AGENT_MOVEMENT_COST, Double.class),
@@ -43,6 +45,7 @@ public final class AgentFactory {
 
     public static Agent StandardAgent(double abscissa, double ordinate, double orientation) {
         return new DesignerAgent(
+                Configuration.getParameter(AGENT_IDENTIFIER, Color.class),
                 new Point2D.Double(abscissa, ordinate),
                 Configuration.getParameter(AGENT_ENERGY, Double.class),
                 Configuration.getParameter(AGENT_MOVEMENT_COST, Double.class),
@@ -75,7 +78,15 @@ public final class AgentFactory {
 
         Random applicationRandom = Configuration.getRandom();
 
+        Color randomColor = new Color(
+                (float) applicationRandom.nextDouble(),
+                (float) applicationRandom.nextDouble(),
+                (float) applicationRandom.nextDouble()
+        );
+
         return new DesignerAgent(
+                //color
+                randomColor,
                 //position
                 randomPoint,
                 //energy amount
