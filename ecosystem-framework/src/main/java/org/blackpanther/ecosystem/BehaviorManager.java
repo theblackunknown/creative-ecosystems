@@ -1,5 +1,7 @@
 package org.blackpanther.ecosystem;
 
+import java.io.Serializable;
+
 /**
  * <p>
  * Strategy Pattern Design.
@@ -9,15 +11,16 @@ package org.blackpanther.ecosystem;
  * </p>
  *
  * @author MACHIZAUD Andréa
- * @version 0.2 - Wed May 11 02:54:46 CEST 2011
+ * @version 1.0-alpha - Wed May 18 02:01:09 CEST 2011
  */
-public interface BehaviorManager {
+public interface BehaviorManager
+        extends Serializable {
 
     /**
      * Update agent state in given {@link Environment}
      *
-     * @param env   environment in which the agent evolves
-     * @param that  monitored agent
+     * @param env  environment in which the agent evolves
+     * @param that monitored agent
      */
     void update(Environment env, Agent that);
 

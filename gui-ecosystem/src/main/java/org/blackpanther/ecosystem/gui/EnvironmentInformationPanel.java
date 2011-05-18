@@ -1,170 +1,657 @@
 package org.blackpanther.ecosystem.gui;
 
-import org.blackpanther.ecosystem.Environment;
-import org.blackpanther.ecosystem.gui.actions.EnvironmentCreationAction;
-import org.blackpanther.ecosystem.gui.lightweight.ConfigurationInformation;
+import org.blackpanther.ecosystem.*;
+import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
+import org.blackpanther.ecosystem.placement.GenerationStrategy;
 
 import javax.swing.*;
-import javax.swing.border.EtchedBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import javax.swing.border.BevelBorder;
 import java.awt.*;
+import java.awt.event.ActionListener;
+import java.beans.EventHandler;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
-import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
+import static org.blackpanther.ecosystem.Agent.*;
+import static org.blackpanther.ecosystem.Configuration.*;
+import static org.blackpanther.ecosystem.gui.formatter.RangeModels.*;
+import static org.blackpanther.ecosystem.helper.Helper.createLabeledField;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 0.2 - Wed May 11 02:54:46 CEST 2011
+ * @version 1.0-alpha - Wed May 18 02:01:10 CEST 2011
  */
-public class EnvironmentInformationPanel extends JTabbedPane {
+public class EnvironmentInformationPanel extends JPanel {
 
-    private static final Dimension DEFAULT_DIMENSION = new Dimension(230, 75);
-    private static final String LABEL_ENVIRONMENT_ID = "Environment #%s";
+    private static final String LABEL_ENVIRONMENT_ID = "Environment #%s %s";
     private static final String LABEL_ENVIRONMENT_AGENT = "Agent number : %d";
     private static final String LABEL_ENVIRONMENT_GENERATION = "#Generation %d";
+    private static final String NO_ENVIRONMENT = "No Environment Set";
+    private static final Dimension PREFERRED_SIZE = new Dimension(280, 600);
 
-    private final JPanel DEFAULT_TAB = new NoEnvironmentInformationPanel();
-    private EnvironmentInformationInstance oldTab;
+    private EnvironmentConfigurationModel model =
+            new EnvironmentConfigurationModel();
+    private EnvironmentInformationInstance informationBoard =
+            new EnvironmentInformationInstance();
 
     public EnvironmentInformationPanel() {
         super();
-//        setPreferredSize(DEFAULT_DIMENSION);
-        addChangeListener(new EnvironmentSwitcher());
-        add(DEFAULT_TAB);
+        add(informationBoard);
         setBorder(
-                BorderFactory.createEtchedBorder(EtchedBorder.RAISED)
+                BorderFactory.createBevelBorder(BevelBorder.RAISED)
         );
+        clearBoard();
     }
 
-    @Override
-    public EnvironmentInformationInstance getSelectedComponent() {
-        return super.getSelectedComponent() instanceof EnvironmentInformationInstance
-                ? (EnvironmentInformationInstance) super.getSelectedComponent()
-                : null; //Can't select default tab
+    public void clearBoard() {
+        informationBoard.deadactivate();
     }
 
-    void addEnvironment(Environment env, ConfigurationInformation initialParameters) {
-        //TODO Handle stuff
-        String tabName = String.format(LABEL_ENVIRONMENT_ID, env.getId());
-        int tabIndex = indexOfTab(tabName);
-
-        if (tabIndex < 0) {
-            JPanel informationTab = new EnvironmentInformationInstance(env,initialParameters);
-            add(informationTab);
-            remove(DEFAULT_TAB);
-            oldTab = getSelectedComponent();
-            setSelectedComponent(informationTab);
-        }
+    public void updateInformation(EnvironmentInformation information) {
+        informationBoard.updateInformation(information);
     }
 
-    void removeEnvironment(Environment env) {
-        //TODO Handle stuff
-        if (getTabCount() == 0) {
-            add(DEFAULT_TAB);
-            oldTab = getSelectedComponent();
-            setSelectedComponent(null);
-        }
+    public void updateInformation(Configuration information) {
+        informationBoard.updateInformation(information);
     }
 
-    void environmentEnded() {
-        if (getSelectedComponent() != null)
-            this.getSelectedComponent().environmentEnded();
+    public void notifyPause() {
+        informationBoard.notifyPause();
     }
 
-    public void updateInformation() {
-        if (getSelectedComponent() != null)
-            this.getSelectedComponent().updateInformation();
+    public void notifyRun() {
+        informationBoard.notifyRun();
     }
 
-    class NoEnvironmentInformationPanel extends JPanel {
-        NoEnvironmentInformationPanel() {
-            setName("No environment is set");
-            JButton createEnvironment =
-                    new JButton(EnvironmentCreationAction.getInstance());
-            add(createEnvironment);
-        }
-    }
 
-    class EnvironmentInformationInstance extends JPanel {
+    private static final String PASSIVE = "Normal";
+    private static final String[] BEHAVIOURS_NAME = new String[]{
+            PASSIVE
+    };
 
-        private static final String FROZEN_MARKER = "[FROZEN]";
+    public class EnvironmentInformationInstance extends JPanel {
+
         private JLabel environmentLabel;
         private JLabel environmentAgentCounter;
         private JLabel environmentGenerationLabel;
+        private JPanel parametersPanel;
+        private JComboBox panelSelector;
 
-        private Environment environmentReference;
+        private ApplicationParameterPanel internalApplicationParametersPanel =
+                new ApplicationParameterPanel(APPLICATION_PARAMETERS);
+        private AgentParameterPanel internalAgentParametersPanel =
+                new AgentParameterPanel(AGENT_PARAMETERS);
+        private PlacementAgentPanel internalAgentPlacementPanel =
+                new PlacementAgentPanel(AGENT_PLACEMENT);
+        private PlacementResourcePanel internalResourcePlacementPanel =
+                new PlacementResourcePanel(RESOURCE_PLACEMENT);
 
-        public EnvironmentInformationInstance(Environment env, ConfigurationInformation initialParameters) {
-            setName(String.format(LABEL_ENVIRONMENT_ID,
-                    Long.toHexString(env.getId())));
-            setLayout(new GridBagLayout());
+        public static final String APPLICATION_PARAMETERS = "Applications parameters";
+        public static final String AGENT_PARAMETERS = "Agent parameters";
+        public static final String AGENT_PLACEMENT = "Agent Placement";
+        public static final String RESOURCE_PLACEMENT = "Resource Placement";
 
-            environmentReference = env;
+        private final String[] PANELS_NAME = new String[]{
+                APPLICATION_PARAMETERS,
+                AGENT_PARAMETERS,
+                AGENT_PLACEMENT,
+                RESOURCE_PLACEMENT
+        };
+
+        public EnvironmentInformationInstance() {
+            super(new BorderLayout());
+            setName("Environment's information board");
+
+            //initialize components
             environmentLabel =
-                    new JLabel(
-                            String.format(LABEL_ENVIRONMENT_ID,
-                                    Long.toHexString(environmentReference.getId())));
+                    new JLabel(NO_ENVIRONMENT);
+            environmentLabel.setAlignmentX(LEFT_ALIGNMENT);
 
             environmentAgentCounter =
-                    new JLabel(
-                            String.format(LABEL_ENVIRONMENT_AGENT,
-                                    environmentReference.getPool().size()));
+                    new JLabel(NO_ENVIRONMENT);
+            environmentAgentCounter.setAlignmentX(LEFT_ALIGNMENT);
 
             environmentGenerationLabel =
-                    new JLabel(
-                            String.format(LABEL_ENVIRONMENT_GENERATION,
-                                    environmentReference.getTime()));
-            JLabel initialParametersLabel =
-                    new JLabel(initialParameters.toString());
+                    new JLabel(NO_ENVIRONMENT);
+            environmentGenerationLabel.setAlignmentX(CENTER_ALIGNMENT);
 
-            GridBagConstraints constraints = new GridBagConstraints();
-            constraints.fill = GridBagConstraints.BOTH;
-            constraints.gridwidth = GridBagConstraints.REMAINDER;
+            JButton resetEnvironment = new JButton("Reset Environment");
+            resetEnvironment.setAlignmentX(LEFT_ALIGNMENT);
+            resetEnvironment.addActionListener(EventHandler.create(
+                    ActionListener.class,
+                    model,
+                    "update"
+            ));
 
-            //Environment Label
-            add(environmentLabel, constraints);
-            add(environmentAgentCounter, constraints);
-            add(environmentGenerationLabel, constraints);
-            add(initialParametersLabel, constraints);
+            //parameters panels
+            parametersPanel = new JPanel(new CardLayout());
+            parametersPanel.setPreferredSize(PREFERRED_SIZE);
+            panelSelector = new JComboBox(PANELS_NAME);
+            panelSelector.addActionListener(EventHandler.create(
+                    ActionListener.class,
+                    this,
+                    "switchPanel",
+                    "source.selectedItem"
+            ));
+
+            parametersPanel.add(
+                    internalApplicationParametersPanel,
+                    internalApplicationParametersPanel.getName());
+            parametersPanel.add(
+                    internalAgentParametersPanel,
+                    internalAgentParametersPanel.getName()
+            );
+            parametersPanel.add(
+                    internalAgentPlacementPanel,
+                    internalAgentPlacementPanel.getName()
+            );
+            parametersPanel.add(
+                    internalResourcePlacementPanel,
+                    internalResourcePlacementPanel.getName()
+            );
+
+            Box information = Box.createVerticalBox();
+
+            information.add(environmentLabel);
+            information.add(environmentAgentCounter);
+            information.add(environmentAgentCounter);
+            information.add(Box.createVerticalStrut(10));
+            information.add(resetEnvironment);
+            information.add(Box.createVerticalStrut(20));
+
+            //initialize layout objects
+            Box box = Box.createVerticalBox();
+            box.add(panelSelector);
+            box.add(parametersPanel);
+
+            add(information, BorderLayout.NORTH);
+            add(box, BorderLayout.CENTER);
+
+            //initialize fields
+            updateInformation(Configuration);
         }
 
-        public void updateInformation() {
+        /**
+         * quick switch between internal panel thanks to combo box + card layout
+         */
+        public void switchPanel(String panelName) {
+            CardLayout layout = (CardLayout) parametersPanel.getLayout();
+            layout.show(parametersPanel, panelName);
+        }
+
+        public void updateInformation(EnvironmentInformation information) {
             this.environmentLabel.setText(
                     String.format(LABEL_ENVIRONMENT_ID,
-                            Long.toHexString(environmentReference.getId())));
+                            Long.toHexString(information.getId()),
+                            information.getState()));
             this.environmentAgentCounter.setText(
                     String.format(LABEL_ENVIRONMENT_AGENT,
-                            environmentReference.getPool().size()));
+                            information.getPoolSize()));
             this.environmentGenerationLabel.setText(
                     String.format(LABEL_ENVIRONMENT_GENERATION,
-                            environmentReference.getTime()));
+                            information.getGenerationCounter()));
         }
 
-        void environmentEnded() {
-            if (!environmentLabel.getText().contains(FROZEN_MARKER)) {
-                this.environmentLabel.setText(
-                        environmentLabel.getText() + FROZEN_MARKER
+        public void updateInformation(Configuration information) {
+            activate();
+            internalApplicationParametersPanel.updateInformation(information);
+            internalAgentParametersPanel.updateInformation(information);
+        }
+
+        //forgive me for this hack...
+        void notifyPause() {
+            int index = environmentLabel.getText().lastIndexOf(" ");
+            if (index > 0) {
+                environmentLabel.setText(
+                        environmentLabel.getText().substring(0, index + 1)
+                                + EnvironmentInformation.State.PAUSED
                 );
             }
         }
 
-        Environment getEnvironment() {
-            return environmentReference;
+        //my apologies, again.
+        public void notifyRun() {
+            int index = environmentLabel.getText().lastIndexOf(" ");
+            if (index > 0) {
+                environmentLabel.setText(
+                        environmentLabel.getText().substring(0, index + 1)
+                                + EnvironmentInformation.State.RUNNING
+                );
+            }
+        }
+
+        public Collection<Agent> getAgentPool() {
+            return internalAgentPlacementPanel.generatePopulation();
+        }
+
+        public Collection<Resource> getResourcePool() {
+            return internalResourcePlacementPanel.generatePopulation();
+        }
+
+        public Map<Object, Object> getParameters() {
+            Map<Object, Object> allParameters = new HashMap<Object, Object>();
+            allParameters.putAll(internalApplicationParametersPanel.getParameters());
+            allParameters.putAll(internalAgentParametersPanel.getParameters());
+            return allParameters;
+        }
+
+        private void activate() {
+            panelSelector.setEnabled(true);
+            internalApplicationParametersPanel.activate();
+            internalAgentParametersPanel.activate();
+        }
+
+        public void deadactivate() {
+            environmentLabel.setText(NO_ENVIRONMENT);
+            environmentAgentCounter.setText(NO_ENVIRONMENT);
+            environmentGenerationLabel.setText(NO_ENVIRONMENT);
+            panelSelector.setEnabled(false);
+            internalApplicationParametersPanel.deactivate();
+            internalAgentParametersPanel.deactivate();
         }
     }
 
-    class EnvironmentSwitcher implements ChangeListener {
-        @Override
-        public void stateChanged(ChangeEvent e) {
-            if (getSelectedComponent() != null) {
-                Monitor.switchEnvironment(
-                        oldTab == null
-                                ? null
-                                : oldTab.getEnvironment(),
-                        getSelectedComponent().getEnvironment()
-                );
-                oldTab = null;
+    private abstract class ParametersPanel extends JPanel {
+
+        protected final Map<String, JSpinner> parameters =
+                generateParameters();
+
+        public ParametersPanel(String name) {
+            super(new BorderLayout());
+            setName(name);
+
+            JLabel presentation = new JLabel("<html><i><b>" + name + "</b></i></html>");
+            presentation.setAlignmentX(LEFT_ALIGNMENT);
+
+            setUpComponents();
+
+            Box layout = Box.createVerticalBox();
+
+            layout.add(presentation);
+
+            generateContent(layout);
+
+            //"bite me, fucking UI"
+            layout.add(Box.createVerticalStrut(25));
+
+            add(new JScrollPane(layout));
+        }
+
+        abstract void setUpComponents();
+
+        abstract Map<String, JSpinner> generateParameters();
+
+        void generateContent(Box layout) {
+            for (Map.Entry<String, JSpinner> entry : parameters.entrySet()) {
+                layout.add(createLabeledField(
+                        entry.getKey(),
+                        entry.getValue()
+                ));
             }
+        }
+
+        /**
+         * Update information with given configuration
+         */
+        void updateInformation(Configuration information) {
+            for (Map.Entry<String, JSpinner> entry : parameters.entrySet()) {
+                if (entry.getKey().equals(RANDOM))
+                    parameters.get(entry.getKey()).setValue(
+                            information.getRandomSeed());
+                else if (entry.getKey().equals(MAX_AGENT_NUMBER))
+                    parameters.get(entry.getKey()).setValue(
+                            information.getParameter(entry.getKey(), Integer.class));
+                else
+                    parameters.get(entry.getKey()).setValue(
+                            information.getParameter(entry.getKey(), Double.class));
+            }
+        }
+
+        public Map<Object, Object> getParameters() {
+            Map<Object, Object> externalisedParameters = new HashMap<Object, Object>();
+            for (Map.Entry<String, JSpinner> parameter : parameters.entrySet())
+                externalisedParameters.put(
+                        parameter.getKey(),
+                        String.valueOf(parameter.getValue().getValue()));
+            return externalisedParameters;
+        }
+
+        void activate() {
+            for (JSpinner components : parameters.values())
+                components.setEnabled(true);
+        }
+
+        void deactivate() {
+            for (JSpinner components : parameters.values())
+                components.setEnabled(false);
+        }
+    }
+
+    /**
+     * Handle panel switching by a card layout
+     */
+
+    class ApplicationParameterPanel extends ParametersPanel {
+
+        public ApplicationParameterPanel(String name) {
+            super(name);
+        }
+
+        @Override
+        void setUpComponents() {
+        }
+
+        @Override
+        Map<String, JSpinner> generateParameters() {
+            return new HashMap<String, JSpinner>() {{
+                put(RANDOM, new JSpinner(generatePositiveLongModel()));
+                put(SPACE_WIDTH, new JSpinner(generatePositiveDoubleModel()));
+                put(SPACE_HEIGHT, new JSpinner(generatePositiveDoubleModel()));
+                put(RESOURCE_AMOUNT, new JSpinner(generatePositiveDoubleModel()));
+                put(MAX_AGENT_NUMBER, new JSpinner(generatePositiveLongModel()));
+                put(CONSUMMATION_RADIUS, new JSpinner(generatePositiveDoubleModel()));
+                //randomized threshold
+                put(RESOURCE_AMOUNT_THRESHOLD, new JSpinner(generatePositiveDoubleModel()));
+                put(SPEED_THRESHOLD, new JSpinner(generatePositiveDoubleModel()));
+                put(CURVATURE_THRESHOLD, new JSpinner(generatePositiveDoubleModel()));
+                put(SENSOR_THRESHOLD, new JSpinner(generatePositiveDoubleModel()));
+                put(ENERGY_AMOUNT_THRESHOLD, new JSpinner(generatePositiveDoubleModel()));
+                put(FECUNDATION_CONSUMMATION_THRESHOLD, new JSpinner(generatePositiveDoubleModel()));
+                //variation
+                put(PROBABILITY_VARIATION, new JSpinner(generateDoubleModel()));
+                put(CURVATURE_VARIATION, new JSpinner(generateDoubleModel()));
+                put(ANGLE_VARIATION, new JSpinner(generateDoubleModel()));
+                put(SPEED_VARIATION, new JSpinner(generateDoubleModel()));
+            }};
+        }
+    }
+
+    class AgentParameterPanel extends ParametersPanel {
+
+        private JComboBox behaviours;
+
+        public AgentParameterPanel(String name) {
+            super(name);
+        }
+
+        @Override
+        void setUpComponents() {
+            behaviours = new JComboBox(BEHAVIOURS_NAME);
+        }
+
+        @Override
+        Map<String, JSpinner> generateParameters() {
+            return new HashMap<String, JSpinner>() {{
+                put(AGENT_ENERGY, new JSpinner(generatePositiveDoubleModel()));
+                put(AGENT_ORIENTATION, new JSpinner(generateAngleModel()));
+                put(AGENT_CURVATURE, new JSpinner(generateDoubleModel()));
+                put(AGENT_SPEED, new JSpinner(generatePositiveDoubleModel()));
+                put(AGENT_MOVEMENT_COST, new JSpinner(generatePercentageModel()));
+                put(AGENT_FECUNDATION_COST, new JSpinner(generatePositiveDoubleModel()));
+                put(AGENT_FECUNDATION_LOSS, new JSpinner(generatePercentageModel()));
+                put(AGENT_ORIENTATION_LAUNCHER, new JSpinner(generateAngleModel()));
+                put(AGENT_SPEED_LAUNCHER, new JSpinner(generatePositiveDoubleModel()));
+                put(AGENT_GREED, new JSpinner(generatePercentageModel()));
+                put(AGENT_SENSOR_RADIUS, new JSpinner(generatePositiveDoubleModel()));
+                put(AGENT_IRRATIONALITY, new JSpinner(generatePercentageModel()));
+                put(AGENT_MORTALITY, new JSpinner(generatePercentageModel()));
+                put(AGENT_FECUNDITY, new JSpinner(generatePercentageModel()));
+                put(AGENT_MUTATION, new JSpinner(generatePercentageModel()));
+            }};
+        }
+
+        @Override
+        void generateContent(Box layout) {
+            super.generateContent(layout);
+            layout.add(createLabeledField(
+                    AGENT_BEHAVIOUR,
+                    behaviours
+            ));
+        }
+
+        @Override
+        void updateInformation(Configuration information) {
+            super.updateInformation(information);
+            String behaviourClass =
+                    information.getParameter(AGENT_BEHAVIOUR, BehaviorManager.class)
+                            .getClass().getCanonicalName();
+            if (behaviourClass.equals(DraughtsmanBehaviour.class.getCanonicalName()))
+                behaviourClass = PASSIVE;
+            //trick to avoid doubles
+            //FIXME event fired
+            behaviours.removeItem(behaviourClass);
+            behaviours.addItem(behaviourClass);
+        }
+
+        @Override
+        public Map<Object, Object> getParameters() {
+            Map<Object, Object> externalisedParameters = super.getParameters();
+            String selectedBehaviour = (String) behaviours.getSelectedItem();
+            if (selectedBehaviour.equals(PASSIVE))
+                externalisedParameters.put(
+                        AGENT_BEHAVIOUR, DraughtsmanBehaviour.class.getCanonicalName());
+            return externalisedParameters;
+        }
+    }
+
+    public abstract class PlacementPanel<T> extends JPanel {
+
+        /**
+         * Panel management
+         */
+        private JComboBox strategyList;
+        private JPanel cardPanel;
+
+        /**
+         * Standard provided
+         */
+        private JSpinner abscissaLimit;
+        private JSpinner ordinateLimit;
+        private JSpinner step;
+
+        /**
+         * Standard random position
+         */
+        private JSpinner numberOfItemRandomized;
+
+        /**
+         * Full random
+         */
+        private JSpinner numberOfItemRandom;
+
+        /**
+         * Circle placement
+         */
+        private JSpinner circleRadius;
+        private JSpinner numberOfItemCircle;
+
+        public PlacementPanel(String name, String itemName) {
+            super();
+            setName(name);
+
+            JLabel presentation = new JLabel("<html><i><b>" + name + "</b></i></html>");
+            presentation.setAlignmentX(LEFT_ALIGNMENT);
+
+            Box layout = Box.createVerticalBox();
+
+            layout.add(presentation);
+
+            generateContent(layout,itemName);
+
+            add(layout);
+        }
+
+        private void generateContent(Box layout, String itemName) {
+            cardPanel = new JPanel(new CardLayout());
+
+            strategyList = new JComboBox(GenerationStrategy.GenerationType.values());
+            strategyList.addActionListener(EventHandler.create(
+                    ActionListener.class,
+                    this,
+                    "switchStrategyPanel",
+                    "source.selectedItem"
+            ));
+
+            abscissaLimit = new JSpinner(generateDoubleModel());
+            abscissaLimit.setValue(1.0);
+            ordinateLimit = new JSpinner(generateDoubleModel());
+            ordinateLimit.setValue(1.0);
+            step = new JSpinner(generateDoubleModel());
+            step.setValue(1.0);
+
+            numberOfItemRandomized = new JSpinner(generatePositiveLongModel());
+            numberOfItemRandomized.setValue(20L);
+            numberOfItemRandom = new JSpinner(generatePositiveLongModel());
+            numberOfItemRandom.setValue(20L);
+            numberOfItemCircle = new JSpinner(generatePositiveLongModel());
+            numberOfItemCircle.setValue(45L);
+
+            circleRadius = new JSpinner(generatePositiveDoubleModel());
+            circleRadius.setValue(5.0);
+
+            JPanel standardPositionProvided = new JPanel(new GridLayout(0, 1));
+            JPanel standardPositionRandomized = new JPanel(new GridLayout(0, 1));
+            JPanel standardCircle = new JPanel(new GridLayout(0, 1));
+            JPanel random = new JPanel(new GridLayout(0, 1));
+
+            standardPositionProvided.add(createLabeledField(
+                    "Maximal Abscissa",
+                    abscissaLimit
+            ));
+            standardPositionProvided.add(createLabeledField(
+                    "Maximal Ordinate",
+                    ordinateLimit
+            ));
+            standardPositionProvided.add(createLabeledField(
+                    "Step",
+                    step
+            ));
+
+            standardPositionRandomized.add(createLabeledField(
+                    "Number of " + itemName,
+                    numberOfItemRandomized
+            ));
+
+            standardCircle.add(createLabeledField(
+                    "Number of " + itemName,
+                    numberOfItemCircle
+            ));
+            standardCircle.add(createLabeledField(
+                    "Circle's radius",
+                    circleRadius
+            ));
+
+            random.add(createLabeledField(
+                    "Number of " + itemName,
+                    numberOfItemRandom
+            ));
+
+            cardPanel.add(standardPositionProvided,
+                    GenerationStrategy.GenerationType.STANDARD_POSITION_PROVIDED.toString());
+            cardPanel.add(standardPositionRandomized,
+                    GenerationStrategy.GenerationType.STANDARD_POSITION_RANDOMIZED.toString());
+            cardPanel.add(standardCircle,
+                    GenerationStrategy.GenerationType.STANDARD_CIRCLE.toString());
+            cardPanel.add(random,
+                    GenerationStrategy.GenerationType.RANDOM.toString());
+
+            layout.add(strategyList);
+            layout.add(cardPanel);
+        }
+
+        public void switchStrategyPanel(GenerationStrategy.GenerationType strategyType) {
+            CardLayout layout = (CardLayout) cardPanel.getLayout();
+            layout.show(cardPanel, strategyType.toString());
+        }
+
+        protected GenerationStrategy.GenerationType getGenerationType() {
+            return (GenerationStrategy.GenerationType) strategyList.getSelectedItem();
+        }
+
+        protected Object[] aggregateAdditionalParameters() {
+            switch ((GenerationStrategy.GenerationType) strategyList.getSelectedItem()) {
+                case STANDARD_POSITION_PROVIDED:
+                    return new Object[]{
+                            abscissaLimit.getValue(),
+                            ordinateLimit.getValue(),
+                            step.getValue()
+                    };
+                case STANDARD_POSITION_RANDOMIZED:
+                    return new Object[]{
+                            numberOfItemRandomized.getValue()
+                    };
+                case STANDARD_CIRCLE:
+                    return new Object[]{
+                            numberOfItemCircle.getValue(),
+                            circleRadius.getValue()
+                    };
+                case RANDOM:
+                    return new Object[]{
+                            numberOfItemRandom.getValue()
+                    };
+                default:
+                    throw new IllegalStateException("strategy unknown : " + strategyList.getSelectedItem());
+            }
+        }
+
+        abstract public Collection<T> generatePopulation();
+    }
+
+    public class PlacementAgentPanel extends PlacementPanel<Agent> {
+
+        public PlacementAgentPanel(String name) {
+            super(name,"agent");
+        }
+
+        @Override
+        public Collection<Agent> generatePopulation() {
+            return GenerationStrategy.generatePopulation(
+                    Agent.class,
+                    getGenerationType(),
+                    aggregateAdditionalParameters()
+            );
+        }
+    }
+
+    public class PlacementResourcePanel extends PlacementPanel<Resource> {
+        public PlacementResourcePanel(String name) {
+            super(name,"resource");
+        }
+
+        @Override
+        public Collection<Resource> generatePopulation() {
+            return GenerationStrategy.generatePopulation(
+                    Resource.class,
+                    getGenerationType(),
+                    aggregateAdditionalParameters()
+            );
+        }
+    }
+
+    /**
+     * A model in a backend keep records of every parameters data
+     */
+    public class EnvironmentConfigurationModel {
+
+        private Collection<Agent> agentPool;
+        private Collection<Resource> resourcePool;
+
+        private void notifyChanges() {
+            GUIMonitor.Monitor.resetEnvironment(
+                    agentPool,
+                    resourcePool
+            );
+        }
+
+        public void update() {
+            Properties props = new Properties();
+            props.putAll(informationBoard.getParameters());
+            Configuration.loadConfiguration(props);
+            agentPool = informationBoard.getAgentPool();
+            resourcePool = informationBoard.getResourcePool();
+            notifyChanges();
         }
     }
 }

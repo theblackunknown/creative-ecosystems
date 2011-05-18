@@ -14,7 +14,7 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 0.2 - Wed May 11 02:54:46 CEST 2011
+ * @version 1.0-alpha - Wed May 18 02:01:10 CEST 2011
  */
 public class LoadConfigurationAction extends AbstractAction {
 
@@ -41,7 +41,6 @@ public class LoadConfigurationAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
         Monitor.pauseEvolution();
-
         Component parent = ((Component) e.getSource()).getParent();
         switch (fileLoader.showOpenDialog(parent)) {
             case JFileChooser.APPROVE_OPTION:
@@ -73,7 +72,5 @@ public class LoadConfigurationAction extends AbstractAction {
                     );
                 }
         }
-        Monitor.resumeEvolution();
-
     }
 }

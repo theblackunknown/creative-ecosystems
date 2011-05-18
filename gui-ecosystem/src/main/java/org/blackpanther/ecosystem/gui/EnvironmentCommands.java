@@ -12,7 +12,7 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
  * TODO Slider to manage evolution speed
  *
  * @author MACHIZAUD Andréa
- * @version 0.2 - Wed May 11 02:54:46 CEST 2011
+ * @version 1.0-alpha - Wed May 18 02:01:10 CEST 2011
  */
 public class EnvironmentCommands
         extends JPanel {
@@ -22,6 +22,7 @@ public class EnvironmentCommands
     public static final String STOP_ENVIRONMENT = "Pause";
     public static final String START_ENVIRONMENT = "Start";
     public static final String NO_ENVIRONMENT = "No environment set";
+    public static final String FROZEN_ENVIRONMENT = "Environment frozen";
 
     private JButton evolutionFlowButton;
 
@@ -31,21 +32,37 @@ public class EnvironmentCommands
         setLayout(new FlowLayout());
 
         evolutionFlowButton = new JButton(NO_ENVIRONMENT);
-        evolutionFlowButton.addActionListener(
-                EventHandler.create(
-                        ActionListener.class,
-                        this,
-                        "switchStartPause"
-                ));
-        evolutionFlowButton.addActionListener(
-                EventHandler.create(
-                        ActionListener.class,
-                        Monitor,
-                        "interceptEnvironmentEvolutionFlow",
-                        "source.text"
-                ));
+        JCheckBox drawBounds = new JCheckBox("Paint bounds", false);
+        JCheckBox drawResources = new JCheckBox("Paint resources", false);
+
+        evolutionFlowButton.setEnabled(false);
+        evolutionFlowButton.addActionListener(EventHandler.create(
+                ActionListener.class,
+                this,
+                "switchStartPause"
+        ));
+        evolutionFlowButton.addActionListener(EventHandler.create(
+                ActionListener.class,
+                Monitor,
+                "interceptEnvironmentEvolutionFlow",
+                "source.text"
+        ));
+        drawBounds.addActionListener(EventHandler.create(
+                ActionListener.class,
+                Monitor,
+                "paintBounds",
+                "source.selected"
+        ));
+        drawResources.addActionListener(EventHandler.create(
+                ActionListener.class,
+                Monitor,
+                "paintResources",
+                "source.selected"
+        ));
 
         add(evolutionFlowButton);
+        add(drawBounds);
+        add(drawResources);
 
         setBorder(
                 BorderFactory.createEtchedBorder(EtchedBorder.RAISED)
@@ -66,9 +83,22 @@ public class EnvironmentCommands
 
     void environmentSet() {
         evolutionFlowButton.setText(START_ENVIRONMENT);
+        evolutionFlowButton.setEnabled(true);
     }
 
-    void environmentUnset(){
+    void environmentUnset() {
         evolutionFlowButton.setText(NO_ENVIRONMENT);
+        evolutionFlowButton.setEnabled(false);
+    }
+
+    public void environmentFrozen() {
+        evolutionFlowButton.setText(FROZEN_ENVIRONMENT);
+        evolutionFlowButton.setEnabled(false);
+    }
+
+    public void notifyPause() {
+        if (evolutionFlowButton.getText().equals(STOP_ENVIRONMENT)) {
+            evolutionFlowButton.setText(START_ENVIRONMENT);
+        }
     }
 }

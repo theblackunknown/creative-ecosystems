@@ -1,16 +1,21 @@
 package org.blackpanther.ecosystem.helper;
 
+import org.blackpanther.ecosystem.math.Geometry;
+
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.net.URL;
 
 /**
  * Tools method to help to design others classes
  *
  * @author MACHIZAUD Andréa
- * @version 0.2 - Wed May 11 02:54:46 CEST 2011
+ * @version 1.0-alpha - Wed May 18 02:01:08 CEST 2011
  */
 public final class Helper {
+
+    public static final double EPSILON = 0.001;
 
     private Helper() {
     }
@@ -64,19 +69,52 @@ public final class Helper {
         return inf <= number && number < sup;
     }
 
+    public static Double normalizeAngle(double angle) {
+        return angle % Geometry.PI_2;
+    }
+
+    public static Double normalizeProbability(double probability) {
+        if (probability < 0.0)
+            return 0.0;
+        else if (probability > 1.0)
+            return 1.0;
+        else
+            return probability;
+    }
+
+    public static Double normalizePositiveDouble(double speed) {
+        if (speed < 0.0)
+            return 0.0;
+        else
+            return speed;
+    }
+
     public static URL getImage(String imagePath) {
         return Helper.class.getClassLoader().getResource(imagePath);
     }
 
-    private static final Dimension FIELD_DIMENSION = new Dimension(400, 50);
+    private static final Dimension FIELD_DIMENSION = new Dimension(160, 50);
 
     public static JPanel createLabeledField(final String labelName, final Component field) {
-        return new JPanel(new GridLayout(2,1)) {{
+        return new JPanel(new GridLayout(2, 1)) {{
             JLabel label = new JLabel(labelName);
             label.setLabelFor(field);
             add(label);
             add(field);
             setPreferredSize(FIELD_DIMENSION);
         }};
+    }
+
+    /**
+     * Get angle in positive rotation (counter-clockwise)
+     * of the angle with source as center and target a point on the circle
+     */
+    public static Double computeOrientation(Point2D source, Point2D target) {
+        double angle = Math.atan2(
+                target.getY() - source.getY(),
+                target.getX() - source.getX());
+        return angle < 0.0
+                ? angle + Geometry.PI_2
+                : angle;
     }
 }

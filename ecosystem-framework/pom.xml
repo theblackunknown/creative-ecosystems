@@ -6,7 +6,7 @@
     <parent>
         <artifactId>creative-ecosystems</artifactId>
         <groupId>org.blackpanther</groupId>
-        <version>0.1</version>
+        <version>0.3</version>
     </parent>
 
     <artifactId>ecosystem-framework</artifactId>

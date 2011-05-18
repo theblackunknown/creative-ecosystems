@@ -6,7 +6,7 @@
     <parent>
         <artifactId>creative-ecosystems</artifactId>
         <groupId>org.blackpanther</groupId>
-        <version>0.1</version>
+        <version>0.3</version>
     </parent>
 
     <artifactId>draughtsman-ecosystem</artifactId>
@@ -17,7 +17,7 @@
         <dependency>
             <artifactId>ecosystem-framework</artifactId>
             <groupId>org.blackpanther</groupId>
-            <version>0.1</version>
+            <version>0.3</version>
         </dependency>
     </dependencies>
 

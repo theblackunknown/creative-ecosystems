@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 0.2 - Wed May 11 02:54:46 CEST 2011
+ * @version 1.0-alpha - Wed May 18 02:01:10 CEST 2011
  */
 public class WindowDimensionFormatter
         extends JFormattedTextField.AbstractFormatter {
