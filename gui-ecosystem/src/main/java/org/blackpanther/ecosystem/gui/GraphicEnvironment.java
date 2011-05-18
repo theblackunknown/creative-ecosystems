@@ -225,6 +225,7 @@ public class GraphicEnvironment
         }
     }
 
+    //fetch only the image generated
     public BufferedImage dumpCurrentImage() {
         if (monitoredEnvironment != null) {
             BufferedImage image = new BufferedImage(
@@ -271,6 +272,7 @@ public class GraphicEnvironment
     public void applyBackgroundColor(Color color) {
         currentBackground = color;
         panelStructureHasChanged = true;
+        repaint();
     }
 
     /**
