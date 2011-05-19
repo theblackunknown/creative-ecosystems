@@ -103,7 +103,7 @@ public class DraughtsmanBehaviour
         }
     }
 
-    private static SensorTarget<Resource> getClosestResource(Point2D source, Collection<SensorTarget<Resource>> resources) {
+    protected static SensorTarget<Resource> getClosestResource(Point2D source, Collection<SensorTarget<Resource>> resources) {
         Iterator<SensorTarget<Resource>> it = resources.iterator();
         if (it.hasNext()) {
             SensorTarget<Resource> closest = it.next();
@@ -120,14 +120,14 @@ public class DraughtsmanBehaviour
         } else return null;
     }
 
-    private static SensorTarget<Agent> getClosestAgent(Point2D source, Collection<SensorTarget<Agent>> agents) {
+    protected static SensorTarget<Agent> getClosestAgent(Point2D source, Collection<SensorTarget<Agent>> agents) {
         Iterator<SensorTarget<Agent>> it = agents.iterator();
         if (it.hasNext()) {
             SensorTarget<Agent> closest = it.next();
             double closestDistance = source.distance(closest.getTarget().getLocation());
             while (it.hasNext()) {
                 SensorTarget<Agent> agent = it.next();
-                double distance = source.distance(closest.getTarget().getLocation());
+                double distance = source.distance(agent.getTarget().getLocation());
                 if (distance < closestDistance) {
                     closest = agent;
                     closestDistance = distance;
