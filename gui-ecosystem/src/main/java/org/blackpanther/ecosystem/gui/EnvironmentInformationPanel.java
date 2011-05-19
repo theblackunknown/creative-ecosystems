@@ -8,13 +8,8 @@ import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.beans.EventHandler;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import static org.blackpanther.ecosystem.Agent.*;
 import static org.blackpanther.ecosystem.Configuration.*;
@@ -337,7 +332,7 @@ public class EnvironmentInformationPanel extends JPanel {
 
         @Override
         Map<String, JSpinner> generateParameters() {
-            return new HashMap<String, JSpinner>() {{
+            return new TreeMap<String, JSpinner>() {{
                 put(SPACE_WIDTH, new JSpinner(generatePositiveDoubleModel()));
                 put(SPACE_HEIGHT, new JSpinner(generatePositiveDoubleModel()));
                 put(RESOURCE_AMOUNT, new JSpinner(generatePositiveDoubleModel()));
@@ -361,11 +356,10 @@ public class EnvironmentInformationPanel extends JPanel {
     }
 
     public class AgentParameterPanel
-            extends ParametersPanel
-            implements MouseListener {
+            extends ParametersPanel {
 
         private JComboBox behaviours;
-        private JLabel colorDisplayer;
+        private JButton colorDisplayer;
 
         public AgentParameterPanel(String name) {
             super(name);
@@ -374,14 +368,18 @@ public class EnvironmentInformationPanel extends JPanel {
         @Override
         void setUpComponents() {
             behaviours = new JComboBox(BEHAVIOURS_NAME);
-            colorDisplayer = new JLabel();
+            colorDisplayer = new JButton("Agent initial color");
             colorDisplayer.setOpaque(true);
-            colorDisplayer.addMouseListener(this);
+            colorDisplayer.addActionListener(EventHandler.create(
+                    ActionListener.class,
+                    this,
+                    "chooseAgentColor"
+            ));
         }
 
         @Override
         Map<String, JSpinner> generateParameters() {
-            return new HashMap<String, JSpinner>() {{
+            return new TreeMap<String, JSpinner>() {{
                 put(AGENT_ENERGY, new JSpinner(generatePositiveDoubleModel()));
                 put(AGENT_ORIENTATION, new JSpinner(generateAngleModel()));
                 put(AGENT_CURVATURE, new JSpinner(generateDoubleModel()));
@@ -392,6 +390,7 @@ public class EnvironmentInformationPanel extends JPanel {
                 put(AGENT_ORIENTATION_LAUNCHER, new JSpinner(generateAngleModel()));
                 put(AGENT_SPEED_LAUNCHER, new JSpinner(generatePositiveDoubleModel()));
                 put(AGENT_GREED, new JSpinner(generatePercentageModel()));
+                put(AGENT_FLEE, new JSpinner(generatePercentageModel()));
                 put(AGENT_SENSOR_RADIUS, new JSpinner(generatePositiveDoubleModel()));
                 put(AGENT_IRRATIONALITY, new JSpinner(generatePercentageModel()));
                 put(AGENT_MORTALITY, new JSpinner(generatePercentageModel()));
@@ -442,8 +441,7 @@ public class EnvironmentInformationPanel extends JPanel {
             return externalisedParameters;
         }
 
-        @Override
-        public void mouseClicked(MouseEvent e) {
+        public void chooseAgentColor() {
             Color selectedColor = JColorChooser.showDialog(
                     WorldFrame.getInstance(),
                     "Choose agent identifier",
@@ -451,18 +449,6 @@ public class EnvironmentInformationPanel extends JPanel {
             if (selectedColor != null)
                 colorDisplayer.setBackground(selectedColor);
         }
-
-        @Override
-        public void mousePressed(MouseEvent e) { }
-
-        @Override
-        public void mouseReleased(MouseEvent e) { }
-
-        @Override
-        public void mouseEntered(MouseEvent e) { }
-
-        @Override
-        public void mouseExited(MouseEvent e) { }
     }
 
     public abstract class PlacementPanel<T> extends JPanel {
@@ -512,10 +498,12 @@ public class EnvironmentInformationPanel extends JPanel {
             add(layout);
         }
 
+        abstract Object[] populateStrategyList();
+
         private void generateContent(Box layout, String itemName) {
             cardPanel = new JPanel(new CardLayout());
 
-            strategyList = new JComboBox(GenerationStrategy.GenerationType.values());
+            strategyList = new JComboBox(populateStrategyList());
             strategyList.addActionListener(EventHandler.create(
                     ActionListener.class,
                     this,
@@ -578,29 +566,29 @@ public class EnvironmentInformationPanel extends JPanel {
             ));
 
             cardPanel.add(standardPositionProvided,
-                    GenerationStrategy.GenerationType.STANDARD_POSITION_PROVIDED.toString());
+                    GenerationStrategy.PlacementType.STANDARD_POSITION_PROVIDED.toString());
             cardPanel.add(standardPositionRandomized,
-                    GenerationStrategy.GenerationType.STANDARD_POSITION_RANDOMIZED.toString());
+                    GenerationStrategy.PlacementType.STANDARD_POSITION_RANDOMIZED.toString());
             cardPanel.add(standardCircle,
-                    GenerationStrategy.GenerationType.STANDARD_CIRCLE.toString());
+                    GenerationStrategy.PlacementType.STANDARD_CIRCLE.toString());
             cardPanel.add(random,
-                    GenerationStrategy.GenerationType.RANDOM.toString());
+                    GenerationStrategy.PlacementType.RANDOM.toString());
 
             layout.add(strategyList);
             layout.add(cardPanel);
         }
 
-        public void switchStrategyPanel(GenerationStrategy.GenerationType strategyType) {
+        public void switchStrategyPanel(GenerationStrategy.PlacementType strategyType) {
             CardLayout layout = (CardLayout) cardPanel.getLayout();
             layout.show(cardPanel, strategyType.toString());
         }
 
-        protected GenerationStrategy.GenerationType getGenerationType() {
-            return (GenerationStrategy.GenerationType) strategyList.getSelectedItem();
+        protected GenerationStrategy.PlacementType getGenerationType() {
+            return (GenerationStrategy.PlacementType) strategyList.getSelectedItem();
         }
 
         protected Object[] aggregateAdditionalParameters() {
-            switch ((GenerationStrategy.GenerationType) strategyList.getSelectedItem()) {
+            switch ((GenerationStrategy.PlacementType) strategyList.getSelectedItem()) {
                 case STANDARD_POSITION_PROVIDED:
                     return new Object[]{
                             abscissaLimit.getValue(),
@@ -635,6 +623,16 @@ public class EnvironmentInformationPanel extends JPanel {
         }
 
         @Override
+        Object[] populateStrategyList() {
+            return new Object[]{
+                    GenerationStrategy.PlacementType.STANDARD_POSITION_PROVIDED,
+                    GenerationStrategy.PlacementType.STANDARD_POSITION_RANDOMIZED,
+                    GenerationStrategy.PlacementType.STANDARD_CIRCLE,
+                    GenerationStrategy.PlacementType.RANDOM
+            };
+        }
+
+        @Override
         public Collection<Agent> generatePopulation() {
             return GenerationStrategy.generatePopulation(
                     Agent.class,
@@ -648,7 +646,18 @@ public class EnvironmentInformationPanel extends JPanel {
         public PlacementResourcePanel(String name) {
             super(name, "resource");
             numberOfItemRandom.setValue(0L);
-            strategyList.setSelectedItem(GenerationStrategy.GenerationType.RANDOM);
+            strategyList.setSelectedItem(GenerationStrategy.PlacementType.RANDOM);
+        }
+
+        @Override
+        Object[] populateStrategyList() {
+            return new Object[]{
+                    GenerationStrategy.PlacementType.NONE,
+                    GenerationStrategy.PlacementType.STANDARD_POSITION_PROVIDED,
+                    GenerationStrategy.PlacementType.STANDARD_POSITION_RANDOMIZED,
+                    GenerationStrategy.PlacementType.STANDARD_CIRCLE,
+                    GenerationStrategy.PlacementType.RANDOM
+            };
         }
 
         @Override

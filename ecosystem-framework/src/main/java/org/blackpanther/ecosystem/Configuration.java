@@ -108,6 +108,7 @@ public enum Configuration {
                 AGENT_FECUNDATION_LOSS,
                 AGENT_IRRATIONALITY,
                 AGENT_GREED,
+                AGENT_FLEE,
                 AGENT_MORTALITY,
                 AGENT_FECUNDITY,
                 AGENT_MUTATION

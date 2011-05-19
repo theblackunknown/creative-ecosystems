@@ -4,6 +4,9 @@ import java.awt.geom.Point2D;
 import java.util.Collection;
 import java.util.Iterator;
 
+import static java.lang.Math.PI;
+import static org.blackpanther.ecosystem.math.Geometry.PI_2;
+
 /**
  * @author MACHIZAUD Andréa
  * @version 19/05/11
@@ -18,7 +21,17 @@ public class PreyBehaviour
 
         //run away closest predator
         if (closestPredator != null) {
+                double lust = that.getGene(AGENT_FLEE, Double.class);
+                double alpha = (that.getOrientation() % PI_2);
+                double beta = closestPredator.getOrientation();
+                double resourceRelativeOrientation = (beta - alpha);
+                if (resourceRelativeOrientation > PI)
+                    resourceRelativeOrientation -= PI_2;
+                else if (resourceRelativeOrientation < -PI)
+                    resourceRelativeOrientation += PI_2;
+                double newOrientation = (alpha + resourceRelativeOrientation * lust) % PI_2;
 
+                that.setOrientation(newOrientation);
         } else
             super.react(env, that, analysis);
     }

@@ -45,6 +45,7 @@ public abstract class Agent
     public static final String AGENT_FECUNDATION_COST = "agent-fecundation-cost";
     public static final String AGENT_FECUNDATION_LOSS = "agent-fecundation-loss";
     public static final String AGENT_GREED = "agent-greed";
+    public static final String AGENT_FLEE = "agent-flee";
     public static final String AGENT_SENSOR_RADIUS = "agent-sensor-radius";
     public static final String AGENT_IRRATIONALITY = "agent-irrationality";
     public static final String AGENT_MORTALITY = "agent-mortality";

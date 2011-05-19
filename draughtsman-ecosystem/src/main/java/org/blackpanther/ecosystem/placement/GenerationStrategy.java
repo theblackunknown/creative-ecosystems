@@ -21,11 +21,18 @@ import static org.blackpanther.ecosystem.helper.ResourceFactory.StandardResource
  */
 public class GenerationStrategy {
 
-    public enum GenerationType {
+    public enum PlacementType {
+        NONE,
         STANDARD_POSITION_PROVIDED,
         STANDARD_POSITION_RANDOMIZED,
         STANDARD_CIRCLE,
-        RANDOM;
+        RANDOM
+    }
+
+    public enum BehaviourType {
+        SAME,
+        HALF,
+        RANDOM
     }
 
     private enum GenerationItemType {
@@ -71,10 +78,12 @@ public class GenerationStrategy {
 
     public static <T> Collection<T> generatePopulation(
             Class<T> itemType,
-            GenerationType genType,
+            PlacementType genType,
             Object... additionalParameters) {
         List<T> pool = new ArrayList<T>();
         switch (genType) {
+            case NONE:
+                break;
             case STANDARD_POSITION_PROVIDED: {
                 Double XLimit = (Double) additionalParameters[0];
                 Double YLimit = (Double) additionalParameters[1];
