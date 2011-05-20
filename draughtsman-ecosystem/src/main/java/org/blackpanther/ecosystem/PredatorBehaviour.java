@@ -33,8 +33,9 @@ public class PredatorBehaviour
                 double newOrientation = (alpha + resourceRelativeOrientation * lust) % PI_2;
 
                 that.setOrientation(newOrientation);
-        } else
-            super.react(env, that, analysis);
+        }
+
+        //their only goals is to eat agent, not resources
     }
 
     private SensorTarget<Agent> getClosestPrey(Point2D source, Collection<SensorTarget<Agent>> agents) {

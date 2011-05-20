@@ -6,6 +6,7 @@ import java.util.Iterator;
 
 import static java.lang.Math.PI;
 import static org.blackpanther.ecosystem.math.Geometry.PI_2;
+import static org.blackpanther.ecosystem.Agent.*;
 
 /**
  * @author MACHIZAUD Andréa
@@ -31,8 +32,10 @@ public class PreyBehaviour
                     resourceRelativeOrientation += PI_2;
                 double newOrientation = (alpha + resourceRelativeOrientation * lust) % PI_2;
 
-                that.setOrientation(newOrientation);
-        } else
+                that.setOrientation(newOrientation + PI);
+        }
+        //eat resources if no predator is in sight
+        else
             super.react(env, that, analysis);
     }
 

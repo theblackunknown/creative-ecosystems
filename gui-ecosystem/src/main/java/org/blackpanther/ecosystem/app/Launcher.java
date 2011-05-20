@@ -1,5 +1,8 @@
 package org.blackpanther.ecosystem.app;
 
+import org.blackpanther.ecosystem.Configuration;
+import org.blackpanther.ecosystem.DesignEnvironment;
+import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.gui.WorldFrame;
 
 import javax.swing.*;
@@ -21,6 +24,9 @@ public class Launcher {
             public void run() {
                 WorldFrame.getInstance().setVisible(true);
                 WorldFrame.getInstance().validate();
+                Environment env = new DesignEnvironment(
+                        Configuration.Configuration.getParameter()
+                );
             }
         });
     }
