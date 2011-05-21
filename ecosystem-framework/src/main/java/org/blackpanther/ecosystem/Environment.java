@@ -31,7 +31,7 @@ import static org.blackpanther.ecosystem.math.Geometry.getIntersection;
  * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
  */
 public abstract class Environment
-        implements Serializable, Cloneable {
+        implements Serializable, Cloneable, ResourceListener {
 
     /*
      *=========================================================================
@@ -46,8 +46,8 @@ public abstract class Environment
     private static final Long serialVersionUID = 1L;
 
     private static long idGenerator = 0L;
-    private static int AREA_COLUMN_NUMBER = 5;
-    private static int AREA_ROW_NUMBER = 5;
+    private static int AREA_COLUMN_NUMBER = 50;
+    private static int AREA_ROW_NUMBER = 50;
 
     /**
      * Simple check for a environment space
@@ -87,6 +87,7 @@ public abstract class Environment
      * Population
      */
     protected Set<Agent> pool;
+    private Set<Resource> resourcePool = new HashSet<Resource>();
 
     /*
      *=========================================================================
@@ -183,6 +184,8 @@ public abstract class Environment
 
         //initialize pool
         pool = new HashSet<Agent>();
+
+        getEventSupport().addResourceListener(this);
     }
 
     /**
@@ -236,11 +239,7 @@ public abstract class Environment
     }
 
     public final Set<Resource> getResources() {
-        Set<Resource> wholeResources = new HashSet<Resource>();
-        for (Area[] row : space)
-            for (Area area : row)
-                wholeResources.addAll(area.getResources());
-        return wholeResources;
+        return resourcePool;
     }
 
     /**
@@ -258,9 +257,8 @@ public abstract class Environment
 
     public final void addResource(
             final Resource resource) {
-        Area area = getCorrespondingArea(resource);
         resource.attachTo(this);
-        area.addResource(resource);
+        resourcePool.add(resource);
     }
 
 
@@ -486,6 +484,16 @@ public abstract class Environment
         eventSupport.clearAllExternalsListeners();
     }
 
+    @Override
+    public void update(ResourceEvent e) {
+        switch (e.getType()) {
+            case DEPLETED:
+                Resource resource = e.getResource();
+                resourcePool.remove(resource);
+                break;
+        }
+    }
+
     /**
      * <p>
      * Component designed to represent a state of a grid space
@@ -503,22 +511,16 @@ public abstract class Environment
      */
     public class Area
             extends Rectangle2D.Double
-            implements Serializable, AreaListener, ResourceListener {
+            implements Serializable, AreaListener {
 
         private Collection<ColorfulTrace> internalDrawHistory = new LinkedList<ColorfulTrace>();
-        private Collection<Resource> resourcePool = new LinkedList<Resource>();
 
         public Area(double x, double y, double w, double h) {
             super(x, y, w, h);
-            getEventSupport().addResourceListener(this);
         }
 
         public Collection<ColorfulTrace> getHistory() {
             return internalDrawHistory;
-        }
-
-        public Collection<Resource> getResources() {
-            return resourcePool;
         }
 
         /**
@@ -601,20 +603,6 @@ public abstract class Environment
                 }
 
             return new SenseResult(detectedAgents, detectedResources);
-        }
-
-        public void addResource(Resource resource) {
-            resourcePool.add(resource);
-        }
-
-        @Override
-        public void update(ResourceEvent e) {
-            switch (e.getType()) {
-                case DEPLETED:
-                    Resource resource = e.getResource();
-                    resourcePool.remove(resource);
-                    break;
-            }
         }
     }
 

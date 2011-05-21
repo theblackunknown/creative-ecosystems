@@ -43,12 +43,9 @@ public class EnvironmentCommands
         JCheckBox drawAgents = new JCheckBox("Paint agents at start", true);
         JButton backgroundColor = new JButton("Choose background color");
 
-        noAction = new JToggleButton("No action",
-                getIcon(getClass().getClassLoader().getResource(HAND_ICON)));
-        paintAgent = new JToggleButton("Agent dropper",
-                getIcon(getClass().getClassLoader().getResource(AGENT_ICON)));
-        paintResource = new JToggleButton("Resource dropper",
-                getIcon(getClass().getClassLoader().getResource(RESOURCE_ICON)));
+        noAction = new JToggleButton("No action");
+        paintAgent = new JToggleButton("Agent dropper");
+        paintResource = new JToggleButton("Resource dropper");
 
         ActionListener toggleListener = EventHandler.create(
                 ActionListener.class,

@@ -1,5 +1,7 @@
-package org.blackpanther.ecosystem;
+package org.blackpanther.ecosystem.behaviour;
 
+
+import org.blackpanther.ecosystem.*;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -27,6 +29,17 @@ import static org.blackpanther.ecosystem.math.Geometry.PI_2;
  */
 public class DraughtsmanBehaviour
         implements BehaviorManager {
+
+    protected DraughtsmanBehaviour(){}
+
+    private static class DraughtsmanBehaviourHolder {
+        private static final DraughtsmanBehaviour instance =
+            new DraughtsmanBehaviour();
+    }
+
+    public static DraughtsmanBehaviour getInstance(){
+        return DraughtsmanBehaviourHolder.instance;
+    }
 
     /**
      * class logger
@@ -63,9 +76,7 @@ public class DraughtsmanBehaviour
 
             //check if we can still move and reach resource
             double resourceDistance = that.getLocation().distance(closestResource.getTarget());
-            if (that.getEnergy() >=
-                    that.getGene(AGENT_MOVEMENT_COST, Double.class) * that.getSpeed()
-                    && resourceDistance < Configuration.getParameter(CONSUMMATION_RADIUS, Double.class)) {
+            if (resourceDistance < Configuration.getParameter(CONSUMMATION_RADIUS, Double.class)) {
                 //we eat it
                 that.setEnergy(that.getEnergy() + closestResource.getTarget().consume());
             }
@@ -245,7 +256,7 @@ public class DraughtsmanBehaviour
                         ))
                 );
 
-                Agent child = new DesignerAgent(
+                Agent child = new Creature(
                         //color
                         childColor,
                         //initial position
@@ -341,7 +352,7 @@ public class DraughtsmanBehaviour
         double randomValue = Configuration.getParameter(RANDOM, Random.class)
                 .nextDouble();
         //TODO update phenotype death's chance according to age and mortality rate
-        double deathChance = that.getMortalityRate();// * (that.getAge() / 10);
+        double deathChance = that.getMortalityRate();
         logger.finer(String.format("[Random mortality's value = %f, death's chance = %f]", randomValue, deathChance));
         if (randomValue < deathChance) {
             that.detachFromEnvironment();

@@ -1,6 +1,7 @@
 package org.blackpanther.ecosystem.gui;
 
 import org.blackpanther.ecosystem.*;
+import org.blackpanther.ecosystem.behaviour.DraughtsmanBehaviour;
 import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
 import org.blackpanther.ecosystem.placement.GenerationStrategy;
 
@@ -15,6 +16,7 @@ import static org.blackpanther.ecosystem.Agent.*;
 import static org.blackpanther.ecosystem.Configuration.*;
 import static org.blackpanther.ecosystem.gui.formatter.RangeModels.*;
 import static org.blackpanther.ecosystem.helper.Helper.createLabeledField;
+import static org.blackpanther.ecosystem.helper.Helper.createLabeledMutableField;
 
 /**
  * @author MACHIZAUD Andréa
@@ -269,7 +271,7 @@ public class EnvironmentInformationPanel extends JPanel {
             generateContent(layout);
 
             //"bite me, fucking UI"
-            layout.add(Box.createVerticalStrut(25));
+            layout.add(Box.createVerticalStrut(40));
 
             add(new JScrollPane(layout));
         }
@@ -278,14 +280,7 @@ public class EnvironmentInformationPanel extends JPanel {
 
         abstract Map<String, JSpinner> generateParameters();
 
-        void generateContent(Box layout) {
-            for (Map.Entry<String, JSpinner> entry : parameters.entrySet()) {
-                layout.add(createLabeledField(
-                        entry.getKey(),
-                        entry.getValue()
-                ));
-            }
-        }
+        abstract void generateContent(Box layout);
 
         /**
          * Update information with given configuration
@@ -358,13 +353,96 @@ public class EnvironmentInformationPanel extends JPanel {
                 put(COLOR_VARIATION, new JSpinner(generateDoubleModel()));
             }};
         }
+
+        @Override
+        void generateContent(Box layout) {
+            Box global = Box.createVerticalBox();
+            Box threshold = Box.createVerticalBox();
+            Box variation = Box.createVerticalBox();
+
+            global.setBorder(BorderFactory.createTitledBorder("Miscellaneous"));
+            threshold.setBorder(BorderFactory.createTitledBorder("Threshold"));
+            variation.setBorder(BorderFactory.createTitledBorder("Variation"));
+
+            global.add(createLabeledField(
+                    SPACE_WIDTH,
+                    parameters.get(SPACE_WIDTH)
+            ));
+            global.add(createLabeledField(
+                    SPACE_HEIGHT,
+                    parameters.get(SPACE_HEIGHT)
+            ));
+            global.add(createLabeledField(
+                    MAX_AGENT_NUMBER,
+                    parameters.get(MAX_AGENT_NUMBER)
+            ));
+            global.add(createLabeledField(
+                    CONSUMMATION_RADIUS,
+                    parameters.get(CONSUMMATION_RADIUS)
+            ));
+            global.add(createLabeledField(
+                    RESOURCE_AMOUNT,
+                    parameters.get(RESOURCE_AMOUNT)
+            ));
+
+            threshold.add(createLabeledField(
+                    RESOURCE_AMOUNT_THRESHOLD,
+                    parameters.get(RESOURCE_AMOUNT_THRESHOLD)
+            ));
+            threshold.add(createLabeledField(
+                    SPEED_THRESHOLD,
+                    parameters.get(SPEED_THRESHOLD)
+            ));
+            threshold.add(createLabeledField(
+                    CURVATURE_THRESHOLD,
+                    parameters.get(CURVATURE_THRESHOLD)
+            ));
+            threshold.add(createLabeledField(
+                    SENSOR_THRESHOLD,
+                    parameters.get(SENSOR_THRESHOLD)
+            ));
+            threshold.add(createLabeledField(
+                    ENERGY_AMOUNT_THRESHOLD,
+                    parameters.get(ENERGY_AMOUNT_THRESHOLD)
+            ));
+            threshold.add(createLabeledField(
+                    FECUNDATION_CONSUMMATION_THRESHOLD,
+                    parameters.get(FECUNDATION_CONSUMMATION_THRESHOLD)
+            ));
+
+            variation.add(createLabeledField(
+                    PROBABILITY_VARIATION,
+                    parameters.get(PROBABILITY_VARIATION)
+            ));
+            variation.add(createLabeledField(
+                    CURVATURE_VARIATION,
+                    parameters.get(CURVATURE_VARIATION)
+            ));
+            variation.add(createLabeledField(
+                    ANGLE_VARIATION,
+                    parameters.get(ANGLE_VARIATION)
+            ));
+            variation.add(createLabeledField(
+                    SPEED_VARIATION,
+                    parameters.get(SPEED_VARIATION)
+            ));
+            variation.add(createLabeledField(
+                    COLOR_VARIATION,
+                    parameters.get(COLOR_VARIATION)
+            ));
+
+            layout.add(global);
+            layout.add(threshold);
+            layout.add(variation);
+        }
     }
 
     public class AgentParameterPanel
             extends ParametersPanel {
 
         private JComboBox behaviours;
-        private JButton colorDisplayer;
+        private JButton colorDisplay;
+        private Map<String, JCheckBox> mutableFields;
 
         public AgentParameterPanel(String name) {
             super(name);
@@ -373,9 +451,9 @@ public class EnvironmentInformationPanel extends JPanel {
         @Override
         void setUpComponents() {
             behaviours = new JComboBox(BEHAVIOURS_NAME);
-            colorDisplayer = new JButton("Agent initial color");
-            colorDisplayer.setOpaque(true);
-            colorDisplayer.addActionListener(EventHandler.create(
+            colorDisplay = new JButton();
+            colorDisplay.setOpaque(true);
+            colorDisplay.addActionListener(EventHandler.create(
                     ActionListener.class,
                     this,
                     "chooseAgentColor"
@@ -406,21 +484,67 @@ public class EnvironmentInformationPanel extends JPanel {
 
         @Override
         void generateContent(Box layout) {
-            layout.add(createLabeledField(
+            Box state = Box.createVerticalBox();
+            Box genotype = Box.createVerticalBox();
+
+            String[] statesTable = new String[]{
+                    AGENT_ENERGY,
+                    AGENT_ORIENTATION,
+                    AGENT_CURVATURE,
+                    AGENT_SPEED
+            };
+            String[] genotypeTable = new String[]{
+                    AGENT_MOVEMENT_COST,
+                    AGENT_FECUNDATION_COST,
+                    AGENT_FECUNDATION_LOSS,
+                    AGENT_GREED,
+                    AGENT_FLEE,
+                    AGENT_SENSOR_RADIUS,
+                    AGENT_IRRATIONALITY,
+                    AGENT_MORTALITY,
+                    AGENT_FECUNDITY,
+                    AGENT_MUTATION,
+                    AGENT_ORIENTATION_LAUNCHER,
+                    AGENT_SPEED_LAUNCHER
+            };
+
+            mutableFields = new HashMap<String, JCheckBox>(genotypeTable.length);
+
+            state.setBorder(BorderFactory.createTitledBorder("State"));
+            genotype.setBorder(BorderFactory.createTitledBorder("Genotype"));
+
+            for (String stateParameter : statesTable)
+                state.add(createLabeledField(
+                        stateParameter,
+                        parameters.get(stateParameter)
+                ));
+
+            for (String geneParameter : genotypeTable) {
+                mutableFields.put(geneParameter,
+                        new JCheckBox((String) null, true));
+                genotype.add(createLabeledMutableField(
+                        geneParameter,
+                        parameters.get(geneParameter),
+                        mutableFields.get(geneParameter)
+                ));
+            }
+            genotype.add(createLabeledField(
                     AGENT_IDENTIFIER,
-                    colorDisplayer
+                    colorDisplay
             ));
-            super.generateContent(layout);
-            layout.add(createLabeledField(
+            genotype.add(createLabeledField(
                     AGENT_BEHAVIOUR,
                     behaviours
             ));
+
+            layout.add(state);
+            layout.add(genotype);
         }
 
         @Override
         void updateInformation(Configuration information) {
             super.updateInformation(information);
-            colorDisplayer.setBackground(information.getParameter(AGENT_IDENTIFIER, Color.class));
+            colorDisplay.setBackground(information.getParameter(AGENT_IDENTIFIER, Color.class));
 
             String behaviourClass =
                     information.getParameter(AGENT_BEHAVIOUR, BehaviorManager.class)
@@ -439,10 +563,11 @@ public class EnvironmentInformationPanel extends JPanel {
             if (selectedBehaviour.equals(PASSIVE))
                 externalisedParameters.put(
                         AGENT_BEHAVIOUR, DraughtsmanBehaviour.class.getCanonicalName());
-            Color color = colorDisplayer.getBackground();
+            Color color = colorDisplay.getBackground();
             externalisedParameters.put(RED_COLOR, String.valueOf(color.getRed()));
             externalisedParameters.put(GREEN_COLOR, String.valueOf(color.getGreen()));
             externalisedParameters.put(BLUE_COLOR, String.valueOf(color.getBlue()));
+            externalisedParameters.put(MUTABLE_GENES, )
             return externalisedParameters;
         }
 
@@ -450,9 +575,9 @@ public class EnvironmentInformationPanel extends JPanel {
             Color selectedColor = JColorChooser.showDialog(
                     WorldFrame.getInstance(),
                     "Choose agent identifier",
-                    colorDisplayer.getBackground());
+                    colorDisplay.getBackground());
             if (selectedColor != null)
-                colorDisplayer.setBackground(selectedColor);
+                colorDisplay.setBackground(selectedColor);
         }
     }
 

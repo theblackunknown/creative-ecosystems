@@ -14,6 +14,7 @@ import java.awt.event.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.util.Random;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -104,7 +105,25 @@ public class GraphicEnvironment
             while (!lineBuffer.isEmpty()) {
                 ColorfulTrace graphicalLine = lineBuffer.pop();
 
-                g.setColor(graphicalLine.getColor());
+                Graphics2D g2d = (Graphics2D) g;
+                Random rand = Configuration.getRandom();
+
+                double basicWidth = 1.0;
+                double variation = 0.1;
+                double strokeWidth = basicWidth
+                        + rand.nextGaussian() * variation;
+
+                g2d.setStroke(new BasicStroke((float) strokeWidth));
+
+                Color basicColor = graphicalLine.getColor();
+                double randomNumber = rand.nextDouble();
+                if( randomNumber < 0.3 ){
+                    basicColor = basicColor.darker();
+                } else if( randomNumber < 0.6) {
+                    basicColor = basicColor.brighter();
+                }
+
+                g2d.setColor(basicColor);
 
                 Point2D start = internalScaler.environmentToPanel(graphicalLine.getP1());
                 Point2D end = internalScaler.environmentToPanel(graphicalLine.getP2());
@@ -125,8 +144,7 @@ public class GraphicEnvironment
      * @param g
      */
     private void redrawEnvironment(Graphics g) {
-        g.setColor(originalBackground);
-        g.fillRect(0, 0, getWidth(), getHeight());
+        g.clearRect(0, 0, getWidth(), getHeight());
 
         //repaint environment structure if it has been erased
         if (monitoredEnvironment != null) {
@@ -191,11 +209,29 @@ public class GraphicEnvironment
             for (Line2D line : monitoredEnvironment.getHistory()) {
                 ColorfulTrace graphicalLine = (ColorfulTrace) line;
 
-                g.setColor(graphicalLine.getColor());
+                Graphics2D g2d = (Graphics2D) g;
+                Random rand = Configuration.getRandom();
+
+                double basicWidth = 1.0;
+                double variation = 0.1;
+                double strokeWidth = basicWidth
+                        + rand.nextGaussian() * variation;
+
+                g2d.setStroke(new BasicStroke((float) strokeWidth));
+
+                Color basicColor = graphicalLine.getColor();
+                double randomNumber = rand.nextDouble();
+                if( randomNumber < 0.3 ){
+                    basicColor = basicColor.darker();
+                } else if( randomNumber < 0.6) {
+                    basicColor = basicColor.brighter();
+                }
+
+                g2d.setColor(basicColor);
 
                 Point2D start = internalScaler.environmentToPanel(graphicalLine.getP1());
                 Point2D end = internalScaler.environmentToPanel(graphicalLine.getP2());
-                g.drawLine(
+                g2d.drawLine(
                         (int) start.getX(),
                         (int) start.getY(),
                         (int) end.getX(),

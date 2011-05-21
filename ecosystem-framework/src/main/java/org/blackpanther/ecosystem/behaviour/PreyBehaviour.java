@@ -1,4 +1,6 @@
-package org.blackpanther.ecosystem;
+package org.blackpanther.ecosystem.behaviour;
+
+import org.blackpanther.ecosystem.*;
 
 import java.awt.geom.Point2D;
 import java.util.Collection;
@@ -14,6 +16,17 @@ import static org.blackpanther.ecosystem.math.Geometry.PI_2;
  */
 public class PreyBehaviour
         extends DraughtsmanBehaviour {
+
+    private PreyBehaviour(){}
+
+    private static class PreyBehaviourHolder {
+        private static final PreyBehaviour instance =
+            new PreyBehaviour();
+    }
+
+    public static PreyBehaviour getInstance(){
+        return PreyBehaviourHolder.instance;
+    }
 
     @Override
     public void update(Environment env, Agent agent) {

@@ -7,9 +7,9 @@ import java.awt.geom.Point2D;
  * @author MACHIZAUD Andréa
  * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
  */
-public class DesignerAgent extends Agent {
+public class Creature extends Agent {
 
-    public DesignerAgent(
+    public Creature(
             Color identifier,
             Point2D spawnLocation,
             double energyAmount,

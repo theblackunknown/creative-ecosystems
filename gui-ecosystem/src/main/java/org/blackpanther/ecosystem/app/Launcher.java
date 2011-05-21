@@ -1,6 +1,8 @@
 package org.blackpanther.ecosystem.app;
 
 import org.blackpanther.ecosystem.*;
+import org.blackpanther.ecosystem.behaviour.PredatorBehaviour;
+import org.blackpanther.ecosystem.behaviour.PreyBehaviour;
 import org.blackpanther.ecosystem.gui.GUIMonitor;
 import org.blackpanther.ecosystem.gui.WorldFrame;
 
@@ -28,15 +30,15 @@ public class Launcher {
             public void run() {
                 WorldFrame.getInstance().setVisible(true);
                 WorldFrame.getInstance().validate();
-//                Environment env = new DesignEnvironment(
-//                        Configuration.getParameter(SPACE_WIDTH, Double.class),
-//                        Configuration.getParameter(SPACE_HEIGHT, Double.class)
-//                );
-//                Agent predator = StandardAgent(Color.BLUE, -10.0, -7.5, 0.1, 1.3, new PredatorBehaviour());
-//                Agent prey = StandardAgent(Color.RED, -2.0, -5.0, 0.05, 0.7, new PreyBehaviour());
-//                env.addAgent(predator);
-//                env.addAgent(prey);
-//                GUIMonitor.Monitor.setCurrentEnvironment(env);
+                Environment env = new DesignEnvironment(
+                        Configuration.getParameter(SPACE_WIDTH, Double.class),
+                        Configuration.getParameter(SPACE_HEIGHT, Double.class)
+                );
+                Agent predator = StandardAgent(Color.BLUE, -10.0, -7.5, Math.PI * ( 1.8 / 4.0 ), 1.3, new PredatorBehaviour());
+                Agent prey = StandardAgent(Color.RED, -2.0, -5.0, Math.PI * ( 2.2 / 4.0 ), 1.0, new PreyBehaviour());
+                env.addAgent(predator);
+                env.addAgent(prey);
+                GUIMonitor.Monitor.setCurrentEnvironment(env);
             }
         });
     }

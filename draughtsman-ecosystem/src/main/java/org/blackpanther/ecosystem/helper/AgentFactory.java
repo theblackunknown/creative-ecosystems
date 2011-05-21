@@ -2,7 +2,7 @@ package org.blackpanther.ecosystem.helper;
 
 import org.blackpanther.ecosystem.Agent;
 import org.blackpanther.ecosystem.BehaviorManager;
-import org.blackpanther.ecosystem.DesignerAgent;
+import org.blackpanther.ecosystem.Creature;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -21,7 +21,7 @@ import static org.blackpanther.ecosystem.Configuration.*;
 public final class AgentFactory {
 
     public static Agent StandardAgent(double abscissa, double ordinate) {
-        return new DesignerAgent(
+        return new Creature(
                 Configuration.getParameter(AGENT_IDENTIFIER, Color.class),
                 new Point2D.Double(abscissa, ordinate),
                 Configuration.getParameter(AGENT_ENERGY, Double.class),
@@ -44,7 +44,7 @@ public final class AgentFactory {
     }
 
     public static Agent StandardAgent(double abscissa, double ordinate, BehaviorManager behavior) {
-        return new DesignerAgent(
+        return new Creature(
                 Configuration.getParameter(AGENT_IDENTIFIER, Color.class),
                 new Point2D.Double(abscissa, ordinate),
                 Configuration.getParameter(AGENT_ENERGY, Double.class),
@@ -73,7 +73,7 @@ public final class AgentFactory {
             double orientation,
             double speed,
             BehaviorManager behavior) {
-        return new DesignerAgent(
+        return new Creature(
                 color,
                 new Point2D.Double(abscissa, ordinate),
                 Configuration.getParameter(AGENT_ENERGY, Double.class),
@@ -96,7 +96,7 @@ public final class AgentFactory {
     }
 
     public static Agent StandardAgent(double abscissa, double ordinate, double orientation) {
-        return new DesignerAgent(
+        return new Creature(
                 Configuration.getParameter(AGENT_IDENTIFIER, Color.class),
                 new Point2D.Double(abscissa, ordinate),
                 Configuration.getParameter(AGENT_ENERGY, Double.class),
@@ -136,7 +136,7 @@ public final class AgentFactory {
                 (float) applicationRandom.nextDouble()
         );
 
-        return new DesignerAgent(
+        return new Creature(
                 //color
                 randomColor,
                 //position

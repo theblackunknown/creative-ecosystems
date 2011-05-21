@@ -1,5 +1,7 @@
 package org.blackpanther.ecosystem;
 
+import org.blackpanther.ecosystem.event.ResourceEvent;
+
 /**
  * @author MACHIZAUD Andréa
  * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
@@ -13,5 +15,11 @@ public class DesignEnvironment extends Environment {
     @Override
     protected void initializeSpace() {
         //Nothing special about space initialization
+    }
+
+
+    @Override
+    public void update(ResourceEvent e) {
+        super.update(e);
     }
 }

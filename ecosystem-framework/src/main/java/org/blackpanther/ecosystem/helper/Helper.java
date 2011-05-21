@@ -122,6 +122,23 @@ public final class Helper {
         }};
     }
 
+    public static JPanel createLabeledMutableField(final String labelName, final Component field, final JCheckBox mutable) {
+        return new JPanel(new GridBagLayout()) {{
+            GridBagConstraints constraints = new GridBagConstraints();
+            JPanel bundledFields = createLabeledField(labelName, field);
+
+            constraints.gridheight = GridBagConstraints.REMAINDER;
+
+            constraints.fill = GridBagConstraints.HORIZONTAL;
+            constraints.ipadx = 80;
+            add(bundledFields, constraints);
+
+            constraints.fill = GridBagConstraints.NONE;
+            constraints.ipadx = 0;
+            add(mutable, constraints);
+        }};
+    }
+
     /**
      * Get angle in positive rotation (counter-clockwise)
      * of the angle with source as center and target a point on the circle
