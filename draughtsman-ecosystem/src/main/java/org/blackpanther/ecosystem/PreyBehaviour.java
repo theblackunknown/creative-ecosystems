@@ -5,8 +5,8 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import static java.lang.Math.PI;
+import static org.blackpanther.ecosystem.Agent.AGENT_FLEE;
 import static org.blackpanther.ecosystem.math.Geometry.PI_2;
-import static org.blackpanther.ecosystem.Agent.*;
 
 /**
  * @author MACHIZAUD Andréa
@@ -16,23 +16,50 @@ public class PreyBehaviour
         extends DraughtsmanBehaviour {
 
     @Override
+    public void update(Environment env, Agent agent) {
+        //possible that a predator previously ate us, sounds weird....
+        if (agent.isAlive())
+            super.update(env, agent);
+    }
+
+    @Override
     protected void react(Environment env, Agent that, SenseResult analysis) {
         SensorTarget<Agent> closestPredator =
                 getClosestPredator(that.getLocation(), analysis.getNearAgents());
 
         //run away closest predator
         if (closestPredator != null) {
-                double lust = that.getGene(AGENT_FLEE, Double.class);
-                double alpha = (that.getOrientation() % PI_2);
-                double beta = closestPredator.getOrientation();
-                double resourceRelativeOrientation = (beta - alpha);
-                if (resourceRelativeOrientation > PI)
-                    resourceRelativeOrientation -= PI_2;
-                else if (resourceRelativeOrientation < -PI)
-                    resourceRelativeOrientation += PI_2;
-                double newOrientation = (alpha + resourceRelativeOrientation * lust) % PI_2;
+            double flee = that.getGene(AGENT_FLEE, Double.class);
+            double alpha = (that.getOrientation() % PI_2);
+            double beta = closestPredator.getOrientation();
+            if (beta < PI)
+                beta += PI;
+            else if (beta > PI)
+                beta -= PI;
+            double resourceRelativeOrientation = (beta - alpha);
+            if (resourceRelativeOrientation > PI)
+                resourceRelativeOrientation -= PI_2;
+            else if (resourceRelativeOrientation < -PI)
+                resourceRelativeOrientation += PI_2;
+            double newOrientation = (alpha + resourceRelativeOrientation * flee) % PI_2;
 
-                that.setOrientation(newOrientation + PI);
+            that.setOrientation(newOrientation);
+
+            String format = String.format(
+                    "%n (%.2f,%.2f)-(%.2f,%.2f)%n " +
+                            "old orientation : %.2fPI%n " +
+                            "resource orientation : %.2fPI%n " +
+                            "resource relative orientation : %.2fPI%n " +
+                            "new orientation : %.2fPI%n ",
+                    that.getLocation().getX(), that.getLocation().getY(),
+                    closestPredator.getTarget().getLocation().getX(),
+                    closestPredator.getTarget().getLocation().getY(),
+                    alpha / PI,
+                    beta / PI,
+                    resourceRelativeOrientation / PI,
+                    newOrientation / PI
+            );
+            System.out.println("Flee : " + format);
         }
         //eat resources if no predator is in sight
         else

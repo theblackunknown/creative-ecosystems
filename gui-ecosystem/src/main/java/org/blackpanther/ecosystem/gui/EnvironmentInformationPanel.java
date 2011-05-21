@@ -47,6 +47,7 @@ public class EnvironmentInformationPanel extends JPanel {
 
     public void recreateEnvironment() {
         model.update();
+        model.notifyChanges();
     }
 
     public void updateInformation(EnvironmentInformation information) {
@@ -70,6 +71,10 @@ public class EnvironmentInformationPanel extends JPanel {
     private static final String[] BEHAVIOURS_NAME = new String[]{
             PASSIVE
     };
+
+    public void updateConfiguration() {
+        model.update();
+    }
 
     public class EnvironmentInformationInstance extends JPanel {
 
@@ -691,7 +696,6 @@ public class EnvironmentInformationPanel extends JPanel {
             Configuration.loadConfiguration(props);
             agentPool = informationBoard.getAgentPool();
             resourcePool = informationBoard.getResourcePool();
-            notifyChanges();
         }
     }
 }

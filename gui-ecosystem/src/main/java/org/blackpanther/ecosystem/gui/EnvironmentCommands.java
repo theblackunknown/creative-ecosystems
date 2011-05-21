@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.beans.EventHandler;
 
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
+import static org.blackpanther.ecosystem.helper.Helper.getIcon;
 
 /**
  * @author MACHIZAUD Andréa
@@ -20,7 +21,15 @@ public class EnvironmentCommands
     public static final String NO_ENVIRONMENT = "No environment set";
     public static final String FROZEN_ENVIRONMENT = "Environment frozen";
 
+    public static final String HAND_ICON = "org/blackpanther/gui/icons/hand.png";
+    public static final String AGENT_ICON = "org/blackpanther/gui/icons/agent.png";
+    public static final String RESOURCE_ICON = "org/blackpanther/gui/icons/resource.png";
+
     private JButton evolutionFlowButton;
+
+    private JToggleButton noAction;
+    private JToggleButton paintAgent;
+    private JToggleButton paintResource;
 
     public EnvironmentCommands() {
         super();
@@ -31,8 +40,27 @@ public class EnvironmentCommands
         evolutionFlowButton = new JButton(NO_ENVIRONMENT);
         JCheckBox drawBounds = new JCheckBox("Paint bounds", false);
         JCheckBox drawResources = new JCheckBox("Paint resources", false);
+        JCheckBox drawAgents = new JCheckBox("Paint agents at start", true);
         JButton backgroundColor = new JButton("Choose background color");
 
+        noAction = new JToggleButton("No action",
+                getIcon(getClass().getClassLoader().getResource(HAND_ICON)));
+        paintAgent = new JToggleButton("Agent dropper",
+                getIcon(getClass().getClassLoader().getResource(AGENT_ICON)));
+        paintResource = new JToggleButton("Resource dropper",
+                getIcon(getClass().getClassLoader().getResource(RESOURCE_ICON)));
+
+        ActionListener toggleListener = EventHandler.create(
+                ActionListener.class,
+                this,
+                "updateDropMode",
+                "source"
+        );
+
+        noAction.setSelected(true);
+        noAction.addActionListener(toggleListener);
+        paintAgent.addActionListener(toggleListener);
+        paintResource.addActionListener(toggleListener);
         resetEnvironment.addActionListener(EventHandler.create(
                 ActionListener.class,
                 Monitor,
@@ -62,23 +90,51 @@ public class EnvironmentCommands
                 "paintResources",
                 "source.selected"
         ));
+        drawAgents.addActionListener(EventHandler.create(
+                ActionListener.class,
+                Monitor,
+                "paintAgents",
+                "source.selected"
+        ));
         backgroundColor.addActionListener(EventHandler.create(
                 ActionListener.class,
                 this,
                 "notifyBackgroundColorChanged"
         ));
 
+        add(noAction);
+        add(paintAgent);
+        add(paintResource);
+        add(Box.createVerticalStrut(40));
         add(resetEnvironment);
         add(evolutionFlowButton);
         add(Box.createVerticalStrut(40));
         add(drawBounds);
         add(drawResources);
+        add(drawAgents);
         add(Box.createVerticalStrut(40));
         add(backgroundColor);
 
         setBorder(
                 BorderFactory.createEtchedBorder(EtchedBorder.RAISED)
         );
+    }
+
+    public void updateDropMode(JToggleButton button) {
+        noAction.setSelected(false);
+        paintAgent.setSelected(false);
+        paintResource.setSelected(false);
+        button.setSelected(true);
+
+        GraphicEnvironment.DropMode mode = GraphicEnvironment.DropMode.NONE;
+        if (noAction.isSelected()) {
+            mode = GraphicEnvironment.DropMode.NONE;
+        } else if (paintAgent.isSelected()) {
+            mode = GraphicEnvironment.DropMode.AGENT;
+        } else if (paintResource.isSelected()) {
+            mode = GraphicEnvironment.DropMode.RESOURCE;
+        }
+        Monitor.setDropMode(mode);
     }
 
     public void switchStartPause() {

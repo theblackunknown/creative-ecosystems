@@ -61,6 +61,11 @@ public enum GUIMonitor {
         environmentCommandsPanel.environmentSet();
     }
 
+    public void updateConfiguration() {
+        require(environmentInformationPanel != null);
+        environmentInformationPanel.updateConfiguration();
+    }
+
     public void updateEnvironmentInformation(Environment env, EnvironmentInformation.State state) {
         require(environmentInformationPanel != null);
         require(drawPanel != null);
@@ -104,6 +109,11 @@ public enum GUIMonitor {
         drawPanel.setOption(GraphicEnvironment.RESOURCE_OPTION, shouldBePainted);
     }
 
+    public void paintAgents(boolean shouldBePainted) {
+        require(drawPanel != null);
+        drawPanel.setOption(GraphicEnvironment.AGENT_INITIAL_OPTION, shouldBePainted);
+    }
+
     public BufferedImage dumpCurrentImage() {
         return drawPanel.dumpCurrentImage();
     }
@@ -139,5 +149,10 @@ public enum GUIMonitor {
     public void setBackgroundColor(Color color) {
         require(drawPanel != null);
         drawPanel.applyBackgroundColor(color);
+    }
+
+    public void setDropMode(GraphicEnvironment.DropMode mode) {
+        require(drawPanel != null);
+        drawPanel.setDropMode(mode);
     }
 }

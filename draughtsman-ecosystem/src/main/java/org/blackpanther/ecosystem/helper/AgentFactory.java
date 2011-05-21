@@ -43,6 +43,58 @@ public final class AgentFactory {
         );
     }
 
+    public static Agent StandardAgent(double abscissa, double ordinate, BehaviorManager behavior) {
+        return new DesignerAgent(
+                Configuration.getParameter(AGENT_IDENTIFIER, Color.class),
+                new Point2D.Double(abscissa, ordinate),
+                Configuration.getParameter(AGENT_ENERGY, Double.class),
+                Configuration.getParameter(AGENT_MOVEMENT_COST, Double.class),
+                Configuration.getParameter(AGENT_FECUNDATION_COST, Double.class),
+                Configuration.getParameter(AGENT_FECUNDATION_LOSS, Double.class),
+                Configuration.getParameter(AGENT_ORIENTATION, Double.class),
+                Configuration.getParameter(AGENT_ORIENTATION_LAUNCHER, Double.class),
+                Configuration.getParameter(AGENT_CURVATURE, Double.class),
+                Configuration.getParameter(AGENT_SPEED, Double.class),
+                Configuration.getParameter(AGENT_SPEED_LAUNCHER, Double.class),
+                Configuration.getParameter(AGENT_GREED, Double.class),
+                Configuration.getParameter(AGENT_SENSOR_RADIUS, Double.class),
+                Configuration.getParameter(AGENT_IRRATIONALITY, Double.class),
+                Configuration.getParameter(AGENT_MORTALITY, Double.class),
+                Configuration.getParameter(AGENT_FECUNDITY, Double.class),
+                Configuration.getParameter(AGENT_MUTATION, Double.class),
+                behavior
+        );
+    }
+
+    public static Agent StandardAgent(
+            Color color,
+            double abscissa,
+            double ordinate,
+            double orientation,
+            double speed,
+            BehaviorManager behavior) {
+        return new DesignerAgent(
+                color,
+                new Point2D.Double(abscissa, ordinate),
+                Configuration.getParameter(AGENT_ENERGY, Double.class),
+                Configuration.getParameter(AGENT_MOVEMENT_COST, Double.class),
+                Configuration.getParameter(AGENT_FECUNDATION_COST, Double.class),
+                Configuration.getParameter(AGENT_FECUNDATION_LOSS, Double.class),
+                orientation,
+                Configuration.getParameter(AGENT_ORIENTATION_LAUNCHER, Double.class),
+                Configuration.getParameter(AGENT_CURVATURE, Double.class),
+                speed,
+                Configuration.getParameter(AGENT_SPEED_LAUNCHER, Double.class),
+                Configuration.getParameter(AGENT_GREED, Double.class),
+                Configuration.getParameter(AGENT_SENSOR_RADIUS, Double.class),
+                Configuration.getParameter(AGENT_IRRATIONALITY, Double.class),
+                Configuration.getParameter(AGENT_MORTALITY, Double.class),
+                Configuration.getParameter(AGENT_FECUNDITY, Double.class),
+                Configuration.getParameter(AGENT_MUTATION, Double.class),
+                behavior
+        );
+    }
+
     public static Agent StandardAgent(double abscissa, double ordinate, double orientation) {
         return new DesignerAgent(
                 Configuration.getParameter(AGENT_IDENTIFIER, Color.class),

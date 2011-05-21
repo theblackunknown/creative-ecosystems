@@ -43,7 +43,7 @@ public class DraughtsmanBehaviour
      * {@inheritDoc}
      */
     @Override
-    public final void update(Environment env, Agent agent) {
+    public void update(Environment env, Agent agent) {
         SenseResult analysis = agent.sense();
         //Step 1 - react with anything detected
         react(env, agent, analysis);
@@ -167,7 +167,7 @@ public class DraughtsmanBehaviour
             //Step 3 - Notify AreaListener that we moved, agent can died if it cross an other line
             //It dies if it didn't move
 
-            ColorfulTrace trace = new ColorfulTrace(oldLocation, that.getLocation(), that.getGene(AGENT_IDENTIFIER, Color.class));
+            ColorfulTrace trace = new ColorfulTrace(oldLocation, that.getLocation(), that.getColor());
 
             hasDied = oldLocation.equals(that.getLocation()) ||
                     env.move(that, trace);
@@ -223,7 +223,8 @@ public class DraughtsmanBehaviour
                 double speedVariation = Configuration.getParameter(SPEED_VARIATION, Double.class);
                 double colorVariation = Configuration.getParameter(COLOR_VARIATION, Double.class);
 
-                Color parentColor = that.getGene(AGENT_IDENTIFIER, Color.class);
+                //FIXME Mutate or not mutate ?
+                Color parentColor = that.getColor();
                 Color childColor = new Color(
                         normalizeColor(mutate(
                                 that.getMutationRate(),

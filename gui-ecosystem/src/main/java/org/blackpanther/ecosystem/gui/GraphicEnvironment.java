@@ -1,5 +1,6 @@
 package org.blackpanther.ecosystem.gui;
 
+import org.blackpanther.ecosystem.Agent;
 import org.blackpanther.ecosystem.ColorfulTrace;
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.Resource;
@@ -19,7 +20,10 @@ import java.util.logging.Logger;
 
 import static org.blackpanther.ecosystem.Configuration.*;
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
+import static org.blackpanther.ecosystem.helper.AgentFactory.StandardAgent;
 import static org.blackpanther.ecosystem.helper.Helper.normalizeProbability;
+import static org.blackpanther.ecosystem.helper.Helper.require;
+import static org.blackpanther.ecosystem.helper.ResourceFactory.StandardResource;
 
 /**
  * @author MACHIZAUD Andréa
@@ -40,11 +44,12 @@ public class GraphicEnvironment
     public static final int RESOURCE_OPTION = 1 << 1;
     public static final int SCROLL_OPTION = 1 << 2;
     public static final int ZOOM_OPTION = 1 << 3;
+    public static final int AGENT_INITIAL_OPTION = 1 << 3;
 
-    private int options = SCROLL_OPTION | ZOOM_OPTION;
+    private int options = SCROLL_OPTION | ZOOM_OPTION | AGENT_INITIAL_OPTION;
 
     private Environment monitoredEnvironment;
-    private MouseListener internalMouseHandler =
+    private IconHandler internalMouseHandler =
             new IconHandler();
     private Scaler internalScaler =
             new Scaler();
@@ -70,9 +75,10 @@ public class GraphicEnvironment
         setPreferredSize(DEFAULT_DIMENSION);
         setOpaque(true);
         addMouseListener(internalScaler);
-        addMouseWheelListener(internalScaler);
         addMouseMotionListener(internalScaler);
+        addMouseWheelListener(internalScaler);
         addMouseListener(internalMouseHandler);
+        addMouseMotionListener(internalMouseHandler);
 
         //timer settings
         runEnvironment = new Timer(
@@ -164,6 +170,22 @@ public class GraphicEnvironment
                     );
                 }
 
+            //agent initial painting activated
+            if ((options & AGENT_INITIAL_OPTION) == AGENT_INITIAL_OPTION
+                    && !runEnvironment.isRunning())
+                for (Agent agent : monitoredEnvironment.getPool()) {
+                    g.setColor(agent.getColor());
+                    Point2D center = internalScaler.environmentToPanel(agent.getLocation());
+                    double radius = internalScaler.environmentToPanel(agent.getEnergy()
+                            / Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class));
+                    g.fillOval(
+                            (int) (center.getX() - radius),
+                            (int) (center.getY() - radius),
+                            (int) (radius * 2.0),
+                            (int) (radius * 2.0)
+                    );
+                }
+
 
             //Draw all environment's lines
             for (Line2D line : monitoredEnvironment.getHistory()) {
@@ -215,6 +237,10 @@ public class GraphicEnvironment
         if (monitoredEnvironment != null) {
             drawEnvironment.start();
             runEnvironment.start();
+            if (monitoredEnvironment.getTime() == 0) {
+                panelStructureHasChanged = true;
+                repaint();
+            }
         }
     }
 
@@ -251,6 +277,7 @@ public class GraphicEnvironment
         switch (boundsOption) {
             case BOUNDS_OPTION:
             case RESOURCE_OPTION:
+            case AGENT_INITIAL_OPTION:
                 panelStructureHasChanged = true;
                 repaint();
         }
@@ -275,14 +302,21 @@ public class GraphicEnvironment
         repaint();
     }
 
+    public void setDropMode(DropMode mode) {
+        internalMouseHandler.setDropMode(mode);
+    }
+
     /**
      * Record every line added to environment history
      */
     class GraphicMonitor implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (runEnvironment.isRunning())
+            if (runEnvironment.isRunning()) {
+                if (monitoredEnvironment.getTime() == 0)
+                    panelStructureHasChanged = true;
                 repaint();
+            }
         }
     }
 
@@ -362,7 +396,7 @@ public class GraphicEnvironment
         private final int WHEEL_UP = -1;
         private final int WHEEL_DOWN = 1;
 
-        private double panelScale = 1.0;
+        private double panelScale = 4.0;
         private int panelAbscissaDifferential = 0;
         private int panelOrdinateDifferential = 0;
 
@@ -384,18 +418,25 @@ public class GraphicEnvironment
             double panelOrdinate =
                     (panelDimension.getHeight() / 2.0) - environmentPosition.getY() * panelScale;
 
-            logger.finest(String.format(
-                    "(%.2f,%.2f) translated to (%.2f,%.2f) [panelDimension=%s]",
-                    environmentPosition.getX(),
-                    environmentPosition.getY(),
-                    panelAbscissa,
-                    panelOrdinate,
-                    panelDimension
-            ));
-
             return new Point2D.Double(
                     panelAbscissa + panelAbscissaDifferential,
                     panelOrdinate + panelOrdinateDifferential
+            );
+        }
+
+        public Point2D panelToEnvironment(Point2D panelPosition) {
+            //get current panel's dimension
+            Dimension panelDimension = getBounds().getSize();
+
+            //minus because environment is real mathematics cartesian coordinate
+            double environmentAbscissa = (panelPosition.getX() - (panelDimension.getWidth() / 2.0) - panelAbscissaDifferential)
+                    / panelScale;
+            double environmentOrdinate = ((panelDimension.getHeight() / 2.0) - panelPosition.getY() - panelOrdinateDifferential)
+                    / panelScale;
+
+            return new Point2D.Double(
+                    environmentAbscissa,
+                    environmentOrdinate
             );
         }
 
@@ -454,7 +495,8 @@ public class GraphicEnvironment
 
         @Override
         public void mouseDragged(MouseEvent e) {
-            if (isActivated(SCROLL_OPTION)) {
+            if (isActivated(SCROLL_OPTION)
+                    && e.getModifiers() == InputEvent.CTRL_MASK) {
                 Point currentMousePoint = e.getPoint();
                 if (oldMouseLocation != null) {
                     //calculate diff
@@ -485,7 +527,26 @@ public class GraphicEnvironment
         }
     }
 
-    class IconHandler extends MouseAdapter {
+    public enum DropMode {
+        NONE,
+        AGENT,
+        RESOURCE
+    }
+
+    class IconHandler
+            extends MouseAdapter
+            implements ActionListener {
+
+        private DropMode dropMode = GraphicEnvironment.DropMode.NONE;
+        private Timer dropTimer = new Timer(200, this);
+        private Point2D nextItemPosition;
+
+        public void setDropMode(DropMode mode) {
+            dropMode = mode == null
+                    ? GraphicEnvironment.DropMode.NONE
+                    : mode;
+        }
+
         @Override
         public void mouseEntered(MouseEvent e) {
             setCursor(
@@ -496,6 +557,73 @@ public class GraphicEnvironment
         public void mouseExited(MouseEvent e) {
             setCursor(
                     Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        }
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            //drop is enabled is evolution has not started
+            if (monitoredEnvironment.getTime() == 0) {
+                switch (dropMode) {
+                    case NONE:
+                        break;
+                    case AGENT:
+                    case RESOURCE:
+                        if (nextItemPosition == null)
+                            nextItemPosition = new Point(e.getX(), e.getY());
+                        else
+                            nextItemPosition.setLocation(e.getX(), e.getY());
+
+                        if (!dropTimer.isRunning())
+                            dropTimer.start();
+                        break;
+                }
+            }
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            switch (dropMode) {
+                case AGENT:
+                case RESOURCE:
+                    //drop is enabled is evolution has not started
+                    if (monitoredEnvironment.getTime() == 0) {
+                        if (dropTimer.isRunning())
+                            dropTimer.stop();
+
+                        nextItemPosition = null;
+                    }
+                    break;
+            }
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            require(monitoredEnvironment.getTime() == 0);
+            require(nextItemPosition != null);
+
+            Point2D environmentPosition =
+                    internalScaler.panelToEnvironment(nextItemPosition);
+
+            Monitor.updateConfiguration();
+            switch (dropMode) {
+                case AGENT:
+                    monitoredEnvironment.addAgent(StandardAgent(
+                            environmentPosition.getX(),
+                            environmentPosition.getY()
+                    ));
+                    panelStructureHasChanged = true;
+                    repaint();
+                    break;
+                case RESOURCE:
+                    monitoredEnvironment.addResource(StandardResource(
+                            environmentPosition.getX(),
+                            environmentPosition.getY()
+                    ));
+                    panelStructureHasChanged = true;
+                    repaint();
+                    break;
+            }
+
         }
     }
 }

@@ -98,8 +98,16 @@ public final class Helper {
             return speed;
     }
 
-    public static URL getImage(String imagePath) {
+    public static URL getURL(String imagePath) {
         return Helper.class.getClassLoader().getResource(imagePath);
+    }
+
+    public static Icon getIcon(String imagePath) {
+        return new ImageIcon(getURL(imagePath));
+    }
+
+    public static Icon getIcon(URL imagePath) {
+        return new ImageIcon(imagePath);
     }
 
     private static final Dimension FIELD_DIMENSION = new Dimension(130, 50);

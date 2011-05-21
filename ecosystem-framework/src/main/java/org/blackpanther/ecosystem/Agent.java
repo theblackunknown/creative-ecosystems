@@ -127,11 +127,12 @@ public abstract class Agent
         require(0.0 <= mutation && mutation <= 1.0, String.valueOf(mutation));
         require(manager != null, "You must provide a BehaviourManager");
 
-        genotype.put(AGENT_IDENTIFIER, identifier);
         genotype.put(AGENT_MOVEMENT_COST, movementCost);
         genotype.put(AGENT_FECUNDATION_COST, fecundationCost);
         genotype.put(AGENT_FECUNDATION_LOSS, fecundationLoss);
         genotype.put(AGENT_GREED, greed);
+        //DEBUG
+        genotype.put(AGENT_FLEE, Configuration.getParameter(AGENT_FLEE, Double.class));
         genotype.put(AGENT_SENSOR_RADIUS, sensorRadius);
         genotype.put(AGENT_IRRATIONALITY, irrationality);
         genotype.put(AGENT_MORTALITY, mortality);
@@ -141,6 +142,7 @@ public abstract class Agent
         genotype.put(AGENT_SPEED_LAUNCHER, launchSpeed);
         genotype.put(AGENT_BEHAVIOUR, manager);
 
+        currentState.put(AGENT_IDENTIFIER, identifier);
         setAge(0);
         currentState.put(AGENT_LOCATION,
                 new Point2D.Double(spawnLocation.getX(), spawnLocation.getY()));
@@ -249,6 +251,9 @@ public abstract class Agent
         }
     }
 
+    public Color getColor() {
+        return getState(AGENT_IDENTIFIER, Color.class);
+    }
 
     /**
      * Get current agent's location in its environment
@@ -367,6 +372,12 @@ public abstract class Agent
      * they are meant to be modified by nothing except the behaviour manager
      *=========================================================================
      */
+
+    final void setColor(int red, int green, int blue) {
+        currentState.put(AGENT_IDENTIFIER, new Color(
+                red, green, blue
+        ));
+    }
 
     final void setLocation(double abscissa, double ordinate) {
         getState(AGENT_LOCATION, Point2D.class).setLocation(abscissa, ordinate);
