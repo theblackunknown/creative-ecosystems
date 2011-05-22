@@ -4,8 +4,10 @@ import org.blackpanther.ecosystem.BehaviorManager;
 import org.blackpanther.ecosystem.factory.generator.provided.BehaviorProvider;
 import org.blackpanther.ecosystem.factory.generator.provided.ColorProvider;
 import org.blackpanther.ecosystem.factory.generator.provided.DoubleProvider;
+import org.blackpanther.ecosystem.factory.generator.provided.LocationProvider;
 
 import java.awt.*;
+import java.awt.geom.Point2D;
 
 /**
  * @author MACHIZAUD Andréa
@@ -28,6 +30,8 @@ public abstract class StandardProvider<T>
     public static ValueProvider StandardProvider(Object providedValue) {
         if (Color.class.isInstance(providedValue))
             return new ColorProvider(Color.class.cast(providedValue));
+        else if (Point2D.class.isInstance(providedValue))
+            return new LocationProvider(Point2D.class.cast(providedValue));
         else if (Double.class.isInstance(providedValue))
             return new DoubleProvider(Double.class.cast(providedValue));
         else if (BehaviorManager.class.isInstance(providedValue))

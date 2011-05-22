@@ -83,11 +83,11 @@ public enum Configuration {
                 ANGLE_VARIATION,
                 SPEED_VARIATION,
                 COLOR_VARIATION,
-                AGENT_CURVATURE
+                CREATURE_CURVATURE
         };
         ANGLE = new String[]{
-                AGENT_ORIENTATION,
-                AGENT_ORIENTATION_LAUNCHER
+                CREATURE_ORIENTATION,
+                CREATURE_ORIENTATION_LAUNCHER
         };
         POSITIVE_DOUBLE = new String[]{
                 RESOURCE_AMOUNT_THRESHOLD,
@@ -98,26 +98,26 @@ public enum Configuration {
                 CONSUMMATION_RADIUS,
                 RESOURCE_AMOUNT,
                 AGENT_ENERGY,
-                AGENT_MOVEMENT_COST,
-                AGENT_FECUNDATION_COST,
-                AGENT_SPEED,
-                AGENT_SPEED_LAUNCHER,
-                AGENT_SENSOR_RADIUS
+                CREATURE_MOVEMENT_COST,
+                CREATURE_FECUNDATION_COST,
+                CREATURE_SPEED,
+                CREATURE_SPEED_LAUNCHER,
+                CREATURE_SENSOR_RADIUS
         };
         PROBABILITY = new String[]{
-                AGENT_FECUNDATION_LOSS,
-                AGENT_IRRATIONALITY,
-                AGENT_GREED,
-                AGENT_FLEE,
-                AGENT_MORTALITY,
-                AGENT_FECUNDITY,
-                AGENT_MUTATION
+                CREATURE_FECUNDATION_LOSS,
+                CREATURE_IRRATIONALITY,
+                CREATURE_GREED,
+                CREATURE_FLEE,
+                CREATURE_MORTALITY,
+                CREATURE_FECUNDITY,
+                CREATURE_MUTATION
         };
         POSITIVE_INTEGER = new String[]{
                 MAX_AGENT_NUMBER
         };
         COLOR = new String[]{
-                AGENT_IDENTIFIER
+                CREATURE_COLOR
         };
 
         //pre-sort arrays
@@ -248,17 +248,13 @@ public enum Configuration {
             }
         }
 
-        String redValue = properties.getProperty(RED_COLOR);
-        String greenValue = properties.getProperty(GREEN_COLOR);
-        String blueValue = properties.getProperty(BLUE_COLOR);
-        if (isValid(redValue) && isValid(greenValue) && isValid(blueValue)) {
+        value = properties.getProperty(AGENT_NATURAL_COLOR);
+        if (isValid(value)) {
             try {
                 setParameter(
-                        AGENT_IDENTIFIER,
+                        AGENT_NATURAL_COLOR,
                         new Color(
-                                Integer.parseInt(redValue),
-                                Integer.parseInt(greenValue),
-                                Integer.parseInt(blueValue)
+                                Integer.parseInt(value, 16)
                         ),
                         Color.class
                 );
@@ -269,14 +265,13 @@ public enum Configuration {
             }
         }
 
-        //update default behavior class
-        value = properties.getProperty(AGENT_BEHAVIOUR);
+        value = properties.getProperty(CREATURE_BEHAVIOUR);
         if (isValid(value)) {
             try {
                 Class<BehaviorManager> userBehaviourManagerClass =
                         (Class<BehaviorManager>) Class.forName(value);
                 setParameter(
-                        AGENT_BEHAVIOUR,
+                        CREATURE_BEHAVIOUR,
                         userBehaviourManagerClass.newInstance(),
                         BehaviorManager.class
                 );
@@ -296,12 +291,11 @@ public enum Configuration {
     }
 
 
-    @SuppressWarnings("unchecked") //Trust me please
     public <T> T getParameter(String parameterName, Class<T> parameterType) {
         Object correspondingParameter = applicationProperties.get(parameterName);
         if (correspondingParameter != null) {
             if (parameterType.isInstance(correspondingParameter)) {
-                return (T) correspondingParameter;
+                return parameterType.cast(correspondingParameter);
             } else {
                 throw new IllegalArgumentException(
                         String.format("%s parameter does not match given type, please check again",
@@ -363,14 +357,14 @@ public enum Configuration {
                         "Invalid value for " + paramName + " : '" + paramValue + "'");
             }
             //color
-        }else if (Arrays.binarySearch(COLOR, paramName) >= 0) {
+        } else if (Arrays.binarySearch(COLOR, paramName) >= 0) {
             if (!paramType.equals(Color.class)) {
                 throw new IllegalArgumentException(
                         "Invalid value this parameter, it must be an "
                                 + Color.class.getCanonicalName());
             }
             //behaviour
-        } else if (paramName.equals(AGENT_BEHAVIOUR)) {
+        } else if (paramName.equals(CREATURE_BEHAVIOUR)) {
             if (!paramType.equals(BehaviorManager.class)) {
                 throw new IllegalArgumentException(
                         "Invalid value this parameter, it must be a "
@@ -404,14 +398,12 @@ public enum Configuration {
     public Properties parameters() {
         Properties parameters = new Properties();
         for (Map.Entry<String, Object> entry : applicationProperties.entrySet())
-            if (entry.getKey().equals(AGENT_BEHAVIOUR))
+            if (entry.getKey().equals(CREATURE_BEHAVIOUR))
                 parameters.put(entry.getKey(),
-                        getParameter(AGENT_BEHAVIOUR, BehaviorManager.class).getClass().getCanonicalName());
-            else if( entry.getKey().equals(AGENT_IDENTIFIER)){
-                Color agentIdentifier = getParameter(AGENT_IDENTIFIER,Color.class);
-                parameters.put(RED_COLOR, agentIdentifier.getRed());
-                parameters.put(GREEN_COLOR, agentIdentifier.getGreen());
-                parameters.put(BLUE_COLOR, agentIdentifier.getBlue());
+                        getParameter(CREATURE_BEHAVIOUR, BehaviorManager.class).getClass().getCanonicalName());
+            else if (entry.getKey().equals(AGENT_NATURAL_COLOR)) {
+                parameters.put(AGENT_NATURAL_COLOR,
+                        Integer.toHexString(getParameter(AGENT_NATURAL_COLOR, Color.class).getRGB()));
             } else
                 parameters.put(entry.getKey(), entry.getValue());
         return parameters;

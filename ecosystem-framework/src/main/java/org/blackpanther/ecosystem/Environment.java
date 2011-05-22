@@ -1,6 +1,9 @@
 package org.blackpanther.ecosystem;
 
+import org.blackpanther.ecosystem.agent.Creature;
+import org.blackpanther.ecosystem.agent.Resource;
 import org.blackpanther.ecosystem.event.*;
+import org.blackpanther.ecosystem.factory.TraceFactory;
 import org.blackpanther.ecosystem.math.Geometry;
 
 import java.awt.geom.Dimension2D;
@@ -31,7 +34,7 @@ import static org.blackpanther.ecosystem.math.Geometry.getIntersection;
  * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
  */
 public abstract class Environment
-        implements Serializable, Cloneable, ResourceListener {
+        implements Serializable, Cloneable, AgentListener {
 
     /*
      *=========================================================================
@@ -49,24 +52,6 @@ public abstract class Environment
     private static int AREA_COLUMN_NUMBER = 50;
     private static int AREA_ROW_NUMBER = 50;
 
-    /**
-     * Simple check for a environment space
-     * which must contains no null-case
-     *
-     * @param env Environment to be checked
-     * @return false is there is at least one null case, true otherwise
-     */
-    private static boolean spaceMustBeNonNull(Environment env) {
-        for (Area[] row : env.space) {
-            for (Area spaceArea : row) {
-                if (spaceArea == null) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
 
     /*
     *=========================================================================
@@ -74,11 +59,12 @@ public abstract class Environment
     *=========================================================================
     */
 
-    private Long id;
+    private Long id = ++idGenerator;
     /**
      * Environment space
      */
     protected Area[][] space;
+    private Rectangle2D bounds;
     /**
      * Time tracker
      */
@@ -86,7 +72,7 @@ public abstract class Environment
     /**
      * Population
      */
-    protected Set<Agent> pool;
+    protected Set<Creature> creaturePool = new HashSet<Creature>();
     private Set<Resource> resourcePool = new HashSet<Resource>();
 
     /*
@@ -105,8 +91,7 @@ public abstract class Environment
      * @see java.beans.PropertyChangeSupport
      */
     protected EnvironmentMonitor eventSupport;
-    private Stack<Agent> nextGenerationBuffer = new Stack<Agent>();
-    private Rectangle2D bounds;
+    private Stack<Creature> nextGenerationBuffer = new Stack<Creature>();
     private Line2D[] boundLines = new Line2D[4];
 
     public Environment(double width, double height) {
@@ -114,10 +99,6 @@ public abstract class Environment
     }
 
     public Environment(Dimension2D dimension) {
-        this.id = ++idGenerator;
-
-        //initialize environment monitor
-
         this.bounds = dimension == null
                 ? new Rectangle2D.Double(
                 -Double.MAX_VALUE / 2.0,
@@ -173,25 +154,12 @@ public abstract class Environment
                 );
             }
         }
-        //template implementation to fill space at initialization
-        initializeSpace();
-        //postcondition
-        require(spaceMustBeNonNull(this),
-                "Wrong initialization : there is at least one null case");
 
         //initialize timeline
         timetracker = 0;
 
-        //initialize pool
-        pool = new HashSet<Agent>();
-
-        getEventSupport().addResourceListener(this);
+        getEventSupport().addAgentListener(this);
     }
-
-    /**
-     * The way you initialize your space in the constructor
-     */
-    protected abstract void initializeSpace();
 
     /**
      * Internal unique environment identifier
@@ -217,12 +185,12 @@ public abstract class Environment
     }
 
     /**
-     * Dump the current global agent's pool at the current state
+     * Dump the current global agent's creaturePool at the current state
      *
-     * @return copy of agent's pool
+     * @return copy of agent's creaturePool
      */
-    public final Set<Agent> getPool() {
-        return pool;
+    public final Set<Creature> getPool() {
+        return creaturePool;
     }
 
     /**
@@ -243,16 +211,16 @@ public abstract class Environment
     }
 
     /**
-     * Add an agent to the environment.
-     * The added agent will be monitored by corresponding case
+     * Add an monster to the environment.
+     * The added monster will be monitored by corresponding case
      * and that till its death or till it moves from there
      *
-     * @param agent the agent
+     * @param monster the monster
      */
-    public final void addAgent(
-            final Agent agent) {
-        agent.attachTo(this, getCorrespondingArea(agent.getLocation()));
-        pool.add(agent);
+    public final void addCreature(
+            final Creature monster) {
+        monster.attachTo(this);
+        creaturePool.add(monster);
     }
 
     public final void addResource(
@@ -267,12 +235,11 @@ public abstract class Environment
      * The added agent will be monitored by corresponding case
      * and that till its death or till it moves from there
      *
-     * @param agents the agent collection
+     * @param monsters the agent collection
      */
-    public final void addAgent(Collection<Agent> agents) {
-        for (Agent agent : agents) {
-            addAgent(agent);
-        }
+    public final void addCreature(Collection<Creature> monsters) {
+        for (Creature monster : monsters)
+            addCreature(monster);
     }
 
     public final void addResource(
@@ -299,15 +266,14 @@ public abstract class Environment
         return null;
     }
 
-    private Set<Area> getCrossedArea(Line2D line) {
+    private Set<Area> getCrossedArea(Point2D from, Point2D to) {
         Set<Area> crossedArea = new HashSet<Area>(
                 AREA_ROW_NUMBER * AREA_COLUMN_NUMBER);
         for (Area[] row : space) {
             for (final Area area : row) {
                 //line is totally contained by this area
                 // OMG this is so COOL !
-                if (area.contains(line.getP1())
-                        || area.contains(line.getP2())) {
+                if (area.contains(from) || area.contains(to)) {
                     crossedArea.add(area);
                 }
             }
@@ -323,7 +289,7 @@ public abstract class Environment
      * The current process is described below :
      * </p>
      * <ol>
-     * <li>Update every agent in the pool.</li>
+     * <li>Update every agent in the creaturePool.</li>
      * <li>Remove all agent which died at this cycle</li>
      * <li>Increment timeline</li>
      * </ol>
@@ -350,7 +316,7 @@ public abstract class Environment
         ));
         totalComparison = 0;
 
-        if (pool.size() == 0) {
+        if (creaturePool.size() == 0) {
             endThisWorld();
         } else {
             //update timeline
@@ -358,7 +324,7 @@ public abstract class Environment
                     "%s 's cycle %d ended, %d agents remaining",
                     this,
                     timetracker,
-                    pool.size()));
+                    creaturePool.size()));
             timetracker++;
             getEventSupport().fireEvolutionEvent(EvolutionEvent.Type.CYCLE_END);
         }
@@ -371,17 +337,17 @@ public abstract class Environment
     private void updatePool() {
 
         //update all agents
-        //if they die, they are simply not kept in the next pool
-        Iterator<Agent> poolIterator = pool.iterator();
+        //if they die, they are simply not kept in the next creaturePool
+        Iterator<Creature> poolIterator = creaturePool.iterator();
         while (poolIterator.hasNext()) {
-            Agent agent = poolIterator.next();
-            agent.update(this);
-            if (!agent.isAlive()) {
+            Creature monster = poolIterator.next();
+            monster.update(this);
+            if (!monster.isAlive()) {
                 poolIterator.remove();
             }
         }
 
-        pool.addAll(nextGenerationBuffer);
+        creaturePool.addAll(nextGenerationBuffer);
         nextGenerationBuffer.clear();
     }
 
@@ -393,7 +359,7 @@ public abstract class Environment
         endReached = true;
         logger.info(String.format("The evolution's game ended. %s's statistics[%d cycle]", this, timetracker));
         getEventSupport().fireEvolutionEvent(EvolutionEvent.Type.ENDED);
-        pool.clear();
+        creaturePool.clear();
         nextGenerationBuffer.clear();
     }
 
@@ -424,26 +390,18 @@ public abstract class Environment
         getEventSupport().addEvolutionListener(listener);
     }
 
-    public void addResourceListener(ResourceListener listener) {
-        getEventSupport().addResourceListener(listener);
-    }
-
-    public void removeResourceListener(ResourceListener listener) {
-        getEventSupport().removeResourceListener(listener);
-    }
-
-    public void nextGeneration(Agent child) {
-        child.attachTo(this, getCorrespondingArea(child.getLocation()));
+    public void nextGeneration(Creature child) {
+        child.attachTo(this);
         nextGenerationBuffer.push(child);
     }
 
     long comparison = 0;
 
-    public boolean move(Agent that, ColorfulTrace trace) {
-        Set<Area> crossedAreas = getCrossedArea(trace);
+    public boolean move(Creature that, Point2D from, Point2D to) {
+        Set<Area> crossedAreas = getCrossedArea(from, to);
         boolean collision = false;
         for (Area area : crossedAreas) {
-            collision = area.trace(trace) || collision;
+            collision = area.trace(that, from, to) || collision;
         }
         logger.finer(String.format(
                 "%d comparison to place a line",
@@ -455,8 +413,7 @@ public abstract class Environment
         //it means line has crossed more than one area
         if (!collision && crossedAreas.size() > 1) {
             that.attachTo(
-                    this,
-                    getCorrespondingArea(trace.getP2())
+                    this
             );
         }
         return collision;
@@ -474,7 +431,7 @@ public abstract class Environment
         getEventSupport().removeLineListener(listener);
     }
 
-    EnvironmentMonitor getEventSupport() {
+    public EnvironmentMonitor getEventSupport() {
         if (eventSupport == null)
             eventSupport = new EnvironmentMonitor(this);
         return eventSupport;
@@ -485,13 +442,39 @@ public abstract class Environment
     }
 
     @Override
-    public void update(ResourceEvent e) {
+    public void update(AgentEvent e) {
         switch (e.getType()) {
-            case DEPLETED:
-                Resource resource = e.getResource();
-                resourcePool.remove(resource);
-                break;
+            case DEATH:
+                if (e.getType().getClass().equals(Resource.class)) {
+                    resourcePool.remove((Resource) e.getAgent());
+                    break;
+                }
         }
+    }
+
+    public SenseResult aggregateInformation(Geometry.Circle circle) {
+        Collection<SensorTarget<Creature>> detectedAgents = new LinkedList<SensorTarget<Creature>>();
+        for (Creature monster : creaturePool)
+            if (circle.contains(monster.getLocation())
+                    && !(monster.getLocation().distance(circle.getCenter()) < EPSILON)) {
+                double agentOrientation =
+                        computeOrientation(
+                                circle.getCenter(),
+                                monster.getLocation());
+                detectedAgents.add(detected(agentOrientation, monster));
+            }
+        Collection<SensorTarget<Resource>> detectedResources = new LinkedList<SensorTarget<Resource>>();
+        for (Resource resource : resourcePool)
+            if (circle.contains(resource.getLocation())
+                    && !(resource.getLocation().distance(circle.getCenter()) < EPSILON)) {
+                double resourceOrientation =
+                        computeOrientation(
+                                circle.getCenter(),
+                                resource.getLocation());
+                detectedResources.add(detected(resourceOrientation, resource));
+            }
+
+        return new SenseResult(detectedAgents, detectedResources);
     }
 
     /**
@@ -511,15 +494,15 @@ public abstract class Environment
      */
     public class Area
             extends Rectangle2D.Double
-            implements Serializable, AreaListener {
+            implements Serializable {
 
-        private Collection<ColorfulTrace> internalDrawHistory = new LinkedList<ColorfulTrace>();
+        private Collection<Line2D> internalDrawHistory = new LinkedList<Line2D>();
 
         public Area(double x, double y, double w, double h) {
             super(x, y, w, h);
         }
 
-        public Collection<ColorfulTrace> getHistory() {
+        public Collection<Line2D> getHistory() {
             return internalDrawHistory;
         }
 
@@ -532,19 +515,15 @@ public abstract class Environment
          * @return <code>true</code> if draughtsman must be die after his movement,
          *         <code>false</code> otherwise.
          */
-        @Override
-        public boolean trace(ColorfulTrace line) {
+        public boolean trace(Creature that, Point2D from, Point2D to) {
             //go fly away little birds, you no longer belong to me ...
-            if (!bounds.contains(line.getP2())) {
+            if (!bounds.contains(to)) {
                 //detect which border has been crossed and where
                 for (Line2D border : boundLines) {
-                    Point2D intersection = getIntersection(border, line);
+                    Point2D intersection = getIntersection(border, new Line2D.Double(from, to));
+
                     if (intersection != null) {
-                        ColorfulTrace realLine = new ColorfulTrace(
-                                line.getP1(),
-                                intersection,
-                                line.getColor()
-                        );
+                        Line2D realLine = TraceFactory.getInstance().trace(from, intersection, that);
                         //We add a drawn line from agent's old location till intersection
                         internalDrawHistory.add(realLine);
 
@@ -556,17 +535,12 @@ public abstract class Environment
                 throw new RuntimeException("Border detection failed");
             }
 
-            for (ColorfulTrace historyLine : internalDrawHistory) {
-                comparison++;
-                Point2D intersection = getIntersection(historyLine, line);
+            for (Line2D historyLine : internalDrawHistory) {
+                Point2D intersection = getIntersection(historyLine, new Line2D.Double(from, to));
                 if (intersection != null
                         //Intersection with the line's start is not an intersection
-                        && !intersection.equals(line.getP1())) {
-                    ColorfulTrace realLine = new ColorfulTrace(
-                            line.getP1(),
-                            intersection,
-                            line.getColor()
-                    );
+                        && !intersection.equals(from)) {
+                    Line2D realLine = TraceFactory.getInstance().trace(from, intersection, that);
                     //We add a drawn line from agent's old location till intersection
                     internalDrawHistory.add(realLine);
                     getEventSupport().fireLineEvent(LineEvent.Type.ADDED, realLine);
@@ -574,35 +548,12 @@ public abstract class Environment
                     return true;
                 }
             }
+
             //Everything went better than expected
+            Line2D line = TraceFactory.getInstance().trace(from, to, that);
             internalDrawHistory.add(line);
             getEventSupport().fireLineEvent(LineEvent.Type.ADDED, line);
             return false;
-        }
-
-        @Override
-        public SenseResult aggregateInformation(Geometry.Circle circle) {
-            Collection<SensorTarget<Agent>> detectedAgents = new LinkedList<SensorTarget<Agent>>();
-            for (Agent agent : pool)
-                if (circle.contains(agent.getLocation())
-                        && !(agent.getLocation().distance(circle.getCenter()) < EPSILON)) {
-                    double agentOrientation =
-                            computeOrientation(
-                                    circle.getCenter(),
-                                    agent.getLocation());
-                    detectedAgents.add(detected(agentOrientation, agent));
-                }
-            Collection<SensorTarget<Resource>> detectedResources = new LinkedList<SensorTarget<Resource>>();
-            for (Resource resource : resourcePool)
-                if (circle.contains(resource)) {
-                    double resourceOrientation =
-                            computeOrientation(
-                                    circle.getCenter(),
-                                    resource);
-                    detectedResources.add(detected(resourceOrientation, resource));
-                }
-
-            return new SenseResult(detectedAgents, detectedResources);
         }
     }
 

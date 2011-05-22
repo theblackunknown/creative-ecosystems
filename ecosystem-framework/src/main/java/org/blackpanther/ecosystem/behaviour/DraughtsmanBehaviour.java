@@ -1,7 +1,15 @@
 package org.blackpanther.ecosystem.behaviour;
 
 
-import org.blackpanther.ecosystem.*;
+import org.blackpanther.ecosystem.BehaviorManager;
+import org.blackpanther.ecosystem.Environment;
+import org.blackpanther.ecosystem.SenseResult;
+import org.blackpanther.ecosystem.SensorTarget;
+import org.blackpanther.ecosystem.agent.Creature;
+import org.blackpanther.ecosystem.agent.Resource;
+import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
+import org.blackpanther.ecosystem.factory.fields.GeneFieldMould;
+import org.blackpanther.ecosystem.factory.fields.StateFieldMould;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -13,7 +21,7 @@ import java.util.logging.Logger;
 import static java.lang.Math.*;
 import static org.blackpanther.ecosystem.Agent.*;
 import static org.blackpanther.ecosystem.Configuration.*;
-import static org.blackpanther.ecosystem.Configuration.Configuration;
+import static org.blackpanther.ecosystem.factory.generator.StandardProvider.StandardProvider;
 import static org.blackpanther.ecosystem.helper.Helper.*;
 import static org.blackpanther.ecosystem.math.Geometry.PI_2;
 
@@ -30,14 +38,15 @@ import static org.blackpanther.ecosystem.math.Geometry.PI_2;
 public class DraughtsmanBehaviour
         implements BehaviorManager {
 
-    protected DraughtsmanBehaviour(){}
+    protected DraughtsmanBehaviour() {
+    }
 
     private static class DraughtsmanBehaviourHolder {
         private static final DraughtsmanBehaviour instance =
-            new DraughtsmanBehaviour();
+                new DraughtsmanBehaviour();
     }
 
-    public static DraughtsmanBehaviour getInstance(){
+    public static DraughtsmanBehaviour getInstance() {
         return DraughtsmanBehaviourHolder.instance;
     }
 
@@ -56,8 +65,8 @@ public class DraughtsmanBehaviour
      * {@inheritDoc}
      */
     @Override
-    public void update(Environment env, Agent agent) {
-        SenseResult analysis = agent.sense();
+    public void update(Environment env, Creature agent) {
+        SenseResult analysis = agent.sense(env);
         //Step 1 - react with anything detected
         react(env, agent, analysis);
         //Step 2 - spawn
@@ -68,22 +77,32 @@ public class DraughtsmanBehaviour
         growUp(env, agent);
     }
 
-    protected void react(Environment env, Agent that, SenseResult analysis) {
+    protected void react(Environment env, Creature that, SenseResult analysis) {
         //fetch closest resource
         SensorTarget<Resource> closestResource =
                 getClosestResource(that.getLocation(), analysis.getNearResources());
         if (closestResource != null) {
 
             //check if we can still move and reach resource
-            double resourceDistance = that.getLocation().distance(closestResource.getTarget());
+            double resourceDistance = that.getLocation().distance(closestResource.getTarget().getLocation());
             if (resourceDistance < Configuration.getParameter(CONSUMMATION_RADIUS, Double.class)) {
                 //we eat it
-                that.setEnergy(that.getEnergy() + closestResource.getTarget().consume());
+                that.setEnergy(that.getEnergy() + closestResource.getTarget().getEnergy());
+                that.setColor(
+                        (that.getColor().getRed()
+                                + closestResource.getTarget().getGene(AGENT_NATURAL_COLOR, Color.class).getRed()) / 2,
+                        (that.getColor().getGreen()
+                                + closestResource.getTarget().getGene(AGENT_NATURAL_COLOR, Color.class).getGreen()) / 2,
+                        (that.getColor().getBlue()
+                                + closestResource.getTarget().getGene(AGENT_NATURAL_COLOR, Color.class).getBlue()) / 2
+                );
+
+                closestResource.getTarget().detachFromEnvironment(env);
             }
 
             //otherwise get closer
             else {
-                double lust = that.getGene(AGENT_GREED, Double.class);
+                double lust = that.getGene(CREATURE_GREED, Double.class);
                 double alpha = (that.getOrientation() % PI_2); // 0 - 2PI
                 double beta = closestResource.getOrientation();//
                 double resourceRelativeOrientation = (beta - alpha);
@@ -102,8 +121,8 @@ public class DraughtsmanBehaviour
                                 "resource relative orientation : %.2fPI%n " +
                                 "new orientation : %.2fPI%n ",
                         that.getLocation().getX(), that.getLocation().getY(),
-                        closestResource.getTarget().getX(),
-                        closestResource.getTarget().getY(),
+                        closestResource.getTarget().getLocation().getX(),
+                        closestResource.getTarget().getLocation().getY(),
                         alpha / PI,
                         beta / PI,
                         resourceRelativeOrientation / PI,
@@ -114,47 +133,13 @@ public class DraughtsmanBehaviour
         }
     }
 
-    protected static SensorTarget<Resource> getClosestResource(Point2D source, Collection<SensorTarget<Resource>> resources) {
-        Iterator<SensorTarget<Resource>> it = resources.iterator();
-        if (it.hasNext()) {
-            SensorTarget<Resource> closest = it.next();
-            double closestDistance = source.distance(closest.getTarget());
-            while (it.hasNext()) {
-                SensorTarget<Resource> res = it.next();
-                double distance = source.distance(res.getTarget());
-                if (distance < closestDistance) {
-                    closest = res;
-                    closestDistance = distance;
-                }
-            }
-            return closest;
-        } else return null;
-    }
-
-    protected static SensorTarget<Agent> getClosestAgent(Point2D source, Collection<SensorTarget<Agent>> agents) {
-        Iterator<SensorTarget<Agent>> it = agents.iterator();
-        if (it.hasNext()) {
-            SensorTarget<Agent> closest = it.next();
-            double closestDistance = source.distance(closest.getTarget().getLocation());
-            while (it.hasNext()) {
-                SensorTarget<Agent> agent = it.next();
-                double distance = source.distance(agent.getTarget().getLocation());
-                if (distance < closestDistance) {
-                    closest = agent;
-                    closestDistance = distance;
-                }
-            }
-            return closest;
-        } else return null;
-    }
-
     /**
      * Move according to current agent's movement's characteristics
      */
-    protected void move(Environment env, Agent that) {
+    protected void move(Environment env, Creature that) {
         boolean hasDied;
         if (that.getEnergy() >=
-                that.getGene(AGENT_MOVEMENT_COST, Double.class) * that.getSpeed()) {
+                that.getGene(CREATURE_MOVEMENT_COST, Double.class) * that.getSpeed()) {
 
             //Step 1 - Update location according to current orientation
             Point2D oldLocation = (Point2D) that.getLocation().clone();
@@ -169,19 +154,17 @@ public class DraughtsmanBehaviour
 
             //Step 2 - Consume energy
             that.setEnergy(
-                    that.getEnergy() - that.getGene(AGENT_MOVEMENT_COST, Double.class) * that.getSpeed()
+                    that.getEnergy() - that.getGene(CREATURE_MOVEMENT_COST, Double.class) * that.getSpeed()
             );
 
             logger.finer(String.format("Changed %s 's location from %s to %s",
                     that, oldLocation, that.getLocation()));
 
-            //Step 3 - Notify AreaListener that we moved, agent can died if it cross an other line
+            //Step 3 - agent can died if it cross an other line
             //It dies if it didn't move
 
-            ColorfulTrace trace = new ColorfulTrace(oldLocation, that.getLocation(), that.getColor());
-
             hasDied = oldLocation.equals(that.getLocation()) ||
-                    env.move(that, trace);
+                    env.move(that, oldLocation, that.getLocation());
 
         } else {
             logger.finer(String.format("%s's has no enough energy (%s) to move with his current speed (%s)",
@@ -211,7 +194,7 @@ public class DraughtsmanBehaviour
                     that, oldOrientation / PI, that.getOrientation() / PI));
 
         } else {
-            that.detachFromEnvironment();
+            that.detachFromEnvironment(env);
             logger.finer(that + " passed away.");
         }
     }
@@ -219,125 +202,22 @@ public class DraughtsmanBehaviour
     /**
      * Method that make an agent to behave like McCormack describe in his essay
      */
-    protected void spawn(final Environment env, final Agent that) {
+    protected void spawn(final Environment env, final Creature that) {
         //check if the environment can hold more agents
         if (env.getPool().size() < Configuration.getParameter(MAX_AGENT_NUMBER, Integer.class)) {
 
             Random applicationRandom = Configuration.getRandom();
             if (applicationRandom.nextDouble() < that.getFecundityRate()
-                    && that.getEnergy() >= that.getGene(AGENT_FECUNDATION_COST, Double.class)) {
+                    && that.getEnergy() >= that.getGene(CREATURE_FECUNDATION_COST, Double.class)) {
 
                 //Create child
-                double probabilityVariation = Configuration.getParameter(PROBABILITY_VARIATION, Double.class);
-                double curvatureVariation = Configuration.getParameter(CURVATURE_VARIATION, Double.class);
-                double orientationVariation = Configuration.getParameter(ANGLE_VARIATION, Double.class);
-                double speedVariation = Configuration.getParameter(SPEED_VARIATION, Double.class);
-                double colorVariation = Configuration.getParameter(COLOR_VARIATION, Double.class);
-
-                //FIXME Mutate or not mutate ?
-                Color parentColor = that.getColor();
-                Color childColor = new Color(
-                        normalizeColor(mutate(
-                                that.getMutationRate(),
-                                parentColor.getRed(),
-                                colorVariation * applicationRandom.nextGaussian()
-                        )),
-                        normalizeColor(mutate(
-                                that.getMutationRate(),
-                                parentColor.getGreen(),
-                                colorVariation * applicationRandom.nextGaussian()
-
-                        )),
-                        normalizeColor(mutate(
-                                that.getMutationRate(),
-                                parentColor.getBlue(),
-                                colorVariation * applicationRandom.nextGaussian()
-
-                        ))
-                );
-
-                Agent child = new Creature(
-                        //color
-                        childColor,
-                        //initial position
-                        that.getLocation(),
-                        //initial amount of energy
-                        that.getEnergy() * that.getGene(AGENT_FECUNDATION_LOSS, Double.class),
-                        //movement cost - non mutable
-                        that.getGene(AGENT_MOVEMENT_COST, Double.class),
-                        //fecundation cost - non mutable
-                        that.getGene(AGENT_FECUNDATION_COST, Double.class),
-                        //fecundation loss
-                        normalizeProbability(mutate(
-                                that.getMutationRate(),
-                                that.getGene(AGENT_FECUNDATION_LOSS, Double.class),
-                                probabilityVariation
-                                        * applicationRandom.nextGaussian())),
-                        //initial orientation
-                        that.getChildOrientationLauncher(),
-                        //child orientation launcher
-                        mutate(
-                                that.getMutationRate(),
-                                that.getChildOrientationLauncher(),
-                                orientationVariation
-                                        * applicationRandom.nextGaussian()),
-                        //initial curvature
-                        mutate(
-                                that.getMutationRate(),
-                                that.getCurvature(),
-                                curvatureVariation
-                                        * applicationRandom.nextGaussian()),
-                        //initial speed
-                        normalizePositiveDouble(that.getChildSpeedLauncher()),
-                        //child speed launcher
-                        normalizePositiveDouble(mutate(
-                                that.getMutationRate(),
-                                that.getChildSpeedLauncher(),
-                                speedVariation
-                                        * applicationRandom.nextGaussian())),
-                        //greediness
-                        normalizeProbability(mutate(
-                                that.getMutationRate(),
-                                that.getGene(AGENT_GREED, Double.class),
-                                probabilityVariation
-                                        * applicationRandom.nextGaussian())),
-                        //initial sensor radius
-                        normalizePositiveDouble(mutate(
-                                that.getMutationRate(),
-                                that.getSensorRadius(),
-                                speedVariation
-                                        * applicationRandom.nextGaussian())),
-                        //irrationality rate
-                        normalizeProbability(mutate(
-                                that.getMutationRate(),
-                                that.getIrrationality(),
-                                probabilityVariation
-                                        * applicationRandom.nextGaussian())),
-                        //mortality rate
-                        normalizeProbability(mutate(
-                                that.getMutationRate(),
-                                that.getMortalityRate(),
-                                probabilityVariation
-                                        * applicationRandom.nextGaussian())),
-                        //fecundity rate
-                        normalizeProbability(mutate(
-                                that.getMutationRate(),
-                                that.getFecundityRate(),
-                                probabilityVariation
-                                        * applicationRandom.nextGaussian())),
-                        //mutation rate
-                        normalizeProbability(mutate(
-                                that.getMutationRate(),
-                                that.getMutationRate(),
-                                probabilityVariation
-                                        * applicationRandom.nextGaussian())),
-                        that.getBehaviour()
-                );
+                Creature child = new Creature(
+                        generateConfigurationFromParent(that));
 
                 //Step 2 - loss of energy
                 that.setEnergy(
                         that.getEnergy() *
-                                (1 - that.getGene(AGENT_FECUNDATION_LOSS, Double.class))
+                                (1 - that.getGene(CREATURE_FECUNDATION_LOSS, Double.class))
                 );
 
                 //Add into environment
@@ -348,14 +228,158 @@ public class DraughtsmanBehaviour
         }
     }
 
-    protected void growUp(Environment env, Agent that) {
+    @SuppressWarnings("unchecked")
+    private FieldsConfiguration generateConfigurationFromParent(Creature parent) {
+        return new FieldsConfiguration(
+                        new StateFieldMould(CREATURE_COLOR, StandardProvider(
+                                parent.getColor()
+                        )),
+                        new StateFieldMould(AGENT_LOCATION, StandardProvider(
+                                parent.getLocation()
+                        )),
+                        new StateFieldMould(AGENT_ENERGY, StandardProvider(
+                                parent.getEnergy() * parent.getGene(CREATURE_FECUNDATION_LOSS, Double.class)
+                        )),
+                        new StateFieldMould(CREATURE_CURVATURE, StandardProvider(
+                                parent.getCurvature()
+                        )),
+                        new StateFieldMould(CREATURE_ORIENTATION, StandardProvider(
+                                parent.getGene(CREATURE_ORIENTATION_LAUNCHER, Double.class)
+                        )),
+                        new StateFieldMould(CREATURE_SPEED, StandardProvider(
+                                parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class)
+                        )),
+                        new GeneFieldMould(AGENT_NATURAL_COLOR, StandardProvider(
+                                parent.isMutable(AGENT_NATURAL_COLOR)
+                                        ? mutate(
+                                        parent.getMutationRate(),
+                                        parent.getColor())
+                                        : parent.getGene(AGENT_NATURAL_COLOR, Color.class)),
+                                parent.isMutable(AGENT_NATURAL_COLOR)
+                        ),
+                        new GeneFieldMould(CREATURE_MOVEMENT_COST, StandardProvider(
+                                parent.getGene(CREATURE_MOVEMENT_COST, Double.class)),
+                                false
+                        ),
+                        new GeneFieldMould(CREATURE_FECUNDATION_COST, StandardProvider(
+                                parent.getGene(CREATURE_FECUNDATION_COST, Double.class)),
+                                false
+                        ),
+                        new GeneFieldMould(CREATURE_FECUNDATION_LOSS, StandardProvider(
+                                parent.isMutable(CREATURE_FECUNDATION_LOSS)
+                                        ? normalizeProbability(mutate(
+                                        parent.getMutationRate(),
+                                        parent.getGene(CREATURE_FECUNDATION_LOSS, Double.class),
+                                        Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
+                                                * Configuration.getRandom().nextGaussian()))
+                                        : parent.getGene(CREATURE_FECUNDATION_LOSS, Double.class)),
+                                parent.isMutable(CREATURE_FECUNDATION_LOSS)
+                        ),
+                        new GeneFieldMould(CREATURE_GREED, StandardProvider(
+                                parent.isMutable(CREATURE_GREED)
+                                        ? normalizeProbability(mutate(
+                                        parent.getMutationRate(),
+                                        parent.getGene(CREATURE_GREED, Double.class),
+                                        Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
+                                                * Configuration.getRandom().nextGaussian()))
+                                        : parent.getGene(CREATURE_GREED, Double.class)),
+                                parent.isMutable(CREATURE_GREED)
+                        ),
+                        new GeneFieldMould(CREATURE_FLEE, StandardProvider(
+                                parent.isMutable(CREATURE_FLEE)
+                                        ? normalizeProbability(mutate(
+                                        parent.getMutationRate(),
+                                        parent.getGene(CREATURE_FLEE, Double.class),
+                                        Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
+                                                * Configuration.getRandom().nextGaussian()))
+                                        : parent.getGene(CREATURE_FLEE, Double.class)),
+                                parent.isMutable(CREATURE_FLEE)
+                        ),
+                        new GeneFieldMould(CREATURE_SENSOR_RADIUS, StandardProvider(
+                                parent.isMutable(CREATURE_SENSOR_RADIUS)
+                                        ? normalizeProbability(mutate(
+                                        parent.getMutationRate(),
+                                        parent.getGene(CREATURE_SENSOR_RADIUS, Double.class),
+                                        Configuration.getParameter(SPEED_VARIATION, Double.class)
+                                                * Configuration.getRandom().nextGaussian()))
+                                        : parent.getGene(CREATURE_SENSOR_RADIUS, Double.class)),
+                                parent.isMutable(CREATURE_SENSOR_RADIUS)
+                        ),
+                        new GeneFieldMould(CREATURE_IRRATIONALITY, StandardProvider(
+                                parent.isMutable(CREATURE_IRRATIONALITY)
+                                        ? normalizeProbability(mutate(
+                                        parent.getMutationRate(),
+                                        parent.getGene(CREATURE_IRRATIONALITY, Double.class),
+                                        Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
+                                                * Configuration.getRandom().nextGaussian()))
+                                        : parent.getGene(CREATURE_IRRATIONALITY, Double.class)),
+                                parent.isMutable(CREATURE_IRRATIONALITY)
+                        ),
+                        new GeneFieldMould(CREATURE_MORTALITY, StandardProvider(
+                                parent.isMutable(CREATURE_MORTALITY)
+                                        ? normalizeProbability(mutate(
+                                        parent.getMutationRate(),
+                                        parent.getGene(CREATURE_MORTALITY, Double.class),
+                                        Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
+                                                * Configuration.getRandom().nextGaussian()))
+                                        : parent.getGene(CREATURE_MORTALITY, Double.class)),
+                                parent.isMutable(CREATURE_MORTALITY)
+                        ),
+                        new GeneFieldMould(CREATURE_FECUNDITY, StandardProvider(
+                                parent.isMutable(CREATURE_FECUNDITY)
+                                        ? normalizeProbability(mutate(
+                                        parent.getMutationRate(),
+                                        parent.getGene(CREATURE_FECUNDITY, Double.class),
+                                        Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
+                                                * Configuration.getRandom().nextGaussian()))
+                                        : parent.getGene(CREATURE_FECUNDITY, Double.class)),
+                                parent.isMutable(CREATURE_FECUNDITY)
+                        ),
+                        new GeneFieldMould(CREATURE_MUTATION, StandardProvider(
+                                parent.isMutable(CREATURE_MUTATION)
+                                        ? normalizeProbability(mutate(
+                                        parent.getMutationRate(),
+                                        parent.getGene(CREATURE_MUTATION, Double.class),
+                                        Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
+                                                * Configuration.getRandom().nextGaussian()))
+                                        : parent.getGene(CREATURE_MUTATION, Double.class)),
+                                parent.isMutable(CREATURE_MUTATION)
+                        ),
+                        new GeneFieldMould(CREATURE_ORIENTATION_LAUNCHER, StandardProvider(
+                                parent.isMutable(CREATURE_ORIENTATION_LAUNCHER)
+                                        ? normalizeProbability(mutate(
+                                        parent.getMutationRate(),
+                                        parent.getGene(CREATURE_ORIENTATION_LAUNCHER, Double.class),
+                                        Configuration.getParameter(ANGLE_VARIATION, Double.class)
+                                                * Configuration.getRandom().nextGaussian()))
+                                        : parent.getGene(CREATURE_ORIENTATION_LAUNCHER, Double.class)),
+                                parent.isMutable(CREATURE_ORIENTATION_LAUNCHER)
+                        ),
+                        new GeneFieldMould(CREATURE_SPEED_LAUNCHER, StandardProvider(
+                                parent.isMutable(CREATURE_SPEED_LAUNCHER)
+                                        ? normalizeProbability(mutate(
+                                        parent.getMutationRate(),
+                                        parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class),
+                                        Configuration.getParameter(SPEED_VARIATION, Double.class)
+                                                * Configuration.getRandom().nextGaussian()))
+                                        : parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class)),
+                                parent.isMutable(CREATURE_SPEED_LAUNCHER)
+                        ),
+                        new GeneFieldMould(CREATURE_BEHAVIOUR, StandardProvider(
+                                parent.getGene(CREATURE_BEHAVIOUR, BehaviorManager.class)),
+                                false
+                        )
+                );
+    }
+
+    protected void growUp(Environment env, Creature that) {
         double randomValue = Configuration.getParameter(RANDOM, Random.class)
                 .nextDouble();
         //TODO update phenotype death's chance according to age and mortality rate
         double deathChance = that.getMortalityRate();
         logger.finer(String.format("[Random mortality's value = %f, death's chance = %f]", randomValue, deathChance));
         if (randomValue < deathChance) {
-            that.detachFromEnvironment();
+            that.detachFromEnvironment(env);
             logger.fine(that + " died naturally.");
         } else {
             logger.fine(that + " didn't die yet.");
@@ -387,6 +411,68 @@ public class DraughtsmanBehaviour
         } else {
             return (double) normalValue;
         }
+    }
+
+    private static Color mutate(
+            Double mutationRate,
+            Color normalValue
+    ) {
+        return new Color(
+                normalizeColor(mutate(
+                        mutationRate,
+                        normalValue.getRed(),
+                        Configuration.getParameter(COLOR_VARIATION, Double.class)
+                                * Configuration.getRandom().nextGaussian()
+                )),
+                normalizeColor(mutate(
+                        mutationRate,
+                        normalValue.getGreen(),
+                        Configuration.getParameter(COLOR_VARIATION, Double.class)
+                                * Configuration.getRandom().nextGaussian()
+
+                )),
+                normalizeColor(mutate(
+                        mutationRate,
+                        normalValue.getBlue(),
+                        Configuration.getParameter(COLOR_VARIATION, Double.class)
+                                * Configuration.getRandom().nextGaussian()
+
+                ))
+        );
+    }
+
+    protected static SensorTarget<Resource> getClosestResource(Point2D source, Collection<SensorTarget<Resource>> resources) {
+        Iterator<SensorTarget<Resource>> it = resources.iterator();
+        if (it.hasNext()) {
+            SensorTarget<Resource> closest = it.next();
+            double closestDistance = source.distance(closest.getTarget().getLocation());
+            while (it.hasNext()) {
+                SensorTarget<Resource> res = it.next();
+                double distance = source.distance(res.getTarget().getLocation());
+                if (distance < closestDistance) {
+                    closest = res;
+                    closestDistance = distance;
+                }
+            }
+            return closest;
+        } else return null;
+    }
+
+    protected static SensorTarget<Creature> getClosestCreature(Point2D source, Collection<SensorTarget<Creature>> monsters) {
+        Iterator<SensorTarget<Creature>> it = monsters.iterator();
+        if (it.hasNext()) {
+            SensorTarget<Creature> closest = it.next();
+            double closestDistance = source.distance(closest.getTarget().getLocation());
+            while (it.hasNext()) {
+                SensorTarget<Creature> monster = it.next();
+                double distance = source.distance(monster.getTarget().getLocation());
+                if (distance < closestDistance) {
+                    closest = monster;
+                    closestDistance = distance;
+                }
+            }
+            return closest;
+        } else return null;
     }
 
 

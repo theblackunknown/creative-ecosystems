@@ -1,7 +1,5 @@
 package org.blackpanther.ecosystem.helper;
 
-import org.blackpanther.ecosystem.Resource;
-
 import java.util.Random;
 
 import static org.blackpanther.ecosystem.Configuration.*;

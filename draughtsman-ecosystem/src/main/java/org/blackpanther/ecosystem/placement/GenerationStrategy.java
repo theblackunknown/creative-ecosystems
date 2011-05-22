@@ -1,7 +1,6 @@
 package org.blackpanther.ecosystem.placement;
 
 import org.blackpanther.ecosystem.Agent;
-import org.blackpanther.ecosystem.Resource;
 
 import java.util.ArrayList;
 import java.util.Collection;

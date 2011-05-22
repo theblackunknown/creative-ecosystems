@@ -464,21 +464,21 @@ public class EnvironmentInformationPanel extends JPanel {
         Map<String, JSpinner> generateParameters() {
             return new TreeMap<String, JSpinner>() {{
                 put(AGENT_ENERGY, new JSpinner(generatePositiveDoubleModel()));
-                put(AGENT_ORIENTATION, new JSpinner(generateAngleModel()));
-                put(AGENT_CURVATURE, new JSpinner(generateDoubleModel()));
-                put(AGENT_SPEED, new JSpinner(generatePositiveDoubleModel()));
-                put(AGENT_MOVEMENT_COST, new JSpinner(generatePercentageModel()));
-                put(AGENT_FECUNDATION_COST, new JSpinner(generatePositiveDoubleModel()));
-                put(AGENT_FECUNDATION_LOSS, new JSpinner(generatePercentageModel()));
-                put(AGENT_ORIENTATION_LAUNCHER, new JSpinner(generateAngleModel()));
-                put(AGENT_SPEED_LAUNCHER, new JSpinner(generatePositiveDoubleModel()));
-                put(AGENT_GREED, new JSpinner(generatePercentageModel()));
-                put(AGENT_FLEE, new JSpinner(generatePercentageModel()));
-                put(AGENT_SENSOR_RADIUS, new JSpinner(generatePositiveDoubleModel()));
-                put(AGENT_IRRATIONALITY, new JSpinner(generatePercentageModel()));
-                put(AGENT_MORTALITY, new JSpinner(generatePercentageModel()));
-                put(AGENT_FECUNDITY, new JSpinner(generatePercentageModel()));
-                put(AGENT_MUTATION, new JSpinner(generatePercentageModel()));
+                put(CREATURE_ORIENTATION, new JSpinner(generateAngleModel()));
+                put(CREATURE_CURVATURE, new JSpinner(generateDoubleModel()));
+                put(CREATURE_SPEED, new JSpinner(generatePositiveDoubleModel()));
+                put(CREATURE_MOVEMENT_COST, new JSpinner(generatePercentageModel()));
+                put(CREATURE_FECUNDATION_COST, new JSpinner(generatePositiveDoubleModel()));
+                put(CREATURE_FECUNDATION_LOSS, new JSpinner(generatePercentageModel()));
+                put(CREATURE_ORIENTATION_LAUNCHER, new JSpinner(generateAngleModel()));
+                put(CREATURE_SPEED_LAUNCHER, new JSpinner(generatePositiveDoubleModel()));
+                put(CREATURE_GREED, new JSpinner(generatePercentageModel()));
+                put(CREATURE_FLEE, new JSpinner(generatePercentageModel()));
+                put(CREATURE_SENSOR_RADIUS, new JSpinner(generatePositiveDoubleModel()));
+                put(CREATURE_IRRATIONALITY, new JSpinner(generatePercentageModel()));
+                put(CREATURE_MORTALITY, new JSpinner(generatePercentageModel()));
+                put(CREATURE_FECUNDITY, new JSpinner(generatePercentageModel()));
+                put(CREATURE_MUTATION, new JSpinner(generatePercentageModel()));
             }};
         }
 
@@ -489,23 +489,23 @@ public class EnvironmentInformationPanel extends JPanel {
 
             String[] statesTable = new String[]{
                     AGENT_ENERGY,
-                    AGENT_ORIENTATION,
-                    AGENT_CURVATURE,
-                    AGENT_SPEED
+                    CREATURE_ORIENTATION,
+                    CREATURE_CURVATURE,
+                    CREATURE_SPEED
             };
             String[] genotypeTable = new String[]{
-                    AGENT_MOVEMENT_COST,
-                    AGENT_FECUNDATION_COST,
-                    AGENT_FECUNDATION_LOSS,
-                    AGENT_GREED,
-                    AGENT_FLEE,
-                    AGENT_SENSOR_RADIUS,
-                    AGENT_IRRATIONALITY,
-                    AGENT_MORTALITY,
-                    AGENT_FECUNDITY,
-                    AGENT_MUTATION,
-                    AGENT_ORIENTATION_LAUNCHER,
-                    AGENT_SPEED_LAUNCHER
+                    CREATURE_MOVEMENT_COST,
+                    CREATURE_FECUNDATION_COST,
+                    CREATURE_FECUNDATION_LOSS,
+                    CREATURE_GREED,
+                    CREATURE_FLEE,
+                    CREATURE_SENSOR_RADIUS,
+                    CREATURE_IRRATIONALITY,
+                    CREATURE_MORTALITY,
+                    CREATURE_FECUNDITY,
+                    CREATURE_MUTATION,
+                    CREATURE_ORIENTATION_LAUNCHER,
+                    CREATURE_SPEED_LAUNCHER
             };
 
             mutableFields = new HashMap<String, JCheckBox>(genotypeTable.length);
@@ -529,11 +529,11 @@ public class EnvironmentInformationPanel extends JPanel {
                 ));
             }
             genotype.add(createLabeledField(
-                    AGENT_IDENTIFIER,
+                    CREATURE_COLOR,
                     colorDisplay
             ));
             genotype.add(createLabeledField(
-                    AGENT_BEHAVIOUR,
+                    CREATURE_BEHAVIOUR,
                     behaviours
             ));
 
@@ -544,10 +544,10 @@ public class EnvironmentInformationPanel extends JPanel {
         @Override
         void updateInformation(Configuration information) {
             super.updateInformation(information);
-            colorDisplay.setBackground(information.getParameter(AGENT_IDENTIFIER, Color.class));
+            colorDisplay.setBackground(information.getParameter(CREATURE_COLOR, Color.class));
 
             String behaviourClass =
-                    information.getParameter(AGENT_BEHAVIOUR, BehaviorManager.class)
+                    information.getParameter(CREATURE_BEHAVIOUR, BehaviorManager.class)
                             .getClass().getCanonicalName();
             if (behaviourClass.equals(DraughtsmanBehaviour.class.getCanonicalName()))
                 behaviourClass = PASSIVE;
@@ -562,7 +562,7 @@ public class EnvironmentInformationPanel extends JPanel {
             String selectedBehaviour = (String) behaviours.getSelectedItem();
             if (selectedBehaviour.equals(PASSIVE))
                 externalisedParameters.put(
-                        AGENT_BEHAVIOUR, DraughtsmanBehaviour.class.getCanonicalName());
+                        CREATURE_BEHAVIOUR, DraughtsmanBehaviour.class.getCanonicalName());
             Color color = colorDisplay.getBackground();
             externalisedParameters.put(RED_COLOR, String.valueOf(color.getRed()));
             externalisedParameters.put(GREEN_COLOR, String.valueOf(color.getGreen()));

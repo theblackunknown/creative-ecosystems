@@ -4,8 +4,10 @@ import org.blackpanther.ecosystem.BehaviorManager;
 import org.blackpanther.ecosystem.factory.generator.random.BehaviorProvider;
 import org.blackpanther.ecosystem.factory.generator.random.ColorProvider;
 import org.blackpanther.ecosystem.factory.generator.random.DoubleProvider;
+import org.blackpanther.ecosystem.factory.generator.random.LocationProvider;
 
 import java.awt.*;
+import java.awt.geom.Point2D;
 
 /**
  * @author MACHIZAUD Andréa
@@ -19,6 +21,8 @@ public abstract class RandomProvider<T>
             return ColorProvider.getInstance();
         else if (valueType.equals(BehaviorManager.class))
             return BehaviorProvider.getInstance();
+        else if (valueType.equals(Point2D.class))
+            return LocationProvider.getInstance();
         else
             throw new IllegalArgumentException(
                     "Unsupported value : " +

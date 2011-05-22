@@ -1,6 +1,6 @@
 package org.blackpanther.ecosystem.factory;
 
-import org.blackpanther.ecosystem.Resource;
+import org.blackpanther.ecosystem.agent.Resource;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
 
 /**
@@ -8,13 +8,14 @@ import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
  * @version 5/21/11
  */
 public class ResourceFactory
-extends EnvironmentFactory<Resource>{
+        extends EnvironmentFactory<Resource> {
+
+    ResourceFactory() {
+    }
 
     @Override
     public Resource createAgent(FieldsConfiguration config) {
-        return new Resource(
-                config
-        );
+        return new Resource(config);
     }
 
 }

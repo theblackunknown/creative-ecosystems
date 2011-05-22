@@ -3,13 +3,11 @@ package org.blackpanther.ecosystem.gui;
 import org.blackpanther.ecosystem.Agent;
 import org.blackpanther.ecosystem.DesignEnvironment;
 import org.blackpanther.ecosystem.Environment;
-import org.blackpanther.ecosystem.Resource;
 import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
-import java.util.Properties;
 
 import static org.blackpanther.ecosystem.Configuration.*;
 import static org.blackpanther.ecosystem.helper.Helper.require;

@@ -1,6 +1,6 @@
 package org.blackpanther.ecosystem.factory;
 
-import org.blackpanther.ecosystem.Resource;
+import org.blackpanther.ecosystem.agent.Creature;
 
 import java.util.HashMap;
 import java.util.Map;

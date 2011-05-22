@@ -3,7 +3,6 @@ package org.blackpanther.ecosystem.gui;
 import org.blackpanther.ecosystem.Agent;
 import org.blackpanther.ecosystem.ColorfulTrace;
 import org.blackpanther.ecosystem.Environment;
-import org.blackpanther.ecosystem.Resource;
 import org.blackpanther.ecosystem.event.*;
 import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
 

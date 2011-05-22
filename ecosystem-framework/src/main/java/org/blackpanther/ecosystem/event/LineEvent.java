@@ -1,9 +1,9 @@
 package org.blackpanther.ecosystem.event;
 
 import org.blackpanther.ecosystem.Environment;
+import org.blackpanther.ecosystem.EnvironmentEvent;
 
 import java.awt.geom.Line2D;
-import java.util.EventObject;
 
 /**
  * @author MACHIZAUD Andréa

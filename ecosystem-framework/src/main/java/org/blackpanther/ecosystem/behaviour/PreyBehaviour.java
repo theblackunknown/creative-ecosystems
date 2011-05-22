@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import static java.lang.Math.PI;
-import static org.blackpanther.ecosystem.Agent.AGENT_FLEE;
+import static org.blackpanther.ecosystem.Agent.CREATURE_FLEE;
 import static org.blackpanther.ecosystem.math.Geometry.PI_2;
 
 /**
@@ -38,11 +38,11 @@ public class PreyBehaviour
     @Override
     protected void react(Environment env, Agent that, SenseResult analysis) {
         SensorTarget<Agent> closestPredator =
-                getClosestPredator(that.getLocation(), analysis.getNearAgents());
+                getClosestPredator(that.getLocation(), analysis.getNearCreatures());
 
         //run away closest predator
         if (closestPredator != null) {
-            double flee = that.getGene(AGENT_FLEE, Double.class);
+            double flee = that.getGene(CREATURE_FLEE, Double.class);
             double alpha = (that.getOrientation() % PI_2);
             double beta = closestPredator.getOrientation();
             if (beta < PI)
@@ -89,7 +89,7 @@ public class PreyBehaviour
             //detect only predators
             if (PredatorBehaviour.class.isInstance(
                     agent.getTarget()
-                            .getGene(Agent.AGENT_BEHAVIOUR, BehaviorManager.class))) {
+                            .getGene(Agent.CREATURE_BEHAVIOUR, BehaviorManager.class))) {
 
                 double distance = source.distance(agent.getTarget().getLocation());
 

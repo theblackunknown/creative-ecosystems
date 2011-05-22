@@ -1,5 +1,7 @@
 package org.blackpanther.ecosystem;
 
+import org.blackpanther.ecosystem.agent.Creature;
+
 import java.io.Serializable;
 
 /**
@@ -22,6 +24,6 @@ public interface BehaviorManager
      * @param env  environment in which the agent evolves
      * @param that monitored agent
      */
-    void update(Environment env, Agent that);
+    void update(Environment env, Creature that);
 
 }
