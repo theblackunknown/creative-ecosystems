@@ -49,9 +49,14 @@ public class GraphicEnvironment
     public static final int RESOURCE_OPTION = 1 << 1;
     public static final int SCROLL_OPTION = 1 << 2;
     public static final int ZOOM_OPTION = 1 << 3;
-    public static final int CREATURE_OPTION = 1 << 3;
+    public static final int CREATURE_OPTION = 1 << 4;
 
-    private int options = BOUNDS_OPTION | RESOURCE_OPTION | SCROLL_OPTION | ZOOM_OPTION | CREATURE_OPTION;
+    private int options =
+            BOUNDS_OPTION
+                    | RESOURCE_OPTION
+                    | SCROLL_OPTION
+                    | ZOOM_OPTION
+                    | CREATURE_OPTION;
 
     private Environment monitoredEnvironment;
     private MouseMonitor internalMouseMonitor =
@@ -168,19 +173,26 @@ public class GraphicEnvironment
 
     private void paintCreatures(Graphics g) {
         //agent initial painting activated
-        if ((options & CREATURE_OPTION) == CREATURE_OPTION)
+        if ((options & CREATURE_OPTION) == CREATURE_OPTION) {
+            Graphics2D g2d = (Graphics2D) g;
             for (Creature monster : monitoredEnvironment.getCreaturePool()) {
-                g.setColor(monster.getColor());
                 Point2D center = internalMouseMonitor.environmentToPanel(monster.getLocation());
                 double radius = internalMouseMonitor.environmentToPanel(monster.getEnergy()
                         / Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class));
-                g.fillOval(
+                g2d.setPaint(new RadialGradientPaint(
+                        center,
+                        (float) radius,
+                        new float[]{0.0f, 1.0f},
+                        new Color[]{monster.getColor(), currentBackground}
+                ));
+                g2d.fillOval(
                         (int) (center.getX() - radius),
                         (int) (center.getY() - radius),
                         (int) (radius * 2.0),
                         (int) (radius * 2.0)
                 );
             }
+        }
     }
 
     private void paintResources(Graphics g) {
@@ -271,10 +283,13 @@ public class GraphicEnvironment
     }
 
     public void setOption(int option, boolean shouldBePainted) {
+        System.out.println(Integer.toBinaryString(options));
+        System.out.println(Integer.toBinaryString(option));
         if (shouldBePainted)
             options |= option;
         else
             options &= ~option;
+        System.out.println(Integer.toBinaryString(options));
         switch (option) {
             case BOUNDS_OPTION:
             case RESOURCE_OPTION:
@@ -586,14 +601,14 @@ public class GraphicEnvironment
                         }
                         break;
                 }
-                paintImmediately(0, 0, getWidth(), getHeight());
+                repaintEnvironment();
             }
         }
 
         @Override
         public void mouseDragged(MouseEvent e) {
             if (isActivated(SCROLL_OPTION)
-                    && ( e.getModifiers() & InputEvent.CTRL_MASK ) == InputEvent.CTRL_MASK) {
+                    && (e.getModifiers() & InputEvent.CTRL_MASK) == InputEvent.CTRL_MASK) {
                 Point currentMousePoint = e.getPoint();
                 if (oldMouseLocation != null) {
                     //calculate diff
@@ -606,8 +621,6 @@ public class GraphicEnvironment
                 oldMouseLocation = currentMousePoint;
             } else {
                 switch (dropMode) {
-                    case NONE:
-                        break;
                     case AGENT:
                     case RESOURCE:
                         nextItemPosition = e.getPoint();
@@ -641,7 +654,7 @@ public class GraphicEnvironment
                             .createAgent(configuration));
                     break;
                 case RESOURCE:
-                    setOption(RESOURCE_OPTION,true);
+                    setOption(RESOURCE_OPTION, true);
                     monitoredEnvironment.add(EnvironmentAbstractFactory
                             .getFactory(Resource.class)
                             .createAgent(configuration));
