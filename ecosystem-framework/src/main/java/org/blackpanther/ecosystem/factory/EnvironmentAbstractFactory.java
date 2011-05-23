@@ -1,6 +1,8 @@
 package org.blackpanther.ecosystem.factory;
 
+import org.blackpanther.ecosystem.agent.Agent;
 import org.blackpanther.ecosystem.agent.Creature;
+import org.blackpanther.ecosystem.agent.Resource;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +21,8 @@ public class EnvironmentAbstractFactory {
         put(Resource.class, new ResourceFactory());
     }};
 
-    public static EnvironmentFactory getFactory(Class agentType) {
+    @SuppressWarnings("unchecked")
+    public static <T extends Agent> EnvironmentFactory<T> getFactory(Class<T> agentType) {
         return factoryRegister.get(agentType);
     }
 

@@ -1,5 +1,7 @@
 package org.blackpanther.ecosystem;
 
+import org.blackpanther.ecosystem.agent.Agent;
+
 /**
  * @author MACHIZAUD Andréa
  * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011

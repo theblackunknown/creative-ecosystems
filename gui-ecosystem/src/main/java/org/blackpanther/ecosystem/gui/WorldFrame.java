@@ -2,12 +2,12 @@ package org.blackpanther.ecosystem.gui;
 
 import com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel;
 import org.blackpanther.ecosystem.gui.actions.*;
+import org.blackpanther.ecosystem.gui.commands.EnvironmentCommands;
+import org.blackpanther.ecosystem.gui.settings.EnvironmentBoard;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowStateListener;
 import java.io.IOException;
 import java.net.URL;
 
@@ -59,10 +59,10 @@ public class WorldFrame
                 graphicEnvironment
         );
 
-        EnvironmentInformationPanel environmentInformationPanel =
-                new EnvironmentInformationPanel();
+        EnvironmentBoard environmentBoard =
+                new EnvironmentBoard();
         Monitor.registerEnvironmentInformationPanel(
-                environmentInformationPanel
+                environmentBoard
         );
 
         EnvironmentCommands environmentCommands =
@@ -73,7 +73,7 @@ public class WorldFrame
 
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(
-                wrapComponent(environmentInformationPanel, BorderLayout.WEST),
+                wrapComponent(environmentBoard, BorderLayout.WEST),
                 BorderLayout.WEST
         );
         getContentPane().add(
@@ -89,7 +89,7 @@ public class WorldFrame
         pack();
         setExtendedState(MAXIMIZED_BOTH);
 
-        environmentInformationPanel.recreateEnvironment();
+        Monitor.resetEnvironment();
     }
 
     private static class WorldFrameHolder {
@@ -125,9 +125,6 @@ public class WorldFrame
     /**
      * Convenience method.<br/>
      * Don't hate me because of the trick...
-     *
-     * @param c component to encapsulate
-     * @return Wrapped component
      */
     private static JPanel wrapComponent(final Component c, final String flag) {
         return new JPanel(new BorderLayout()) {{

@@ -1,6 +1,6 @@
-package org.blackpanther.ecosystem;
+package org.blackpanther.ecosystem.agent;
 
-import org.blackpanther.ecosystem.agent.CreatureConstants;
+import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.event.AgentEvent;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
 
@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.blackpanther.ecosystem.factory.fields.FieldsConfiguration.checkAgentConfiguration;
-import static org.blackpanther.ecosystem.helper.Helper.isGene;
 import static org.blackpanther.ecosystem.helper.Helper.require;
 
 /**

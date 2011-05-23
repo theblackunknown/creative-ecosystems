@@ -1,6 +1,7 @@
 package org.blackpanther.ecosystem.behaviour;
 
 import org.blackpanther.ecosystem.*;
+import org.blackpanther.ecosystem.agent.Agent;
 import org.blackpanther.ecosystem.agent.Creature;
 
 import java.awt.geom.Point2D;
@@ -8,8 +9,8 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import static java.lang.Math.PI;
-import static org.blackpanther.ecosystem.Agent.CREATURE_GREED;
-import static org.blackpanther.ecosystem.Agent.CREATURE_MOVEMENT_COST;
+import static org.blackpanther.ecosystem.agent.Agent.CREATURE_GREED;
+import static org.blackpanther.ecosystem.agent.Agent.CREATURE_MOVEMENT_COST;
 import static org.blackpanther.ecosystem.Configuration.CONSUMMATION_RADIUS;
 import static org.blackpanther.ecosystem.Configuration.Configuration;
 import static org.blackpanther.ecosystem.math.Geometry.PI_2;
@@ -103,7 +104,7 @@ public class PredatorBehaviour
             //detect only preys
             if (PreyBehaviour.class.isInstance(
                     monster.getTarget()
-                            .getGene(Agent.CREATURE_BEHAVIOUR, BehaviorManager.class))) {
+                            .getGene(Agent.CREATURE_BEHAVIOR, BehaviorManager.class))) {
 
                 double distance = source.distance(monster.getTarget().getLocation());
 

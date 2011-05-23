@@ -1,13 +1,15 @@
 package org.blackpanther.ecosystem.behaviour;
 
 import org.blackpanther.ecosystem.*;
+import org.blackpanther.ecosystem.agent.Agent;
+import org.blackpanther.ecosystem.agent.Creature;
 
 import java.awt.geom.Point2D;
 import java.util.Collection;
 import java.util.Iterator;
 
 import static java.lang.Math.PI;
-import static org.blackpanther.ecosystem.Agent.CREATURE_FLEE;
+import static org.blackpanther.ecosystem.agent.Agent.CREATURE_FLEE;
 import static org.blackpanther.ecosystem.math.Geometry.PI_2;
 
 /**
@@ -29,15 +31,15 @@ public class PreyBehaviour
     }
 
     @Override
-    public void update(Environment env, Agent agent) {
+    public void update(Environment env, Creature monster) {
         //possible that a predator previously ate us, sounds weird....
-        if (agent.isAlive())
-            super.update(env, agent);
+        if (monster.isAlive())
+            super.update(env, monster);
     }
 
     @Override
-    protected void react(Environment env, Agent that, SenseResult analysis) {
-        SensorTarget<Agent> closestPredator =
+    protected void react(Environment env, Creature that, SenseResult analysis) {
+        SensorTarget<Creature> closestPredator =
                 getClosestPredator(that.getLocation(), analysis.getNearCreatures());
 
         //run away closest predator
@@ -79,26 +81,26 @@ public class PreyBehaviour
             super.react(env, that, analysis);
     }
 
-    private SensorTarget<Agent> getClosestPredator(Point2D source, Collection<SensorTarget<Agent>> agents) {
-        Iterator<SensorTarget<Agent>> it = agents.iterator();
-        SensorTarget<Agent> closest = null;
+    private SensorTarget<Creature> getClosestPredator(Point2D source, Collection<SensorTarget<Creature>> agents) {
+        Iterator<SensorTarget<Creature>> it = agents.iterator();
+        SensorTarget<Creature> closest = null;
         double closestDistance = Double.MAX_VALUE;
         while (it.hasNext()) {
-            SensorTarget<Agent> agent = it.next();
+            SensorTarget<Creature> monster = it.next();
 
             //detect only predators
             if (PredatorBehaviour.class.isInstance(
-                    agent.getTarget()
-                            .getGene(Agent.CREATURE_BEHAVIOUR, BehaviorManager.class))) {
+                    monster.getTarget()
+                            .getGene(Agent.CREATURE_BEHAVIOR, BehaviorManager.class))) {
 
-                double distance = source.distance(agent.getTarget().getLocation());
+                double distance = source.distance(monster.getTarget().getLocation());
 
                 if (closest == null) {
-                    closest = agent;
+                    closest = monster;
                     closestDistance = distance;
                 } else {
                     if (distance < closestDistance) {
-                        closest = agent;
+                        closest = monster;
                         closestDistance = distance;
                     }
                 }

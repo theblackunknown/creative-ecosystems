@@ -1,7 +1,6 @@
 package org.blackpanther.ecosystem.behaviour;
 
 
-import org.blackpanther.ecosystem.BehaviorManager;
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.SenseResult;
 import org.blackpanther.ecosystem.SensorTarget;
@@ -19,7 +18,7 @@ import java.util.Random;
 import java.util.logging.Logger;
 
 import static java.lang.Math.*;
-import static org.blackpanther.ecosystem.Agent.*;
+import static org.blackpanther.ecosystem.agent.Agent.*;
 import static org.blackpanther.ecosystem.Configuration.*;
 import static org.blackpanther.ecosystem.factory.generator.StandardProvider.StandardProvider;
 import static org.blackpanther.ecosystem.helper.Helper.*;
@@ -38,7 +37,7 @@ import static org.blackpanther.ecosystem.math.Geometry.PI_2;
 public class DraughtsmanBehaviour
         implements BehaviorManager {
 
-    protected DraughtsmanBehaviour() {
+    public DraughtsmanBehaviour() {
     }
 
     private static class DraughtsmanBehaviourHolder {
@@ -204,7 +203,7 @@ public class DraughtsmanBehaviour
      */
     protected void spawn(final Environment env, final Creature that) {
         //check if the environment can hold more agents
-        if (env.getPool().size() < Configuration.getParameter(MAX_AGENT_NUMBER, Integer.class)) {
+        if (env.getCreaturePool().size() < Configuration.getParameter(MAX_AGENT_NUMBER, Integer.class)) {
 
             Random applicationRandom = Configuration.getRandom();
             if (applicationRandom.nextDouble() < that.getFecundityRate()
@@ -365,15 +364,15 @@ public class DraughtsmanBehaviour
                                         : parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class)),
                                 parent.isMutable(CREATURE_SPEED_LAUNCHER)
                         ),
-                        new GeneFieldMould(CREATURE_BEHAVIOUR, StandardProvider(
-                                parent.getGene(CREATURE_BEHAVIOUR, BehaviorManager.class)),
+                        new GeneFieldMould(CREATURE_BEHAVIOR, StandardProvider(
+                                parent.getGene(CREATURE_BEHAVIOR, BehaviorManager.class)),
                                 false
                         )
                 );
     }
 
     protected void growUp(Environment env, Creature that) {
-        double randomValue = Configuration.getParameter(RANDOM, Random.class)
+        double randomValue = Configuration.getRandom()
                 .nextDouble();
         //TODO update phenotype death's chance according to age and mortality rate
         double deathChance = that.getMortalityRate();
@@ -392,7 +391,7 @@ public class DraughtsmanBehaviour
             Double normalValue,
             Double mutationVariation
     ) {
-        if (Configuration.getParameter(RANDOM, Random.class)
+        if (Configuration.getRandom()
                 .nextDouble() <= mutationRate) {
             return normalValue + mutationVariation;
         } else {
@@ -405,7 +404,7 @@ public class DraughtsmanBehaviour
             Integer normalValue,
             Double mutationVariation
     ) {
-        if (Configuration.getParameter(RANDOM, Random.class)
+        if (Configuration.getRandom()
                 .nextDouble() <= mutationRate) {
             return normalValue + mutationVariation;
         } else {
@@ -475,5 +474,8 @@ public class DraughtsmanBehaviour
         } else return null;
     }
 
-
+    @Override
+    public String toString() {
+        return getClass().getSimpleName();
+    }
 }

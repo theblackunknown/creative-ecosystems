@@ -1,6 +1,5 @@
 package org.blackpanther.ecosystem.agent;
 
-import org.blackpanther.ecosystem.Agent;
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
 

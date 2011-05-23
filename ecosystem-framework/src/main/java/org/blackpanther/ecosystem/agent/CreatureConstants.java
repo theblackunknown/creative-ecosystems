@@ -1,7 +1,5 @@
 package org.blackpanther.ecosystem.agent;
 
-import org.blackpanther.ecosystem.AgentConstants;
-
 /**
  * @author MACHIZAUD Andréa
  * @version 5/22/11
@@ -27,7 +25,7 @@ public interface CreatureConstants
     public static final String CREATURE_MUTATION = "creature-mutation";
     public static final String CREATURE_ORIENTATION_LAUNCHER = "creature-orientation-launcher";
     public static final String CREATURE_SPEED_LAUNCHER = "creature-speed-launcher";
-    public static final String CREATURE_BEHAVIOUR = "creature-behaviour-manager";
+    public static final String CREATURE_BEHAVIOR = "creature-behavior";
 
     public static final String[] CREATURE_STATE = new String[]{
             CREATURE_AGE,
@@ -53,7 +51,7 @@ public interface CreatureConstants
             CREATURE_MUTATION,
             CREATURE_ORIENTATION_LAUNCHER,
             CREATURE_SPEED_LAUNCHER,
-            CREATURE_BEHAVIOUR
+            CREATURE_BEHAVIOR
     };
 
     /**
@@ -64,6 +62,14 @@ public interface CreatureConstants
             CREATURE_CURVATURE,
             AGENT_ENERGY,
             AGENT_LOCATION,
+            CREATURE_ORIENTATION,
+            CREATURE_SPEED
+    };
+
+    public static final String[] CUSTOMIZABLE_CREATURE_STATE = new String[]{
+            CREATURE_COLOR,
+            CREATURE_CURVATURE,
+            AGENT_ENERGY,
             CREATURE_ORIENTATION,
             CREATURE_SPEED
     };

@@ -1,6 +1,6 @@
 package org.blackpanther.ecosystem.event;
 
-import org.blackpanther.ecosystem.Agent;
+import org.blackpanther.ecosystem.agent.Agent;
 import org.blackpanther.ecosystem.Environment;
 
 import java.awt.geom.Line2D;

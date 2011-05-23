@@ -1,7 +1,6 @@
 package org.blackpanther.ecosystem.agent;
 
-import org.blackpanther.ecosystem.Agent;
-import org.blackpanther.ecosystem.BehaviorManager;
+import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.SenseResult;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
@@ -52,7 +51,7 @@ public class Creature
     @Override
     public void update(final Environment env) {
         require(alive, this + " is dead.");
-        getGene(CREATURE_BEHAVIOUR, BehaviorManager.class).update(env, this);
+        getGene(CREATURE_BEHAVIOR, BehaviorManager.class).update(env, this);
     }
 
     /**
@@ -182,7 +181,7 @@ public class Creature
     }
 
     public BehaviorManager getBehaviour() {
-        return getGene(CREATURE_BEHAVIOUR, BehaviorManager.class);
+        return getGene(CREATURE_BEHAVIOR, BehaviorManager.class);
     }
 
     /*=========================================================================

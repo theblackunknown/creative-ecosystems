@@ -1,5 +1,6 @@
 package org.blackpanther.ecosystem;
 
+import org.blackpanther.ecosystem.agent.Agent;
 import org.blackpanther.ecosystem.agent.Creature;
 import org.blackpanther.ecosystem.agent.Resource;
 import org.blackpanther.ecosystem.event.*;
@@ -33,7 +34,7 @@ import static org.blackpanther.ecosystem.math.Geometry.getIntersection;
  * @author MACHIZAUD Andréa
  * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
  */
-public abstract class Environment
+public class Environment
         implements Serializable, Cloneable, AgentListener {
 
     /*
@@ -72,8 +73,8 @@ public abstract class Environment
     /**
      * Population
      */
-    protected Set<Creature> creaturePool = new HashSet<Creature>();
-    private Set<Resource> resourcePool = new HashSet<Resource>();
+    protected Collection<Creature> creaturePool = new ArrayList<Creature>();
+    private Collection<Resource> resourcePool = new ArrayList<Resource>();
 
     /*
      *=========================================================================
@@ -189,7 +190,7 @@ public abstract class Environment
      *
      * @return copy of agent's creaturePool
      */
-    public final Set<Creature> getPool() {
+    public final Collection<Creature> getCreaturePool() {
         return creaturePool;
     }
 
@@ -206,7 +207,7 @@ public abstract class Environment
         return wholeHistory;
     }
 
-    public final Set<Resource> getResources() {
+    public final Collection<Resource> getResources() {
         return resourcePool;
     }
 
@@ -215,16 +216,14 @@ public abstract class Environment
      * The added monster will be monitored by corresponding case
      * and that till its death or till it moves from there
      *
-     * @param monster the monster
+     * @param mosntergent the monster
      */
-    public final void addCreature(
-            final Creature monster) {
+    public final void add(final Creature monster) {
         monster.attachTo(this);
         creaturePool.add(monster);
     }
 
-    public final void addResource(
-            final Resource resource) {
+    public final void add(final Resource resource) {
         resource.attachTo(this);
         resourcePool.add(resource);
     }
@@ -237,33 +236,15 @@ public abstract class Environment
      *
      * @param monsters the agent collection
      */
-    public final void addCreature(Collection<Creature> monsters) {
+    public final void addCreatures(Collection<Creature> monsters) {
         for (Creature monster : monsters)
-            addCreature(monster);
+            add(monster);
     }
 
-    public final void addResource(
+    public final void addResources(
             final Collection<Resource> resources) {
         for (Resource resource : resources)
-            addResource(resource);
-    }
-
-    /**
-     * Determine in which environment area a point is located
-     *
-     * @param location location to find a spot
-     * @return corresponding area
-     */
-    private Area getCorrespondingArea(Point2D location) {
-        //Rectangle2D is not good enough for me ...
-        for (Area[] row : space)
-            for (Area area : row)
-                if (area.contains(location))
-                    return area;
-        error(String.format("No area able to manage (%.2f,%.2f)",
-                location.getX(), location.getY()));
-        //never reached - fuck that
-        return null;
+            add(resource);
     }
 
     private Set<Area> getCrossedArea(Point2D from, Point2D to) {
@@ -409,13 +390,6 @@ public abstract class Environment
         ));
         totalComparison += comparison;
         comparison = 0;
-        //move agent to the right area if it has changed
-        //it means line has crossed more than one area
-        if (!collision && crossedAreas.size() > 1) {
-            that.attachTo(
-                    this
-            );
-        }
         return collision;
     }
 
@@ -445,8 +419,8 @@ public abstract class Environment
     public void update(AgentEvent e) {
         switch (e.getType()) {
             case DEATH:
-                if (e.getType().getClass().equals(Resource.class)) {
-                    resourcePool.remove((Resource) e.getAgent());
+                if (e.getAgent() instanceof Resource) {
+                    resourcePool.remove(e.getAgent());
                     break;
                 }
         }

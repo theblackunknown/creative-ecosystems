@@ -1,4 +1,6 @@
-package org.blackpanther.ecosystem;
+package org.blackpanther.ecosystem.event;
+
+import org.blackpanther.ecosystem.Environment;
 
 import java.util.EventObject;
 

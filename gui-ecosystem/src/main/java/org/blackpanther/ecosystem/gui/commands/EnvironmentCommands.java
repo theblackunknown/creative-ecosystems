@@ -1,4 +1,7 @@
-package org.blackpanther.ecosystem.gui;
+package org.blackpanther.ecosystem.gui.commands;
+
+import org.blackpanther.ecosystem.gui.GraphicEnvironment;
+import org.blackpanther.ecosystem.gui.WorldFrame;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
@@ -7,7 +10,6 @@ import java.awt.event.ActionListener;
 import java.beans.EventHandler;
 
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
-import static org.blackpanther.ecosystem.helper.Helper.getIcon;
 
 /**
  * @author MACHIZAUD Andréa
@@ -21,15 +23,12 @@ public class EnvironmentCommands
     public static final String NO_ENVIRONMENT = "No environment set";
     public static final String FROZEN_ENVIRONMENT = "Environment frozen";
 
-    public static final String HAND_ICON = "org/blackpanther/gui/icons/hand.png";
-    public static final String AGENT_ICON = "org/blackpanther/gui/icons/agent.png";
-    public static final String RESOURCE_ICON = "org/blackpanther/gui/icons/resource.png";
-
     private JButton evolutionFlowButton;
 
     private JToggleButton noAction;
     private JToggleButton paintAgent;
     private JToggleButton paintResource;
+    private JCheckBox drawCreatures;
 
     public EnvironmentCommands() {
         super();
@@ -38,9 +37,9 @@ public class EnvironmentCommands
 
         JButton resetEnvironment = new JButton("Generate new environment");
         evolutionFlowButton = new JButton(NO_ENVIRONMENT);
-        JCheckBox drawBounds = new JCheckBox("Paint bounds", false);
-        JCheckBox drawResources = new JCheckBox("Paint resources", false);
-        JCheckBox drawAgents = new JCheckBox("Paint agents at start", true);
+        JCheckBox drawBounds = new JCheckBox("Paint bounds", true);
+        JCheckBox drawResources = new JCheckBox("Paint resources", true);
+        drawCreatures = new JCheckBox("Paint agents at start", true);
         JButton backgroundColor = new JButton("Choose background color");
 
         noAction = new JToggleButton("No action");
@@ -61,7 +60,7 @@ public class EnvironmentCommands
         resetEnvironment.addActionListener(EventHandler.create(
                 ActionListener.class,
                 Monitor,
-                "recreateEnvironment"
+                "resetEnvironment"
         ));
         evolutionFlowButton.setEnabled(false);
         evolutionFlowButton.addActionListener(EventHandler.create(
@@ -87,10 +86,10 @@ public class EnvironmentCommands
                 "paintResources",
                 "source.selected"
         ));
-        drawAgents.addActionListener(EventHandler.create(
+        drawCreatures.addActionListener(EventHandler.create(
                 ActionListener.class,
                 Monitor,
-                "paintAgents",
+                "paintCreatures",
                 "source.selected"
         ));
         backgroundColor.addActionListener(EventHandler.create(
@@ -108,7 +107,7 @@ public class EnvironmentCommands
         add(Box.createVerticalStrut(40));
         add(drawBounds);
         add(drawResources);
-        add(drawAgents);
+        add(drawCreatures);
         add(Box.createVerticalStrut(40));
         add(backgroundColor);
 
@@ -146,12 +145,13 @@ public class EnvironmentCommands
         }
     }
 
-    void environmentSet() {
+    public void environmentSet() {
         evolutionFlowButton.setText(START_ENVIRONMENT);
         evolutionFlowButton.setEnabled(true);
+        drawCreatures.setEnabled(true);
     }
 
-    void environmentUnset() {
+    public void environmentUnset() {
         evolutionFlowButton.setText(NO_ENVIRONMENT);
         evolutionFlowButton.setEnabled(false);
     }
@@ -177,4 +177,12 @@ public class EnvironmentCommands
         }
     }
 
+    public void disableOptionButton(int option) {
+        switch (option) {
+            case GraphicEnvironment.CREATURE_OPTION:
+                drawCreatures.setSelected(false);
+                drawCreatures.setEnabled(false);
+                break;
+        }
+    }
 }

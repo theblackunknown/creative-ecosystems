@@ -1,14 +1,11 @@
 package org.blackpanther.ecosystem.helper;
 
-import org.blackpanther.ecosystem.Agent;
-import org.blackpanther.ecosystem.AgentConstants;
-import org.blackpanther.ecosystem.agent.Creature;
-import org.blackpanther.ecosystem.agent.CreatureConstants;
-import org.blackpanther.ecosystem.agent.Resource;
+import org.blackpanther.ecosystem.agent.*;
 import org.blackpanther.ecosystem.math.Geometry;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.Dimension2D;
 import java.awt.geom.Point2D;
 import java.net.URL;
 import java.util.Arrays;
@@ -26,6 +23,11 @@ public final class Helper {
         Arrays.sort(AgentConstants.AGENT_GENOTYPE);
         Arrays.sort(CreatureConstants.CREATURE_STATE);
         Arrays.sort(CreatureConstants.CREATURE_GENOTYPE);
+    }
+
+    public static boolean isGene(String trait) {
+        return Arrays.binarySearch(CreatureConstants.CREATURE_GENOTYPE, trait) >= 0
+                    || Arrays.binarySearch(AgentConstants.AGENT_GENOTYPE, trait) >= 0;
     }
 
     public static boolean isGene(Class species, String trait) {
@@ -141,6 +143,16 @@ public final class Helper {
             add(label);
             add(field);
             setPreferredSize(FIELD_DIMENSION);
+        }};
+    }
+
+    public static JPanel createLabeledField(final String labelName, final JComponent field, final Dimension dim) {
+        return new JPanel(new GridLayout(2, 1)) {{
+            JLabel label = new JLabel(labelName);
+            label.setLabelFor(field);
+            add(label);
+            add(field);
+            setPreferredSize(dim);
         }};
     }
 

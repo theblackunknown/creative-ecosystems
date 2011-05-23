@@ -1,7 +1,6 @@
 package org.blackpanther.ecosystem.gui.actions;
 
 import org.blackpanther.ecosystem.Configuration;
-import org.blackpanther.ecosystem.Environment;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,9 +9,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-
-import static org.blackpanther.ecosystem.Configuration.textify;
-import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
  * @author MACHIZAUD Andréa
@@ -69,7 +65,7 @@ public class ConfigurationSaveAction
                         ObjectOutputStream os = new ObjectOutputStream(
                                 new FileOutputStream(
                                         file));
-                        os.writeObject(textify(Configuration.Configuration.parameters()));
+                        os.writeObject(Configuration.Configuration);
                         os.close();
                         JOptionPane.showMessageDialog(
                                 parent,

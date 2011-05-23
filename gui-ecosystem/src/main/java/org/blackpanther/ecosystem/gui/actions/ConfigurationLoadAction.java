@@ -1,7 +1,6 @@
-package org.blackpanther.ecosystem.gui;
+package org.blackpanther.ecosystem.gui.actions;
 
 import org.blackpanther.ecosystem.Configuration;
-import org.blackpanther.ecosystem.gui.actions.FileBrowserAction;
 
 import javax.swing.*;
 import java.awt.*;

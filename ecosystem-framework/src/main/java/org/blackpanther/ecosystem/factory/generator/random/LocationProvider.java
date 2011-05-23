@@ -3,11 +3,8 @@ package org.blackpanther.ecosystem.factory.generator.random;
 import org.blackpanther.ecosystem.factory.generator.RandomProvider;
 
 import java.awt.geom.Point2D;
-import java.util.Random;
 
 import static org.blackpanther.ecosystem.Configuration.*;
-import static org.blackpanther.ecosystem.Configuration.Configuration;
-import static org.blackpanther.ecosystem.Configuration.SPACE_HEIGHT;
 
 /**
  * @author MACHIZAUD Andréa
@@ -30,10 +27,10 @@ public class LocationProvider
     @Override
     public Point2D getValue() {
         return new Point2D.Double(
-                Configuration.getParameter(RANDOM, Random.class).nextDouble()
+                Configuration.getRandom().nextDouble()
                         * Configuration.getParameter(SPACE_WIDTH, Double.class)
                         - (Configuration.getParameter(SPACE_WIDTH, Double.class) / 2.0),
-                Configuration.getParameter(RANDOM, Random.class).nextDouble()
+                Configuration.getRandom().nextDouble()
                         * Configuration.getParameter(SPACE_HEIGHT, Double.class)
                         - (Configuration.getParameter(SPACE_HEIGHT, Double.class) / 2.0)
         );

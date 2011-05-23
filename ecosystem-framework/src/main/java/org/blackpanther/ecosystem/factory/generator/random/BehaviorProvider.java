@@ -1,6 +1,6 @@
 package org.blackpanther.ecosystem.factory.generator.random;
 
-import org.blackpanther.ecosystem.BehaviorManager;
+import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.Configuration;
 import org.blackpanther.ecosystem.behaviour.DraughtsmanBehaviour;
 import org.blackpanther.ecosystem.factory.generator.RandomProvider;

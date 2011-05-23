@@ -1,5 +1,6 @@
-package org.blackpanther.ecosystem;
+package org.blackpanther.ecosystem.behaviour;
 
+import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.agent.Creature;
 
 import java.io.Serializable;
@@ -8,8 +9,8 @@ import java.io.Serializable;
  * <p>
  * Strategy Pattern Design.
  * Agent's behavior delegate operations to this interface
- * to update at each cycle, and to interact with the {@link Environment}
- * and thus other {@link Agent}
+ * to update at each cycle, and to interact with the {@link org.blackpanther.ecosystem.Environment}
+ * and thus other {@link org.blackpanther.ecosystem.agent.Agent}
  * </p>
  *
  * @author MACHIZAUD Andréa
@@ -19,7 +20,7 @@ public interface BehaviorManager
         extends Serializable {
 
     /**
-     * Update agent state in given {@link Environment}
+     * Update agent state in given {@link org.blackpanther.ecosystem.Environment}
      *
      * @param env  environment in which the agent evolves
      * @param that monitored agent

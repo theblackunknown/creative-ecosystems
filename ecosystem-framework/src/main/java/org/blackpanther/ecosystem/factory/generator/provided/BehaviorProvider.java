@@ -1,6 +1,6 @@
 package org.blackpanther.ecosystem.factory.generator.provided;
 
-import org.blackpanther.ecosystem.BehaviorManager;
+import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.factory.generator.StandardProvider;
 
 /**

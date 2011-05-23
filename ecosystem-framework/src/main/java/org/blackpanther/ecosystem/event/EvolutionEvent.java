@@ -1,7 +1,6 @@
 package org.blackpanther.ecosystem.event;
 
 import org.blackpanther.ecosystem.Environment;
-import org.blackpanther.ecosystem.EnvironmentEvent;
 
 /**
  * @author MACHIZAUD Andréa

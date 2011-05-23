@@ -1,6 +1,6 @@
 package org.blackpanther.ecosystem.factory.generator;
 
-import org.blackpanther.ecosystem.BehaviorManager;
+import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.factory.generator.random.BehaviorProvider;
 import org.blackpanther.ecosystem.factory.generator.random.ColorProvider;
 import org.blackpanther.ecosystem.factory.generator.random.DoubleProvider;
