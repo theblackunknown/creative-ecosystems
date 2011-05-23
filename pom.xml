@@ -8,7 +8,6 @@
 
     <modules>
         <module>ecosystem-framework</module>
-        <module>draughtsman-ecosystem</module>
         <module>gui-ecosystem</module>
     </modules>
 

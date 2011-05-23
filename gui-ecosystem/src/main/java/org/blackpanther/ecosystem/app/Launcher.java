@@ -1,15 +1,10 @@
 package org.blackpanther.ecosystem.app;
 
-import org.blackpanther.ecosystem.*;
-import org.blackpanther.ecosystem.gui.GUIMonitor;
 import org.blackpanther.ecosystem.gui.WorldFrame;
 
 import javax.swing.*;
-
-import java.awt.*;
-
-import static org.blackpanther.ecosystem.Configuration.*;
-import static org.blackpanther.ecosystem.helper.AgentFactory.StandardAgent;
+import java.io.IOException;
+import java.util.logging.LogManager;
 
 /**
  * @author MACHIZAUD Andréa
@@ -23,20 +18,19 @@ public class Launcher {
     }
 
     public static void createAndShowGUI() {
+        try {
+            LogManager.getLogManager().readConfiguration(
+                    Launcher.class.getClassLoader().getResourceAsStream("logging.properties")
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 WorldFrame.getInstance().setVisible(true);
                 WorldFrame.getInstance().validate();
-//                Environment env = new DesignEnvironment(
-//                        Configuration.getParameter(SPACE_WIDTH, Double.class),
-//                        Configuration.getParameter(SPACE_HEIGHT, Double.class)
-//                );
-//                Agent predator = StandardAgent(Color.BLUE, -10.0, -7.5, 0.1, 1.3, new PredatorBehaviour());
-//                Agent prey = StandardAgent(Color.RED, -2.0, -5.0, 0.05, 0.7, new PreyBehaviour());
-//                env.addAgent(predator);
-//                env.addAgent(prey);
-//                GUIMonitor.Monitor.setCurrentEnvironment(env);
             }
         });
     }

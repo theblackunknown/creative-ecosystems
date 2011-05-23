@@ -3,7 +3,6 @@ package org.blackpanther.ecosystem.event;
 import org.blackpanther.ecosystem.Environment;
 
 import java.awt.geom.Line2D;
-import java.util.EventObject;
 
 /**
  * @author MACHIZAUD Andréa

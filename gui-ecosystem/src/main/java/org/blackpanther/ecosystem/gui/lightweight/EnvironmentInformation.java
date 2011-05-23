@@ -12,7 +12,7 @@ public class EnvironmentInformation {
         return new EnvironmentInformation(
                 env.getId(),
                 state,
-                env.getPool().size(),
+                env.getCreaturePool().size(),
                 env.getTime()
         );
     }

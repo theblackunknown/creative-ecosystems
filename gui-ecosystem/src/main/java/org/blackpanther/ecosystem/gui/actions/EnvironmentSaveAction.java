@@ -1,20 +1,15 @@
 package org.blackpanther.ecosystem.gui.actions;
 
-import org.blackpanther.ecosystem.Configuration;
 import org.blackpanther.ecosystem.Environment;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.Map;
-import java.util.Properties;
 
-import static org.blackpanther.ecosystem.Configuration.textify;
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
@@ -39,13 +34,16 @@ public class EnvironmentSaveAction
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        Component parent = e.getSource() instanceof Component
-                ? ((Component) e.getSource()).getParent()
-                : null;
+        save((Component) e.getSource(), Monitor.dumpCurrentEnvironment());
+    }
 
+    public void save(Environment backup) {
+        save(null, backup);
+    }
+
+    public void save(Component parent, Environment env) {
         Monitor.pauseEvolution();
-        Environment env = Monitor.dumpCurrentEnvironment();
-        if (env == null) //TODO Make action unavailable
+        if (env == null)
             JOptionPane.showMessageDialog(
                     parent,
                     "No environment set yet",
@@ -80,7 +78,6 @@ public class EnvironmentSaveAction
                                 new FileOutputStream(
                                         file));
                         os.writeObject(env);
-                        os.writeObject(textify(Configuration.Configuration.parameters()));
                         os.close();
                         JOptionPane.showMessageDialog(
                                 parent,

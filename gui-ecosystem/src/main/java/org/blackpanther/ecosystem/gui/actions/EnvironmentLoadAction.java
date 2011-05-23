@@ -4,7 +4,6 @@ import org.blackpanther.ecosystem.Configuration;
 import org.blackpanther.ecosystem.Environment;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
