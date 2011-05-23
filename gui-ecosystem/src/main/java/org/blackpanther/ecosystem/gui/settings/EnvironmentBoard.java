@@ -48,7 +48,7 @@ public class EnvironmentBoard extends JPanel {
     private static final String LABEL_ENVIRONMENT_AGENT = "Agent number : %d";
     private static final String LABEL_ENVIRONMENT_GENERATION = "#Generation %d";
     private static final String NO_ENVIRONMENT = "No Environment Set";
-    private static final Dimension PREFERRED_SIZE = new Dimension(280, 600);
+    private static final Dimension PREFERRED_SIZE = new Dimension(280, 800);
 
     private EnvironmentInformationInstance informationBoard =
             new EnvironmentInformationInstance();

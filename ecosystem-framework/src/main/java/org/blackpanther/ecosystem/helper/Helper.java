@@ -5,7 +5,6 @@ import org.blackpanther.ecosystem.math.Geometry;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.Dimension2D;
 import java.awt.geom.Point2D;
 import java.net.URL;
 import java.util.Arrays;
@@ -134,7 +133,7 @@ public final class Helper {
         return new ImageIcon(imagePath);
     }
 
-    private static final Dimension FIELD_DIMENSION = new Dimension(130, 50);
+    private static final Dimension DEFAULT_DIMENSION = new Dimension(130, 50);
 
     public static JPanel createLabeledField(final String labelName, final Component field) {
         return new JPanel(new GridLayout(2, 1)) {{
@@ -142,7 +141,7 @@ public final class Helper {
             label.setLabelFor(field);
             add(label);
             add(field);
-            setPreferredSize(FIELD_DIMENSION);
+            setPreferredSize(DEFAULT_DIMENSION);
         }};
     }
 

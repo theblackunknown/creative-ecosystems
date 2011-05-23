@@ -37,18 +37,20 @@ public abstract class MutableSettingField<T>
 
     @Override
     protected void placeComponents(JPanel layout) {
-        super.placeComponents(layout);
-
         GridBagConstraints constraints = new GridBagConstraints();
 
-        constraints.gridheight = GridBagConstraints.REMAINDER;
+        constraints.insets = new Insets(0,5,0,5);
+        constraints.ipadx = 115;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        layout.add(createLabeledField(
+                getMainComponent().getName(),
+                getMainComponent(),
+                FIELD_DIMENSION
+        ), constraints);
 
-        constraints.gridx = 0;
-        constraints.gridy = 2;
-        constraints.gridwidth = 1;
-        constraints.gridheight = 1;
-        constraints.ipadx = 0;
-        constraints.fill = GridBagConstraints.NONE;
+        constraints.insets = new Insets(0,0,0,0);
+        constraints.ipadx = 20;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         layout.add(createLabeledField(
                 "M",
                 mutable,

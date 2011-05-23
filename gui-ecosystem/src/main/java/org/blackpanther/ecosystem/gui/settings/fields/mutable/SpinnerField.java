@@ -41,14 +41,8 @@ public class SpinnerField
 
         GridBagConstraints constraints = new GridBagConstraints();
 
-        constraints.gridheight = GridBagConstraints.REMAINDER;
-
-        constraints.gridx = 0;
-        constraints.gridy = 2;
-        constraints.gridwidth = 1;
-        constraints.gridheight = 1;
-        constraints.ipadx = 0;
-        constraints.fill = GridBagConstraints.NONE;
+        constraints.ipadx = 20;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         layout.add(createLabeledField(
                 "M",
                 mutable,

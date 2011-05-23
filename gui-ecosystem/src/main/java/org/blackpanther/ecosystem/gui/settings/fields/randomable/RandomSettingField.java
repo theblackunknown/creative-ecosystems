@@ -1,6 +1,5 @@
 package org.blackpanther.ecosystem.gui.settings.fields.randomable;
 
-import org.blackpanther.ecosystem.factory.fields.FieldMould;
 import org.blackpanther.ecosystem.gui.settings.fields.SettingField;
 
 import javax.swing.*;
@@ -29,30 +28,36 @@ public abstract class RandomSettingField<T>
         randomized = new JCheckBox();
         randomized.addActionListener(EventHandler.create(
                 ActionListener.class,
-                randomized,
-                "setSelected",
+                this,
+                "setRandomized",
                 "source.selected"
         ));
     }
 
+    public void setRandomized(boolean isRandomized){
+        randomized.setSelected(isRandomized);
+        getMainComponent().setEnabled(!isRandomized);
+    }
+
     @Override
     protected void placeComponents(JPanel layout) {
-        super.placeComponents(layout);
-
         GridBagConstraints constraints = new GridBagConstraints();
 
-        constraints.gridheight = GridBagConstraints.REMAINDER;
-
-        constraints.gridx = 0;
-        constraints.gridy = 0;
-        constraints.gridwidth = 1;
-        constraints.gridheight = 1;
-        constraints.ipadx = 0;
-        constraints.fill = GridBagConstraints.NONE;
+        constraints.ipadx = 20;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         layout.add(createLabeledField(
                 "R",
                 randomized,
                 CHECKBOX_DIMENSION
+        ), constraints);
+
+        constraints.insets = new Insets(0,5,0,5);
+        constraints.ipadx = 60;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        layout.add(createLabeledField(
+                getMainComponent().getName(),
+                getMainComponent(),
+                FIELD_DIMENSION
         ), constraints);
     }
 

@@ -561,7 +561,7 @@ public class GraphicEnvironment
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
             if (isActivated(ZOOM_OPTION)
-                    && ( e.getModifiers() & InputEvent.CTRL_MASK ) == InputEvent.CTRL_MASK) {
+                    && e.getModifiers() == InputEvent.CTRL_MASK) {
                 switch (e.getWheelRotation()) {
                     case WHEEL_UP:
                         if (panelScale < UP_SCALE_THRESHOLD) {

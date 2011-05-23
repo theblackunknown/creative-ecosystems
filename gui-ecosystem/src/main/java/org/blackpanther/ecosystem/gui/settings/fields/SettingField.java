@@ -13,7 +13,8 @@ import static org.blackpanther.ecosystem.helper.Helper.createLabeledField;
  */
 public abstract class SettingField<T>
         extends JPanel {
-    public static final Dimension CHECKBOX_DIMENSION = new Dimension(20, 20);
+    public static final Dimension CHECKBOX_DIMENSION = new Dimension(25, 50);
+    public static final Dimension FIELD_DIMENSION = new Dimension(60, 50);
 
 
     protected SettingField(String name) {
@@ -26,16 +27,9 @@ public abstract class SettingField<T>
     abstract protected void initializeComponents(String fieldName);
 
     protected void placeComponents(JPanel layout) {
-
         GridBagConstraints constraints = new GridBagConstraints();
 
-        constraints.gridheight = GridBagConstraints.REMAINDER;
-
-        constraints.gridx = 0;
-        constraints.gridy = 1;
-        constraints.gridwidth = 1;
-        constraints.gridheight = 1;
-        constraints.ipadx = 60;
+        constraints.ipadx = 80;
         constraints.fill = GridBagConstraints.HORIZONTAL;
         layout.add(createLabeledField(
                 getMainComponent().getName(),
