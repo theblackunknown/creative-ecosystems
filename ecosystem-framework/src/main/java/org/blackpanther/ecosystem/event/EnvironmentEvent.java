@@ -6,9 +6,9 @@ import java.util.EventObject;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
+ * @version 1.0-alpha - Tue May 24 23:49:57 CEST 2011
  */
-abstract class EnvironmentEvent
+public abstract class EnvironmentEvent
         extends EventObject {
 
     public EnvironmentEvent(Environment source) {

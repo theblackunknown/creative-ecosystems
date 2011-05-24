@@ -1,11 +1,10 @@
 package org.blackpanther.ecosystem.event;
 
-import org.blackpanther.ecosystem.Agent;
+import org.blackpanther.ecosystem.agent.Agent;
 import org.blackpanther.ecosystem.Environment;
-import org.blackpanther.ecosystem.Resource;
 
 import java.awt.geom.Line2D;
-import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -13,7 +12,7 @@ import java.util.Set;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
+ * @version 1.0-alpha - Tue May 24 23:49:57 CEST 2011
  */
 public class EnvironmentMonitor
         implements Serializable {
@@ -26,8 +25,6 @@ public class EnvironmentMonitor
             new HashSet<EvolutionListener>();
     private Set<AgentListener> agentListeners =
             new HashSet<AgentListener>();
-    private Set<ResourceListener> resourceListeners =
-            new HashSet<ResourceListener>();
 
     private Environment source;
 
@@ -42,10 +39,9 @@ public class EnvironmentMonitor
     public void clearAllExternalsListeners(){
         lineListeners.clear();
         evolutionListeners.clear();
-        agentListeners.clear();
-        Iterator<ResourceListener> it = resourceListeners.iterator();
+        Iterator<AgentListener> it = agentListeners.iterator();
         while (it.hasNext())
-            if (!(it.next() instanceof Environment.Area))
+            if (!(it.next() instanceof Environment))
                 it.remove();
     }
 
@@ -63,10 +59,6 @@ public class EnvironmentMonitor
 
     public void addEvolutionListener(EvolutionListener listener) {
         evolutionListeners.add(listener);
-    }
-
-    public void addResourceListener(ResourceListener listener) {
-        resourceListeners.add(listener);
     }
 
     /*=========================================================================
@@ -95,13 +87,6 @@ public class EnvironmentMonitor
         }
     }
 
-    public void fireResourceEvent(Resource value, ResourceEvent.Type eventType) {
-        ResourceEvent event = new ResourceEvent(eventType, source, value);
-        for (ResourceListener resourceListener : resourceListeners) {
-            resourceListener.update(event);
-        }
-    }
-
     public void removeAgentListener(AgentListener listener) {
         agentListeners.remove(listener);
     }
@@ -112,9 +97,5 @@ public class EnvironmentMonitor
 
     public void removeLineListener(LineListener listener) {
         lineListeners.remove(listener);
-    }
-
-    public void removeResourceListener(ResourceListener listener) {
-        resourceListeners.remove(listener);
     }
 }

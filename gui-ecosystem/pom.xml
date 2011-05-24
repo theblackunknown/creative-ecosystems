@@ -8,11 +8,11 @@
     <parent>
         <artifactId>creative-ecosystems</artifactId>
         <groupId>org.blackpanther</groupId>
-        <version>0.3</version>
+        <version>1.0-alpha</version>
     </parent>
 
     <artifactId>gui-ecosystem</artifactId>
-    <version>0.5</version>
+    <version>0.7</version>
 
     <name>A General GUI to monitor environment's evolution</name>
 
@@ -47,12 +47,6 @@
     <dependencies>
         <dependency>
             <artifactId>ecosystem-framework</artifactId>
-            <groupId>org.blackpanther</groupId>
-            <version>0.3</version>
-        </dependency>
-        <!-- FIXME Remove it to get loose coupling -->
-        <dependency>
-            <artifactId>draughtsman-ecosystem</artifactId>
             <groupId>org.blackpanther</groupId>
             <version>0.3</version>
         </dependency>

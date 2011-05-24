@@ -2,12 +2,12 @@ package org.blackpanther.ecosystem.gui;
 
 import com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel;
 import org.blackpanther.ecosystem.gui.actions.*;
+import org.blackpanther.ecosystem.gui.commands.EnvironmentCommands;
+import org.blackpanther.ecosystem.gui.settings.EnvironmentBoard;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowStateListener;
 import java.io.IOException;
 import java.net.URL;
 
@@ -15,7 +15,7 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
+ * @version 1.0-alpha - Tue May 24 23:49:58 CEST 2011
  */
 public class WorldFrame
         extends JFrame {
@@ -59,10 +59,10 @@ public class WorldFrame
                 graphicEnvironment
         );
 
-        EnvironmentInformationPanel environmentInformationPanel =
-                new EnvironmentInformationPanel();
+        EnvironmentBoard environmentBoard =
+                new EnvironmentBoard();
         Monitor.registerEnvironmentInformationPanel(
-                environmentInformationPanel
+                environmentBoard
         );
 
         EnvironmentCommands environmentCommands =
@@ -73,7 +73,7 @@ public class WorldFrame
 
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(
-                wrapComponent(environmentInformationPanel, BorderLayout.WEST),
+                wrapComponent(environmentBoard, BorderLayout.WEST),
                 BorderLayout.WEST
         );
         getContentPane().add(
@@ -89,7 +89,7 @@ public class WorldFrame
         pack();
         setExtendedState(MAXIMIZED_BOTH);
 
-        environmentInformationPanel.recreateEnvironment();
+        Monitor.resetEnvironment();
     }
 
     private static class WorldFrameHolder {
@@ -104,20 +104,27 @@ public class WorldFrame
     private JMenuBar buildMenuBar() {
         JMenuBar menuBar = new JMenuBar();
 
-        JMenu file = new JMenu("File");
         JMenu environment = new JMenu("Environment");
+        JMenu painting = new JMenu("Paint options");
 
-        file.add(LoadConfigurationAction.getInstance());
-        file.add(SaveImageAction.getInstance());
-
-        environment.add(ConfigurationSaveAction.getInstance());
-        environment.add(ConfigurationLoadAction.getInstance());
+        environment.add(ConfigurationSave.getInstance());
+        environment.add(ConfigurationLoad.getInstance());
         environment.addSeparator();
-        environment.add(EnvironmentSaveAction.getInstance());
-        environment.add(EnvironmentLoadAction.getInstance());
+        environment.add(EnvironmentSave.getInstance());
+        environment.add(EnvironmentSaveBackup.getInstance());
+        environment.addSeparator();
+        environment.add(EnvironmentLoad.getInstance());
+        environment.addSeparator();
+        environment.add(SaveImageAction.getInstance());
 
-        menuBar.add(file);
+        painting.add(ToggleBounds.getInstance());
+        painting.add(ToggleCreatures.getInstance());
+        painting.add(ToggleResources.getInstance());
+        painting.add(ToggleFancyLines.getInstance());
+
+
         menuBar.add(environment);
+        menuBar.add(painting);
 
         return menuBar;
     }
@@ -125,9 +132,6 @@ public class WorldFrame
     /**
      * Convenience method.<br/>
      * Don't hate me because of the trick...
-     *
-     * @param c component to encapsulate
-     * @return Wrapped component
      */
     private static JPanel wrapComponent(final Component c, final String flag) {
         return new JPanel(new BorderLayout()) {{

@@ -1,12 +1,14 @@
 package org.blackpanther.ecosystem;
 
+import org.blackpanther.ecosystem.agent.Agent;
+
 /**
  * @author MACHIZAUD Andréa
- * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
+ * @version 1.0-alpha - Tue May 24 23:49:57 CEST 2011
  */
-public class SensorTarget<T> {
+public class SensorTarget<T extends Agent> {
 
-    public static final <T> SensorTarget<T> detected(
+    public static final <T extends Agent> SensorTarget<T> detected(
             Double orientation, T target) {
         return new SensorTarget<T>(orientation, target);
     }

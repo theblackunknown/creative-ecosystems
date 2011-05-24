@@ -1,10 +1,14 @@
 package org.blackpanther.ecosystem.gui;
 
-import org.blackpanther.ecosystem.ColorfulTrace;
 import org.blackpanther.ecosystem.Environment;
-import org.blackpanther.ecosystem.Resource;
+import org.blackpanther.ecosystem.agent.Creature;
+import org.blackpanther.ecosystem.agent.Resource;
 import org.blackpanther.ecosystem.event.*;
+import org.blackpanther.ecosystem.factory.EnvironmentAbstractFactory;
+import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
+import org.blackpanther.ecosystem.factory.fields.StateFieldMould;
 import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
+import org.blackpanther.ecosystem.line.AgentLine;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
@@ -13,13 +17,18 @@ import java.awt.event.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.util.Collection;
+import java.util.Random;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.blackpanther.ecosystem.Configuration.*;
+import static org.blackpanther.ecosystem.agent.AgentConstants.AGENT_LOCATION;
+import static org.blackpanther.ecosystem.agent.AgentConstants.AGENT_NATURAL_COLOR;
+import static org.blackpanther.ecosystem.factory.generator.StandardProvider.StandardProvider;
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
-import static org.blackpanther.ecosystem.helper.Helper.normalizeProbability;
+import static org.blackpanther.ecosystem.helper.Helper.require;
 
 /**
  * @author MACHIZAUD Andréa
@@ -33,81 +42,88 @@ public class GraphicEnvironment
             );
 
     private static final Dimension DEFAULT_DIMENSION = new Dimension(800, 600);
-    private static final Integer DEFAULT_DELAY = 100;
+    private static final Integer EVOLUTION_DELAY = 200;
+    private static final Integer PAINTER_DELAY = 160;
 
-    public static final int NO_OPTION = 0;
     public static final int BOUNDS_OPTION = 1;
     public static final int RESOURCE_OPTION = 1 << 1;
     public static final int SCROLL_OPTION = 1 << 2;
     public static final int ZOOM_OPTION = 1 << 3;
+    public static final int CREATURE_OPTION = 1 << 4;
+    public static final int FANCY_LINE_OPTION = 1 << 5;
 
-    private int options = SCROLL_OPTION | ZOOM_OPTION;
+    public static final Double CREATURE_RADIUS = 10.0;
+    public static final Double LINE_WIDTH = 3.0;
+
+    private int options =
+            BOUNDS_OPTION
+                    | RESOURCE_OPTION
+                    | SCROLL_OPTION
+                    | ZOOM_OPTION
+                    | CREATURE_OPTION
+                    | FANCY_LINE_OPTION;
 
     private Environment monitoredEnvironment;
-    private MouseListener internalMouseHandler =
-            new IconHandler();
-    private Scaler internalScaler =
-            new Scaler();
+    private MouseMonitor internalMouseMonitor =
+            new MouseMonitor();
     private EnvironmentLineMonitor internalLineMonitor =
             new EnvironmentLineMonitor();
     private EnvironmentEvolutionMonitor internalEvolutionMonitor =
             new EnvironmentEvolutionMonitor();
-    private ResourceMonitor internalResourceMonitor =
-            new ResourceMonitor();
+    private AgentMonitor internalAgentMonitor =
+            new AgentMonitor();
 
     /**
      * Buffer which retains next line to draw at the next repaint() call
      */
-    private Stack<ColorfulTrace> lineBuffer = new Stack<ColorfulTrace>();
+    private Stack<AgentLine> lineBuffer = new Stack<AgentLine>();
+    private Stack<Creature> nextCycleCreaturesBuffer = new Stack<Creature>();
+
     private Timer runEnvironment;
     private Timer drawEnvironment;
     private boolean panelStructureHasChanged = false;
     private Color currentBackground;
-    private Color originalBackground;
 
     public GraphicEnvironment() {
         //panel settings
-        setPreferredSize(DEFAULT_DIMENSION);
+        setMinimumSize(DEFAULT_DIMENSION);
         setOpaque(true);
-        addMouseListener(internalScaler);
-        addMouseWheelListener(internalScaler);
-        addMouseMotionListener(internalScaler);
-        addMouseListener(internalMouseHandler);
+        addMouseListener(internalMouseMonitor);
+        addMouseMotionListener(internalMouseMonitor);
+        addMouseWheelListener(internalMouseMonitor);
 
         //timer settings
         runEnvironment = new Timer(
-                DEFAULT_DELAY, internalEvolutionMonitor);
-        drawEnvironment = new Timer(50, new GraphicMonitor());
-        currentBackground = originalBackground = getBackground();
+                EVOLUTION_DELAY, internalEvolutionMonitor);
+        drawEnvironment = new Timer(
+                PAINTER_DELAY, new GraphicMonitor());
+        currentBackground = getBackground();
 
         setBorder(
                 BorderFactory.createBevelBorder(BevelBorder.LOWERED)
         );
     }
 
-    private boolean isActivated(int option) {
+    /**
+     * Check is option is activated on this panel
+     */
+    public boolean isActivated(int option) {
         return (options & option) == option;
+    }
+
+    private void repaintEnvironment() {
+        panelStructureHasChanged = true;
+        repaint();
     }
 
     @Override
     public void paintComponent(Graphics g) {
         if (panelStructureHasChanged) {
-            redrawEnvironment(g);
+            paintEnvironment(g);
             panelStructureHasChanged = false;
         } else {
             while (!lineBuffer.isEmpty()) {
-                ColorfulTrace graphicalLine = lineBuffer.pop();
-
-                g.setColor(graphicalLine.getColor());
-
-                Point2D start = internalScaler.environmentToPanel(graphicalLine.getP1());
-                Point2D end = internalScaler.environmentToPanel(graphicalLine.getP2());
-                g.drawLine(
-                        (int) start.getX(),
-                        (int) start.getY(),
-                        (int) end.getX(),
-                        (int) end.getY()
-                );
+                paintLine(g, lineBuffer.pop());
             }
         }
     }
@@ -118,71 +134,136 @@ public class GraphicEnvironment
      *
      * @param g
      */
-    private void redrawEnvironment(Graphics g) {
-        g.setColor(originalBackground);
-        g.fillRect(0, 0, getWidth(), getHeight());
-
+    private void paintEnvironment(Graphics g) {
+        g.clearRect(0, 0, getWidth(), getHeight());
         //repaint environment structure if it has been erased
         if (monitoredEnvironment != null) {
-            //paint background
-            g.setColor(currentBackground);
-            Point2D top = internalScaler.environmentToPanel(new Point2D.Double(
-                    monitoredEnvironment.getBounds().getX(),
-                    -monitoredEnvironment.getBounds().getY()));
-            double width = internalScaler.environmentToPanel(
-                    monitoredEnvironment.getBounds().getWidth());
-            double height = internalScaler.environmentToPanel(
-                    monitoredEnvironment.getBounds().getHeight());
-            g.fillRect((int) top.getX(), (int) top.getY(), (int) width, (int) height);
-
-            //environment bounds painting activated
-            if ((options & BOUNDS_OPTION) == BOUNDS_OPTION) {
-                g.setColor(Color.BLACK);
-                //north line
-                g.drawRect((int) top.getX(), (int) top.getY(), (int) width, (int) height);
-            }
-
-            //resource painting activated
-            if ((options & RESOURCE_OPTION) == RESOURCE_OPTION)
-                for (Resource resource : monitoredEnvironment.getResources()) {
-                    Double bluePercentage = normalizeProbability(
-                            resource.getAmount()
-                                    / Configuration.getParameter(RESOURCE_AMOUNT_THRESHOLD, Double.class));
-                    Color blueGradient = new Color(0f,
-                            0f,
-                            bluePercentage.floatValue()
-                    );
-                    g.setColor(blueGradient);
-                    Point2D center = internalScaler.environmentToPanel(resource);
-                    double radius = internalScaler.environmentToPanel(
-                            Configuration.getParameter(CONSUMMATION_RADIUS, Double.class));
-                    g.fillOval(
-                            (int) (center.getX() - radius),
-                            (int) (center.getY() - radius),
-                            (int) (radius * 2.0),
-                            (int) (radius * 2.0)
-                    );
-                }
-
-
+            paintBackground(g);
+            paintResources(g);
             //Draw all environment's lines
-            for (Line2D line : monitoredEnvironment.getHistory()) {
-                ColorfulTrace graphicalLine = (ColorfulTrace) line;
+            for (Line2D line : monitoredEnvironment.getHistory())
+                paintLine(g, (AgentLine) line);
+            paintCreatures(g);
+        }
+    }
 
-                g.setColor(graphicalLine.getColor());
+    private void paintBackground(Graphics g) {
+        //paint background
+        g.setColor(currentBackground);
+        Point2D top = internalMouseMonitor.environmentToPanel(new Point2D.Double(
+                monitoredEnvironment.getBounds().getX(),
+                -monitoredEnvironment.getBounds().getY()));
+        double width = internalMouseMonitor.environmentToPanel(
+                monitoredEnvironment.getBounds().getWidth());
+        double height = internalMouseMonitor.environmentToPanel(
+                monitoredEnvironment.getBounds().getHeight());
+        g.fillRect((int) top.getX(), (int) top.getY(), (int) width, (int) height);
 
-                Point2D start = internalScaler.environmentToPanel(graphicalLine.getP1());
-                Point2D end = internalScaler.environmentToPanel(graphicalLine.getP2());
-                g.drawLine(
-                        (int) start.getX(),
-                        (int) start.getY(),
-                        (int) end.getX(),
-                        (int) end.getY()
+        //environment bounds painting activated
+        if ((options & BOUNDS_OPTION) == BOUNDS_OPTION) {
+            g.setColor(Color.BLACK);
+            //north line
+            g.drawRect((int) top.getX(), (int) top.getY(), (int) width, (int) height);
+        }
+    }
+
+    private void paintCreatures(Graphics g) {
+        //agent initial painting activated
+        if ((options & CREATURE_OPTION) == CREATURE_OPTION
+                && !runEnvironment.isRunning()) {
+            Graphics2D g2d = (Graphics2D) g;
+            for (Creature monster : monitoredEnvironment.getCreaturePool()) {
+                Point2D center = internalMouseMonitor.environmentToPanel(monster.getLocation());
+                double radius =
+                        (internalMouseMonitor.environmentToPanel(monster.getEnergy()
+                                / Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class)))
+                                * CREATURE_RADIUS;
+                g2d.setPaint(new RadialGradientPaint(
+                        center,
+                        (float) radius,
+                        new float[]{0.0f, 1.0f},
+                        new Color[]{monster.getColor(), currentBackground}
+                ));
+                g2d.fillOval(
+                        (int) (center.getX() - radius),
+                        (int) (center.getY() - radius),
+                        (int) (radius * 2.0),
+                        (int) (radius * 2.0)
                 );
             }
-        } else {
-            g.fillRect(0, 0, getWidth(), getHeight());
         }
+    }
+
+    private void paintResources(Graphics g) {
+        //resource painting activated
+        if ((options & RESOURCE_OPTION) == RESOURCE_OPTION) {
+            Graphics2D g2d = (Graphics2D) g;
+            for (Resource resource : monitoredEnvironment.getResources()) {
+                Color resourceColor = resource.getGene(AGENT_NATURAL_COLOR, Color.class);
+                Point2D center = internalMouseMonitor.environmentToPanel(resource.getLocation());
+                double radius = internalMouseMonitor.environmentToPanel(
+                        (internalMouseMonitor.environmentToPanel(
+                                Configuration.getParameter(CONSUMMATION_RADIUS, Double.class)))
+                                * CREATURE_RADIUS);
+                g2d.setPaint(new RadialGradientPaint(
+                        center,
+                        (float) radius,
+                        new float[]{0.0f, 1.0f},
+                        new Color[]{resourceColor, currentBackground}
+                ));
+                g.fillOval(
+                        (int) (center.getX() - radius),
+                        (int) (center.getY() - radius),
+                        (int) (radius * 2.0),
+                        (int) (radius * 2.0)
+                );
+            }
+        }
+    }
+
+    private void paintLine(Graphics g, AgentLine graphicalLine) {
+        Graphics2D g2d = (Graphics2D) g;
+        Random rand = Configuration.getRandom();
+
+
+        Point2D start = internalMouseMonitor.environmentToPanel(graphicalLine.getP1());
+        Point2D end = internalMouseMonitor.environmentToPanel(graphicalLine.getP2());
+        Color basicColor = graphicalLine.getColor();
+
+
+        if (isActivated(FANCY_LINE_OPTION)) {
+            double randomNumber = rand.nextGaussian();
+            if (randomNumber < 0.0) {
+                basicColor = basicColor.darker();
+            } else if (randomNumber > 1.0) {
+                basicColor = basicColor.brighter();
+            }
+
+            float strokeWidth = internalMouseMonitor.environmentToPanel(
+                    (rand.nextDouble() * 0.3) + LINE_WIDTH).floatValue();
+
+            g2d.setStroke(new BasicStroke(
+                    strokeWidth,
+                    BasicStroke.CAP_ROUND,
+                    BasicStroke.JOIN_ROUND
+            ));
+
+            g2d.setPaint(new LinearGradientPaint(
+                    start,
+                    end,
+                    new float[]{0.0f, 1.0f},
+                    new Color[]{basicColor, currentBackground}
+            ));
+        } else {
+            g2d.setColor(basicColor);
+        }
+
+        g2d.drawLine(
+                (int) start.getX(),
+                (int) start.getY(),
+                (int) end.getX(),
+                (int) end.getY()
+        );
     }
 
     public void setEnvironment(Environment env) {
@@ -192,39 +273,55 @@ public class GraphicEnvironment
         monitoredEnvironment = env;
         env.addLineListener(internalLineMonitor);
         env.addEvolutionListener(internalEvolutionMonitor);
-        env.addResourceListener(internalResourceMonitor);
-        panelStructureHasChanged = true;
-        repaint();
+        env.addAgentListener(internalAgentMonitor);
+        repaintEnvironment();
     }
-
 
     public void unsetEnvironment() {
         if (monitoredEnvironment != null) {
             drawEnvironment.stop();
             runEnvironment.stop();
-            monitoredEnvironment.removeLineListener(internalLineMonitor);
+            monitoredEnvironment.removeAgentListener(internalAgentMonitor);
             monitoredEnvironment.removeEvolutionListener(internalEvolutionMonitor);
-            monitoredEnvironment.removeResourceListener(internalResourceMonitor);
+            monitoredEnvironment.removeLineListener(internalLineMonitor);
             monitoredEnvironment = null;
-            panelStructureHasChanged = true;
-            paintImmediately(getBounds());
+            repaintEnvironment();
         }
     }
 
     public void runSimulation() {
-        if (monitoredEnvironment != null) {
+        if (monitoredEnvironment != null || !runEnvironment.isRunning()) {
             drawEnvironment.start();
             runEnvironment.start();
+            if (isActivated(CREATURE_OPTION))
+                repaintEnvironment();
         }
     }
 
     public void stopSimulation() {
-        if (monitoredEnvironment != null) {
+        if (monitoredEnvironment != null || runEnvironment.isRunning()) {
             drawEnvironment.stop();
             runEnvironment.stop();
+            if (isActivated(CREATURE_OPTION))
+                repaintEnvironment();
         }
     }
 
+    public void setOption(int option, boolean shouldBePainted) {
+        if (shouldBePainted)
+            options |= option;
+        else
+            options &= ~option;
+        switch (option) {
+            case BOUNDS_OPTION:
+            case RESOURCE_OPTION:
+            case CREATURE_OPTION:
+            case FANCY_LINE_OPTION:
+                repaintEnvironment();
+        }
+    }
+
+    //fetch only the image generated
     public BufferedImage dumpCurrentImage() {
         if (monitoredEnvironment != null) {
             BufferedImage image = new BufferedImage(
@@ -233,7 +330,7 @@ public class GraphicEnvironment
                     BufferedImage.TYPE_INT_RGB
             );
             Graphics2D graphics = image.createGraphics();
-            redrawEnvironment(graphics);
+            paintEnvironment(graphics);
             return image;
         } else {
             //no environment set
@@ -242,52 +339,55 @@ public class GraphicEnvironment
 
     }
 
-    public void setOption(int boundsOption, boolean shouldBePainted) {
-        if (shouldBePainted)
-            options |= boundsOption;
-        else
-            options &= ~boundsOption;
-        switch (boundsOption) {
-            case BOUNDS_OPTION:
-            case RESOURCE_OPTION:
-                panelStructureHasChanged = true;
-                repaint();
-        }
-    }
-
     public Environment dumpCurrentEnvironment() {
-        try {
-            Environment env = monitoredEnvironment != null
-                    ? monitoredEnvironment.clone()
-                    : null;
-            if (env != null)
-                env.clearAllExternalsListeners();
-            return env;
-        } catch (CloneNotSupportedException e1) {
-            throw new Error("Model is not cloneable");
-        }
+        Environment env = monitoredEnvironment != null
+                ? monitoredEnvironment.clone()
+                : null;
+        if (env != null)
+            env.clearAllExternalsListeners();
+        return env;
     }
 
     public void applyBackgroundColor(Color color) {
         currentBackground = color;
-        panelStructureHasChanged = true;
+        repaintEnvironment();
+    }
+
+    public void setDropMode(DropMode mode) {
+        internalMouseMonitor.setDropMode(mode);
+    }
+
+    public void addCreatures(Collection<Creature> creatures) {
+        if (monitoredEnvironment != null
+                && !runEnvironment.isRunning()) {
+            monitoredEnvironment.addCreatures(creatures);
+            repaintEnvironment();
+        } else
+            nextCycleCreaturesBuffer.addAll(creatures);
+    }
+
+    public void addResources(Collection<Resource> resources) {
+        monitoredEnvironment.addResources(resources);
+        if (isActivated(RESOURCE_OPTION))
+            repaintEnvironment();
     }
 
     /**
      * Record every line added to environment history
      */
-    class GraphicMonitor implements ActionListener {
+    class GraphicMonitor
+            implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (runEnvironment.isRunning())
-                repaint();
+            repaint();
         }
     }
 
     /**
      * Record every line added to environment history
      */
-    class EnvironmentLineMonitor implements LineListener {
+    class EnvironmentLineMonitor
+            implements LineListener {
 
         @Override
         public void update(LineEvent e) {
@@ -295,7 +395,7 @@ public class GraphicEnvironment
                 case ADDED:
                     //if a line has been added to monitored environment,
                     // add it to lineBuffer
-                    lineBuffer.add((ColorfulTrace) e.getValue());
+                    lineBuffer.add((AgentLine) e.getValue());
                     logger.log(Level.FINEST, "{0} added to line buffer, lineBuffer size : {1}",
                             new Object[]{e.getValue(), lineBuffer.size()});
                     break;
@@ -306,11 +406,16 @@ public class GraphicEnvironment
         }
     }
 
-    class EnvironmentEvolutionMonitor implements ActionListener, EvolutionListener {
+    class EnvironmentEvolutionMonitor
+            implements ActionListener, EvolutionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
             monitoredEnvironment.runNextCycle();
+            if (!nextCycleCreaturesBuffer.isEmpty()) {
+                monitoredEnvironment.addCreatures(nextCycleCreaturesBuffer);
+                nextCycleCreaturesBuffer.clear();
+            }
         }
 
         /**
@@ -322,7 +427,7 @@ public class GraphicEnvironment
         public void update(EvolutionEvent e) {
             switch (e.getType()) {
                 case STARTED:
-                    drawEnvironment.start();
+                    Monitor.makeBackup();
                 case CYCLE_END:
                     Monitor.updateEnvironmentInformation(
                             monitoredEnvironment, EnvironmentInformation.State.RUNNING);
@@ -330,32 +435,45 @@ public class GraphicEnvironment
                 case ENDED:
                     Monitor.updateEnvironmentInformation(
                             monitoredEnvironment, EnvironmentInformation.State.FROZEN);
-                    repaint();
                     drawEnvironment.stop();
                     runEnvironment.stop();
+                    repaint();
             }
         }
     }
 
-    class ResourceMonitor implements ResourceListener {
+    class AgentMonitor
+            implements AgentListener {
 
         @Override
-        public void update(ResourceEvent e) {
-            switch (e.getType()) {
-                case DEPLETED:
-                    if ((options & RESOURCE_OPTION) == RESOURCE_OPTION)
-                        panelStructureHasChanged = true;
-                    break;
-            }
+        public void update(AgentEvent e) {
+            if (e.getAgent() instanceof Resource)
+                switch (e.getType()) {
+                    case DEATH:
+                        if ((options & RESOURCE_OPTION) == RESOURCE_OPTION)
+                            panelStructureHasChanged = true;
+                        break;
+                }
         }
     }
 
-    class Scaler
-            extends MouseAdapter {
+    public enum DropMode {
+        NONE,
+        AGENT,
+        RESOURCE
+    }
+
+    class MouseMonitor
+            extends MouseAdapter
+            implements ActionListener {
+
+        private DropMode dropMode = GraphicEnvironment.DropMode.NONE;
+        private Timer dropTimer = new Timer(200, this);
+        private Point mouseLocation = null;
 
         private final double UP_SCALE_THRESHOLD = 20.0;
         private final double DOWN_SCALE_THRESHOLD = 0.1;
-        private final double SCALE_GROW_STEP = 0.2;
+        private final double SCALE_GROW_STEP = 0.1;
 
         private final int WHEEL_UP = -1;
         private final int WHEEL_DOWN = 1;
@@ -370,9 +488,7 @@ public class GraphicEnvironment
          * @param environmentPosition position in environment's landmark
          * @return position in panel's landmark
          */
-        public Point2D environmentToPanel(
-                Point2D environmentPosition
-        ) {
+        public Point2D environmentToPanel(Point2D environmentPosition) {
             //get current panel's dimension
             Dimension panelDimension = getBounds().getSize();
 
@@ -382,24 +498,29 @@ public class GraphicEnvironment
             double panelOrdinate =
                     (panelDimension.getHeight() / 2.0) - environmentPosition.getY() * panelScale;
 
-            logger.finest(String.format(
-                    "(%.2f,%.2f) translated to (%.2f,%.2f) [panelDimension=%s]",
-                    environmentPosition.getX(),
-                    environmentPosition.getY(),
-                    panelAbscissa,
-                    panelOrdinate,
-                    panelDimension
-            ));
-
             return new Point2D.Double(
                     panelAbscissa + panelAbscissaDifferential,
                     panelOrdinate + panelOrdinateDifferential
             );
         }
 
-        public Double environmentToPanel(
-                Double distance
-        ) {
+        public Point2D panelToEnvironment(Point2D panelPosition) {
+            //get current panel's dimension
+            Dimension panelDimension = getBounds().getSize();
+
+            //minus because environment is real mathematics cartesian coordinate
+            double environmentAbscissa = ((panelPosition.getX() - panelAbscissaDifferential) - (panelDimension.getWidth() / 2.0))
+                    / panelScale;
+            double environmentOrdinate = ((panelDimension.getHeight() / 2.0) - (panelPosition.getY() - panelOrdinateDifferential))
+                    / panelScale;
+
+            return new Point2D.Double(
+                    environmentAbscissa,
+                    environmentOrdinate
+            );
+        }
+
+        public Double environmentToPanel(Double distance) {
             //get current panel's dimension
             Dimension panelDimension = getBounds().getSize();
 
@@ -416,74 +537,12 @@ public class GraphicEnvironment
             return panelDistance;
         }
 
-        @Override
-        public void mouseWheelMoved(MouseWheelEvent e) {
-            if (isActivated(ZOOM_OPTION)
-                    && e.getModifiers() == InputEvent.CTRL_MASK) {
-                switch (e.getWheelRotation()) {
-                    case WHEEL_UP:
-                        if (panelScale < UP_SCALE_THRESHOLD) {
-                            panelScale += SCALE_GROW_STEP;
-                            panelStructureHasChanged = true;
-                            logger.finer(String.format(
-                                    "Panel zoom scale updated from %.1f to %.1f",
-                                    panelScale - SCALE_GROW_STEP,
-                                    panelScale
-                            ));
-                        }
-                        break;
-                    case WHEEL_DOWN:
-                        if (panelScale > DOWN_SCALE_THRESHOLD) {
-                            panelScale -= SCALE_GROW_STEP;
-                            panelStructureHasChanged = true;
-                            logger.finer(String.format(
-                                    "Panel zoom scale updated from %.1f to %.1f",
-                                    panelScale + SCALE_GROW_STEP,
-                                    panelScale
-                            ));
-                        }
-                        break;
-                }
-                paintImmediately(0, 0, getWidth(), getHeight());
-            }
+        public void setDropMode(DropMode mode) {
+            dropMode = mode == null
+                    ? GraphicEnvironment.DropMode.NONE
+                    : mode;
         }
 
-        private Point oldMouseLocation = null;
-
-        @Override
-        public void mouseDragged(MouseEvent e) {
-            if (isActivated(SCROLL_OPTION)) {
-                Point currentMousePoint = e.getPoint();
-                if (oldMouseLocation != null) {
-                    //calculate diff
-                    panelAbscissaDifferential +=
-                            (currentMousePoint.x - oldMouseLocation.x);
-                    panelOrdinateDifferential +=
-                            (currentMousePoint.y - oldMouseLocation.y);
-                    panelStructureHasChanged = true;
-
-                    paintImmediately(0, 0, getWidth(), getHeight());
-                }
-                oldMouseLocation = currentMousePoint;
-            }
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            if (isActivated(SCROLL_OPTION)) {
-                oldMouseLocation = null;
-                logger.finer(String.format(
-                        "Panel differential updated to (%d,%d)",
-                        panelAbscissaDifferential,
-                        panelOrdinateDifferential
-                ));
-
-                paintImmediately(0, 0, getWidth(), getHeight());
-            }
-        }
-    }
-
-    class IconHandler extends MouseAdapter {
         @Override
         public void mouseEntered(MouseEvent e) {
             setCursor(
@@ -494,6 +553,99 @@ public class GraphicEnvironment
         public void mouseExited(MouseEvent e) {
             setCursor(
                     Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            dropAgent(e.getPoint());
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            switch (dropMode) {
+                case AGENT:
+                case RESOURCE:
+                    if (dropTimer.isRunning())
+                        dropTimer.stop();
+                    break;
+            }
+            mouseLocation = null;
+        }
+
+        @Override
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            if (isActivated(ZOOM_OPTION)
+                    && e.getModifiers() == InputEvent.CTRL_MASK) {
+                switch (e.getWheelRotation()) {
+                    case WHEEL_UP:
+                        if (panelScale < UP_SCALE_THRESHOLD)
+                            panelScale += SCALE_GROW_STEP;
+                        break;
+                    case WHEEL_DOWN:
+                        if (panelScale > DOWN_SCALE_THRESHOLD)
+                            panelScale -= SCALE_GROW_STEP;
+                        break;
+                }
+                repaintEnvironment();
+            }
+        }
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            if (isActivated(SCROLL_OPTION)
+                    && (e.getModifiers() & InputEvent.CTRL_MASK) == InputEvent.CTRL_MASK) {
+                Point currentMousePoint = e.getPoint();
+                if (mouseLocation != null) {
+                    //calculate diff
+                    panelAbscissaDifferential +=
+                            (currentMousePoint.x - mouseLocation.x);
+                    panelOrdinateDifferential +=
+                            (currentMousePoint.y - mouseLocation.y);
+                    repaintEnvironment();
+                }
+                mouseLocation = currentMousePoint;
+            } else {
+                switch (dropMode) {
+                    case AGENT:
+                    case RESOURCE:
+                        mouseLocation = e.getPoint();
+                        if (!dropTimer.isRunning())
+                            dropTimer.start();
+                        break;
+                }
+            }
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            require(monitoredEnvironment.getTime() == 0);
+            require(mouseLocation != null);
+            dropAgent(mouseLocation);
+        }
+
+        @SuppressWarnings("unchecked")
+        private void dropAgent(Point position) {
+            Point2D environmentPosition =
+                    internalMouseMonitor.panelToEnvironment(position);
+            FieldsConfiguration configuration = Monitor.fetchConfiguration();
+            configuration.updateMould(new StateFieldMould(
+                    AGENT_LOCATION,
+                    StandardProvider(environmentPosition)
+            ));
+            switch (dropMode) {
+                case AGENT:
+                    monitoredEnvironment.add(EnvironmentAbstractFactory
+                            .getFactory(Creature.class)
+                            .createAgent(configuration));
+                    break;
+                case RESOURCE:
+                    setOption(RESOURCE_OPTION, true);
+                    monitoredEnvironment.add(EnvironmentAbstractFactory
+                            .getFactory(Resource.class)
+                            .createAgent(configuration));
+                    break;
+            }
+            repaintEnvironment();
         }
     }
 }
