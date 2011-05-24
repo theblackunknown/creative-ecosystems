@@ -59,22 +59,6 @@ public class PreyBehaviour
             double newOrientation = (alpha + resourceRelativeOrientation * flee) % PI_2;
 
             that.setOrientation(newOrientation);
-
-            String format = String.format(
-                    "%n (%.2f,%.2f)-(%.2f,%.2f)%n " +
-                            "old orientation : %.2fPI%n " +
-                            "resource orientation : %.2fPI%n " +
-                            "resource relative orientation : %.2fPI%n " +
-                            "new orientation : %.2fPI%n ",
-                    that.getLocation().getX(), that.getLocation().getY(),
-                    closestPredator.getTarget().getLocation().getX(),
-                    closestPredator.getTarget().getLocation().getY(),
-                    alpha / PI,
-                    beta / PI,
-                    resourceRelativeOrientation / PI,
-                    newOrientation / PI
-            );
-            System.out.println("Flee : " + format);
         }
         //eat resources if no predator is in sight
         else

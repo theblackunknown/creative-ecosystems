@@ -1,15 +1,11 @@
 package org.blackpanther.ecosystem.gui.settings;
 
-import org.blackpanther.ecosystem.Configuration;
-import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
 import org.blackpanther.ecosystem.gui.settings.fields.SettingField;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.blackpanther.ecosystem.Configuration.MAX_AGENT_NUMBER;
 
 /**
  * @author MACHIZAUD Andréa

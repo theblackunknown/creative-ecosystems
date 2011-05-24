@@ -1,7 +1,7 @@
 package org.blackpanther.ecosystem.gui.actions;
 
-import org.blackpanther.ecosystem.Configuration;
 import org.blackpanther.ecosystem.Environment;
+import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,25 +12,26 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Properties;
 
+import static org.blackpanther.ecosystem.Configuration.*;
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
  * @author MACHIZAUD Andréa
  * @version 1.1-alpha - Thu May 19 01:22:55 CEST 2011
  */
-public class EnvironmentLoadAction
+public class EnvironmentLoad
         extends FileBrowserAction {
 
-    private EnvironmentLoadAction() {
+    private EnvironmentLoad() {
         super("Load external environment", "Environment files", "env");
     }
 
     private static class EnvironmentLoadActionHolder {
-        private static final EnvironmentLoadAction instance =
-                new EnvironmentLoadAction();
+        private static final EnvironmentLoad instance =
+                new EnvironmentLoad();
     }
 
-    public static EnvironmentLoadAction getInstance() {
+    public static EnvironmentLoad getInstance() {
         return EnvironmentLoadActionHolder.instance;
     }
 
@@ -50,9 +51,11 @@ public class EnvironmentLoadAction
                             new FileInputStream(
                                     selectedFile));
                     Environment environment = (Environment) os.readObject();
-                    Properties environmentProperties = (Properties) os.readObject();
+                    Properties applicationParameters = (Properties) os.readObject();
+                    FieldsConfiguration agentConfiguration = (FieldsConfiguration) os.readObject();
                     os.close();
-                    Configuration.Configuration.loadConfiguration(environmentProperties);
+                    Configuration.loadConfiguration(applicationParameters);
+                    Monitor.updateSettingFields(agentConfiguration);
                     Monitor.setCurrentEnvironment(environment);
                     JOptionPane.showMessageDialog(
                             parent,

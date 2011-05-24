@@ -5,49 +5,55 @@ import org.blackpanther.ecosystem.factory.fields.FieldMould;
 import org.blackpanther.ecosystem.factory.fields.StateFieldMould;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionListener;
+import java.beans.EventHandler;
+
+import static org.blackpanther.ecosystem.helper.Helper.createLabeledField;
 
 /**
  * @author MACHIZAUD Andréa
  * @version 5/22/11
  */
 public class BehaviorField
-        extends MutableSettingField<BehaviorManager> {
+        extends org.blackpanther.ecosystem.gui.settings.fields.randomable.BehaviorField
+        implements Mutable {
 
-    private JComboBox behaviorSelector;
+    private JCheckBox mutable;
 
     public BehaviorField(String name, BehaviorManager[] behaviors) {
-        super(name);
-        for (BehaviorManager behavior : behaviors)
-            behaviorSelector.addItem(behavior);
+        super(name,behaviors);
     }
 
     @Override
     protected void initializeComponents(String fieldName) {
         super.initializeComponents(fieldName);
-        behaviorSelector = new JComboBox();
-        behaviorSelector.setName(fieldName);
+
+        mutable = new JCheckBox();
+
+        mutable.addActionListener(EventHandler.create(
+                ActionListener.class,
+                mutable,
+                "setSelected",
+                "source.selected"
+        ));
     }
 
     @Override
-    protected JComponent getMainComponent() {
-        return behaviorSelector;
+    protected void placeComponents(JPanel layout) {
+        super.placeComponents(layout);
+
+        GridBagConstraints constraints = new GridBagConstraints();
+
+        layout.add(createLabeledField(
+                "M",
+                mutable,
+                CHECKBOX_DIMENSION
+        ), constraints);
     }
 
     @Override
-    public void setValue(BehaviorManager newValue) {
-        behaviorSelector.setSelectedItem(newValue);
-    }
-
-    @Override
-    public BehaviorManager getValue() {
-        return (BehaviorManager) behaviorSelector.getSelectedItem();
-    }
-
-    @Override
-    public FieldMould<BehaviorManager> toMould() {
-        return new StateFieldMould<BehaviorManager>(
-                behaviorSelector.getName(),
-                new org.blackpanther.ecosystem.factory.generator.provided.BehaviorProvider((BehaviorManager) behaviorSelector.getSelectedItem())
-        );
+    public boolean isMutable() {
+        return mutable.isSelected();
     }
 }

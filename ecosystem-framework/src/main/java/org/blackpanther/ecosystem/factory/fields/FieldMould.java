@@ -2,11 +2,14 @@ package org.blackpanther.ecosystem.factory.fields;
 
 import org.blackpanther.ecosystem.factory.generator.ValueProvider;
 
+import java.io.Serializable;
+
 /**
  * @author MACHIZAUD Andréa
  * @version 5/21/11
  */
-public abstract class FieldMould<T> {
+public abstract class FieldMould<T>
+        implements Serializable {
 
     private String name;
     private ValueProvider<T> provider;

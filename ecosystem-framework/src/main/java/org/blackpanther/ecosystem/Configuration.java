@@ -28,7 +28,6 @@ public enum Configuration
      * Application's parameters with default loaded
      */
     protected final Map<String, Object> applicationProperties = new HashMap<String, Object>();
-
     private final Random generator = new Random();
 
     /**
@@ -185,6 +184,12 @@ public enum Configuration
         }
     }
 
+    public Properties textCopy(){
+        Properties copy = new Properties();
+        for(Map.Entry<String,Object> parameter : applicationProperties.entrySet())
+            copy.put(parameter.getKey(),String.valueOf(parameter.getValue()));
+        return copy;
+    }
 
     @Override
     public String toString() {

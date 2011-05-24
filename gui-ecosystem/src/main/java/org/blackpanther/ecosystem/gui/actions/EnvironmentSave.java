@@ -16,19 +16,19 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
  * @author MACHIZAUD Andréa
  * @version 1.1-alpha - Thu May 19 01:22:55 CEST 2011
  */
-public class EnvironmentSaveAction
+public class EnvironmentSave
         extends FileBrowserAction {
 
-    private EnvironmentSaveAction() {
+    private EnvironmentSave() {
         super("Save current environment", "Environment files", "env");
     }
 
     private static class EnvironmentSaveActionHolder {
-        private static final EnvironmentSaveAction instance =
-                new EnvironmentSaveAction();
+        private static final EnvironmentSave instance =
+                new EnvironmentSave();
     }
 
-    public static EnvironmentSaveAction getInstance() {
+    public static EnvironmentSave getInstance() {
         return EnvironmentSaveActionHolder.instance;
     }
 

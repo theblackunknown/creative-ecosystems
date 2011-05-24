@@ -4,6 +4,7 @@ import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.math.Geometry;
 
 import java.awt.*;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -18,7 +19,8 @@ import static org.blackpanther.ecosystem.helper.Helper.isGene;
  * @author MACHIZAUD Andréa
  * @version 5/21/11
  */
-public class FieldsConfiguration {
+public class FieldsConfiguration
+        implements Serializable, Cloneable {
 
     public static final String[] UNBOUNDED_FIELDS = new String[]{
             CREATURE_CURVATURE,
@@ -183,5 +185,14 @@ public class FieldsConfiguration {
             if (!configuration.wrappedFieldProvider.containsKey(genotypeTrait))
                 throw new IllegalStateException("Given configuration is incomplete to build a creature : " +
                         "missing trait '" + genotypeTrait + "'");
+    }
+
+    @Override
+    public FieldsConfiguration clone() {
+        try {
+            return (FieldsConfiguration) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new Error("unexpected error");
+        }
     }
 }

@@ -104,20 +104,27 @@ public class WorldFrame
     private JMenuBar buildMenuBar() {
         JMenuBar menuBar = new JMenuBar();
 
-        JMenu file = new JMenu("File");
         JMenu environment = new JMenu("Environment");
+        JMenu painting = new JMenu("Paint options");
 
-        file.add(LoadConfigurationAction.getInstance());
-        file.add(SaveImageAction.getInstance());
-
-        environment.add(ConfigurationSaveAction.getInstance());
-        environment.add(ConfigurationLoadAction.getInstance());
+        environment.add(ConfigurationSave.getInstance());
+        environment.add(ConfigurationLoad.getInstance());
         environment.addSeparator();
-        environment.add(EnvironmentSaveAction.getInstance());
-        environment.add(EnvironmentLoadAction.getInstance());
+        environment.add(EnvironmentSave.getInstance());
+        environment.add(EnvironmentSaveBackup.getInstance());
+        environment.addSeparator();
+        environment.add(EnvironmentLoad.getInstance());
+        environment.addSeparator();
+        environment.add(SaveImageAction.getInstance());
 
-        menuBar.add(file);
+        painting.add(ToggleBounds.getInstance());
+        painting.add(ToggleCreatures.getInstance());
+        painting.add(ToggleResources.getInstance());
+        painting.add(ToggleFancyLines.getInstance());
+
+
         menuBar.add(environment);
+        menuBar.add(painting);
 
         return menuBar;
     }

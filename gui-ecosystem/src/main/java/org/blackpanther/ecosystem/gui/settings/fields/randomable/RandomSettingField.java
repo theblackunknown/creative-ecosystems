@@ -43,8 +43,6 @@ public abstract class RandomSettingField<T>
     protected void placeComponents(JPanel layout) {
         GridBagConstraints constraints = new GridBagConstraints();
 
-        constraints.ipadx = 20;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
         layout.add(createLabeledField(
                 "R",
                 randomized,
@@ -52,7 +50,7 @@ public abstract class RandomSettingField<T>
         ), constraints);
 
         constraints.insets = new Insets(0,5,0,5);
-        constraints.ipadx = 60;
+        constraints.ipadx = 89;
         constraints.fill = GridBagConstraints.HORIZONTAL;
         layout.add(createLabeledField(
                 getMainComponent().getName(),

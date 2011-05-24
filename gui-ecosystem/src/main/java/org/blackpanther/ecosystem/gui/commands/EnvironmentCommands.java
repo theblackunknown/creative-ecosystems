@@ -39,7 +39,7 @@ public class EnvironmentCommands
         evolutionFlowButton = new JButton(NO_ENVIRONMENT);
         JCheckBox drawBounds = new JCheckBox("Paint bounds", true);
         JCheckBox drawResources = new JCheckBox("Paint resources", true);
-        drawCreatures = new JCheckBox("Paint agents at start", true);
+        drawCreatures = new JCheckBox("Paint agents", true);
         JButton backgroundColor = new JButton("Choose background color");
 
         noAction = new JToggleButton("No action");

@@ -29,7 +29,7 @@ public abstract class SettingField<T>
     protected void placeComponents(JPanel layout) {
         GridBagConstraints constraints = new GridBagConstraints();
 
-        constraints.ipadx = 80;
+        constraints.ipadx = 20;
         constraints.fill = GridBagConstraints.HORIZONTAL;
         layout.add(createLabeledField(
                 getMainComponent().getName(),

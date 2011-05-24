@@ -4,7 +4,8 @@ import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.agent.Creature;
 import org.blackpanther.ecosystem.agent.Resource;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
-import org.blackpanther.ecosystem.gui.actions.EnvironmentSaveAction;
+import org.blackpanther.ecosystem.gui.actions.EnvironmentSave;
+import org.blackpanther.ecosystem.gui.actions.EnvironmentSaveBackup;
 import org.blackpanther.ecosystem.gui.commands.EnvironmentCommands;
 import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
 import org.blackpanther.ecosystem.gui.settings.EnvironmentBoard;
@@ -54,7 +55,6 @@ public enum GUIMonitor {
     public void removeEnvironment() {
         require(drawPanel != null);
         require(environmentBoard != null);
-        proposeSaveEnvironment(drawPanel.getBackup());
         drawPanel.unsetEnvironment();
         environmentBoard.clearBoard();
         environmentCommandsPanel.environmentUnset();
@@ -71,6 +71,12 @@ public enum GUIMonitor {
                 EnvironmentInformation.dump(env, EnvironmentInformation.State.NOT_YET_STARTED));
         environmentBoard.updateInformation(Configuration);
         environmentCommandsPanel.environmentSet();
+    }
+
+    public void updateSettingFields(FieldsConfiguration configuration){
+        require(environmentBoard != null);
+        environmentBoard.updateInformation(Configuration);
+        environmentBoard.updateInformation(configuration);
     }
 
     /**
@@ -94,14 +100,6 @@ public enum GUIMonitor {
     }
 
     /**
-     * Notify information panel that application configuration has changed
-     */
-    public void notifyConfigurationUpdate() {
-        require(environmentBoard != null);
-        environmentBoard.updateInformation(Configuration);
-    }
-
-    /**
      * Update evolution flow according to user interaction on evolution's button
      */
     public void interceptEnvironmentEvolutionFlow(String buttonLabel) {
@@ -121,6 +119,11 @@ public enum GUIMonitor {
     public void updateOption(int option, boolean activated) {
         require(drawPanel != null);
         drawPanel.setOption(option, activated);
+    }
+
+    public void toggleOption(int option) {
+        require(drawPanel != null);
+        drawPanel.setOption(option, !drawPanel.isActivated(option));
     }
 
     public void paintBounds(boolean shouldBePainted) {
@@ -219,7 +222,7 @@ public enum GUIMonitor {
                     JOptionPane.YES_NO_OPTION)) {
                 case JOptionPane.OK_OPTION:
                     backup.clearAllExternalsListeners();
-                    EnvironmentSaveAction.getInstance().save(backup);
+                    EnvironmentSave.getInstance().save(backup);
                     break;
             }
     }
@@ -232,5 +235,17 @@ public enum GUIMonitor {
     public void addResources(Collection<Resource> creatures) {
         require(drawPanel != null);
         drawPanel.addResources(creatures);
+    }
+
+    public void makeBackup() {
+        EnvironmentSaveBackup.getInstance().backup(
+                drawPanel.dumpCurrentEnvironment(),
+                Configuration,
+                environmentBoard.createConfiguration()
+        );
+    }
+
+    public FieldsConfiguration dumpFieldsConfiguration() {
+        return environmentBoard.createConfiguration();
     }
 }

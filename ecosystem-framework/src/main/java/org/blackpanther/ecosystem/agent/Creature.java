@@ -1,8 +1,8 @@
 package org.blackpanther.ecosystem.agent;
 
-import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.SenseResult;
+import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
 import org.blackpanther.ecosystem.math.Geometry;
 
@@ -28,7 +28,7 @@ public class Creature
         for (String stateTrait : BUILD_PROVIDED_CREATURE_STATE)
             currentState.put(stateTrait, config.getValue(stateTrait));
 
-        for (String genotypeTrait : CREATURE_GENOTYPE){
+        for (String genotypeTrait : CREATURE_GENOTYPE) {
             genotype.put(genotypeTrait, config.getValue(genotypeTrait));
             mutableTable.put(genotypeTrait, config.isMutable(Creature.class, genotypeTrait));
         }
@@ -50,8 +50,11 @@ public class Creature
      */
     @Override
     public void update(final Environment env) {
-        require(alive, this + " is dead.");
-        getGene(CREATURE_BEHAVIOR, BehaviorManager.class).update(env, this);
+        if (alive)
+            getGene(CREATURE_BEHAVIOR, BehaviorManager.class).update(env, this);
+
+        //otherwise it means it has been eaten
+
     }
 
     /**
@@ -66,14 +69,14 @@ public class Creature
 
     @Override
     public void attachTo(Environment env) {
-        require(!alive,this + " is already alive, thus bounded to an environment");
+        require(!alive, this + " is already alive, thus bounded to an environment");
         alive = true;
         super.attachTo(env);
     }
 
     @Override
     public void detachFromEnvironment(Environment env) {
-        require(alive,this + " wasn't alive, thus not bounded to any environment");
+        require(alive, this + " wasn't alive, thus not bounded to any environment");
         alive = false;
         super.detachFromEnvironment(env);
     }

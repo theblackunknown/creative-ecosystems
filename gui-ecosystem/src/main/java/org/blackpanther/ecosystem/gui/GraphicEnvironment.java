@@ -43,23 +43,25 @@ public class GraphicEnvironment
 
     private static final Dimension DEFAULT_DIMENSION = new Dimension(800, 600);
     private static final Integer EVOLUTION_DELAY = 200;
-    private static final Integer PAINTER_DELAY = 50;
+    private static final Integer PAINTER_DELAY = 160;
 
     public static final int BOUNDS_OPTION = 1;
     public static final int RESOURCE_OPTION = 1 << 1;
     public static final int SCROLL_OPTION = 1 << 2;
     public static final int ZOOM_OPTION = 1 << 3;
     public static final int CREATURE_OPTION = 1 << 4;
+    public static final int FANCY_LINE_OPTION = 1 << 5;
 
     public static final Double CREATURE_RADIUS = 10.0;
-    public static final Float LINE_WIDTH = 3.0f;
+    public static final Double LINE_WIDTH = 3.0;
 
     private int options =
             BOUNDS_OPTION
                     | RESOURCE_OPTION
                     | SCROLL_OPTION
                     | ZOOM_OPTION
-                    | CREATURE_OPTION;
+                    | CREATURE_OPTION
+                    | FANCY_LINE_OPTION;
 
     private Environment monitoredEnvironment;
     private MouseMonitor internalMouseMonitor =
@@ -81,11 +83,6 @@ public class GraphicEnvironment
     private Timer drawEnvironment;
     private boolean panelStructureHasChanged = false;
     private Color currentBackground;
-
-    /**
-     * Hidden backup
-     */
-    private Environment backup;
 
     public GraphicEnvironment() {
         //panel settings
@@ -110,7 +107,7 @@ public class GraphicEnvironment
     /**
      * Check is option is activated on this panel
      */
-    private boolean isActivated(int option) {
+    public boolean isActivated(int option) {
         return (options & option) == option;
     }
 
@@ -143,10 +140,10 @@ public class GraphicEnvironment
         if (monitoredEnvironment != null) {
             paintBackground(g);
             paintResources(g);
-            paintCreatures(g);
             //Draw all environment's lines
             for (Line2D line : monitoredEnvironment.getHistory())
                 paintLine(g, (AgentLine) line);
+            paintCreatures(g);
         }
     }
 
@@ -204,10 +201,10 @@ public class GraphicEnvironment
             for (Resource resource : monitoredEnvironment.getResources()) {
                 Color resourceColor = resource.getGene(AGENT_NATURAL_COLOR, Color.class);
                 Point2D center = internalMouseMonitor.environmentToPanel(resource.getLocation());
-                double radius =
+                double radius = internalMouseMonitor.environmentToPanel(
                         (internalMouseMonitor.environmentToPanel(
                                 Configuration.getParameter(CONSUMMATION_RADIUS, Double.class)))
-                                * CREATURE_RADIUS;
+                                * CREATURE_RADIUS);
                 g2d.setPaint(new RadialGradientPaint(
                         center,
                         (float) radius,
@@ -228,31 +225,39 @@ public class GraphicEnvironment
         Graphics2D g2d = (Graphics2D) g;
         Random rand = Configuration.getRandom();
 
-        Color basicColor = graphicalLine.getColor();
-        double randomNumber = rand.nextDouble();
-        if (randomNumber < 0.3) {
-            basicColor = basicColor.darker();
-        } else if (randomNumber < 0.6) {
-            basicColor = basicColor.brighter();
-        }
 
         Point2D start = internalMouseMonitor.environmentToPanel(graphicalLine.getP1());
         Point2D end = internalMouseMonitor.environmentToPanel(graphicalLine.getP2());
+        Color basicColor = graphicalLine.getColor();
 
-        float strokeWidth = (rand.nextFloat() * 0.3f) + LINE_WIDTH;
 
-        g2d.setStroke(new BasicStroke(
-                strokeWidth,
-                BasicStroke.CAP_ROUND,
-                BasicStroke.JOIN_ROUND
-        ));
+        if (isActivated(FANCY_LINE_OPTION)) {
+            double randomNumber = rand.nextGaussian();
+            if (randomNumber < 0.0) {
+                basicColor = basicColor.darker();
+            } else if (randomNumber > 1.0) {
+                basicColor = basicColor.brighter();
+            }
 
-        g2d.setPaint(new RadialGradientPaint(
-                start,
-                strokeWidth,
-                new float[]{0.0f, 1.0f},
-                new Color[]{basicColor, currentBackground}
-        ));
+            float strokeWidth = internalMouseMonitor.environmentToPanel(
+                    (rand.nextDouble() * 0.3) + LINE_WIDTH).floatValue();
+
+            g2d.setStroke(new BasicStroke(
+                    strokeWidth,
+                    BasicStroke.CAP_ROUND,
+                    BasicStroke.JOIN_ROUND
+            ));
+
+            g2d.setPaint(new LinearGradientPaint(
+                    start,
+                    end,
+                    new float[]{0.0f, 1.0f},
+                    new Color[]{basicColor, currentBackground}
+            ));
+        } else {
+            g2d.setColor(basicColor);
+        }
+
         g2d.drawLine(
                 (int) start.getX(),
                 (int) start.getY(),
@@ -280,24 +285,25 @@ public class GraphicEnvironment
             monitoredEnvironment.removeEvolutionListener(internalEvolutionMonitor);
             monitoredEnvironment.removeLineListener(internalLineMonitor);
             monitoredEnvironment = null;
-            backup = null;
             repaintEnvironment();
         }
     }
 
     public void runSimulation() {
-        if (monitoredEnvironment != null) {
+        if (monitoredEnvironment != null || !runEnvironment.isRunning()) {
             drawEnvironment.start();
             runEnvironment.start();
-            repaintEnvironment();
+            if (isActivated(CREATURE_OPTION))
+                repaintEnvironment();
         }
     }
 
     public void stopSimulation() {
-        if (monitoredEnvironment != null) {
+        if (monitoredEnvironment != null || runEnvironment.isRunning()) {
             drawEnvironment.stop();
             runEnvironment.stop();
-            repaintEnvironment();
+            if (isActivated(CREATURE_OPTION))
+                repaintEnvironment();
         }
     }
 
@@ -310,6 +316,7 @@ public class GraphicEnvironment
             case BOUNDS_OPTION:
             case RESOURCE_OPTION:
             case CREATURE_OPTION:
+            case FANCY_LINE_OPTION:
                 repaintEnvironment();
         }
     }
@@ -332,21 +339,13 @@ public class GraphicEnvironment
 
     }
 
-    public Environment getBackup() {
-        return backup;
-    }
-
     public Environment dumpCurrentEnvironment() {
-        try {
-            Environment env = monitoredEnvironment != null
-                    ? monitoredEnvironment.clone()
-                    : null;
-            if (env != null)
-                env.clearAllExternalsListeners();
-            return env;
-        } catch (CloneNotSupportedException e1) {
-            throw new Error("Model is not cloneable");
-        }
+        Environment env = monitoredEnvironment != null
+                ? monitoredEnvironment.clone()
+                : null;
+        if (env != null)
+            env.clearAllExternalsListeners();
+        return env;
     }
 
     public void applyBackgroundColor(Color color) {
@@ -428,11 +427,7 @@ public class GraphicEnvironment
         public void update(EvolutionEvent e) {
             switch (e.getType()) {
                 case STARTED:
-                    try {
-                        backup = monitoredEnvironment.clone();
-                    } catch (CloneNotSupportedException e1) {
-                        throw new Error("Impossible error : environment is cloneable");
-                    }
+                    Monitor.makeBackup();
                 case CYCLE_END:
                     Monitor.updateEnvironmentInformation(
                             monitoredEnvironment, EnvironmentInformation.State.RUNNING);

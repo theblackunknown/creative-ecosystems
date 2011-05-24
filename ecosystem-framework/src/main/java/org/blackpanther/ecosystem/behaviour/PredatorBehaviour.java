@@ -54,7 +54,6 @@ public class PredatorBehaviour
                         ( that.getColor().getGreen() + closestPrey.getTarget().getColor().getGreen() ) / 2,
                         ( that.getColor().getBlue() + closestPrey.getTarget().getColor().getBlue() ) / 2
                 );
-
                 closestPrey.getTarget().detachFromEnvironment(env);
 
             }
@@ -72,22 +71,6 @@ public class PredatorBehaviour
                 double newOrientation = (alpha + resourceRelativeOrientation * lust) % PI_2;
 
                 that.setOrientation(newOrientation);
-
-                String format = String.format(
-                        "%n (%.2f,%.2f)-(%.2f,%.2f)%n " +
-                                "old orientation : %.2fPI%n " +
-                                "resource orientation : %.2fPI%n " +
-                                "resource relative orientation : %.2fPI%n " +
-                                "new orientation : %.2fPI%n ",
-                        that.getLocation().getX(), that.getLocation().getY(),
-                        closestPrey.getTarget().getLocation().getX(),
-                        closestPrey.getTarget().getLocation().getY(),
-                        alpha / PI,
-                        beta / PI,
-                        resourceRelativeOrientation / PI,
-                        newOrientation / PI
-                );
-                System.out.println("Greed : " + format);
             }
         }
 

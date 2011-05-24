@@ -1,6 +1,7 @@
 package org.blackpanther.ecosystem.gui.actions;
 
 import org.blackpanther.ecosystem.Configuration;
+import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,21 +18,21 @@ import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
  * @author MACHIZAUD Andréa
  * @version 1.1-alpha - Thu May 19 01:22:54 CEST 2011
  */
-public class ConfigurationLoadAction
+public class ConfigurationLoad
         extends FileBrowserAction {
 
-    private ConfigurationLoadAction() {
+    private ConfigurationLoad() {
         super("Load external configuration",
                 "Configuration files",
                 "environment-conf");
     }
 
     private static class ConfigurationLoadActionHolder {
-        private static final ConfigurationLoadAction instance =
-                new ConfigurationLoadAction();
+        private static final ConfigurationLoad instance =
+                new ConfigurationLoad();
     }
 
-    public static ConfigurationLoadAction getInstance() {
+    public static ConfigurationLoad getInstance() {
         return ConfigurationLoadActionHolder.instance;
     }
 
@@ -65,10 +66,11 @@ public class ConfigurationLoadAction
                             new FileInputStream(
                                     selectedFile));
                     Properties environmentProperties = (Properties) os.readObject();
+                    FieldsConfiguration agentConfiguration = (FieldsConfiguration) os.readObject();
                     os.close();
-                    Monitor.removeEnvironment();
+                    Monitor.resetEnvironment();
                     Configuration.Configuration.loadConfiguration(environmentProperties);
-                    Monitor.notifyConfigurationUpdate();
+                    Monitor.updateSettingFields(agentConfiguration);
                     JOptionPane.showMessageDialog(
                             parent,
                             "File loaded : " + selectedFile.getName(),

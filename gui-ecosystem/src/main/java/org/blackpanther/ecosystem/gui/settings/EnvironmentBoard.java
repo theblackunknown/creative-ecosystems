@@ -8,6 +8,8 @@ import org.blackpanther.ecosystem.agent.CreatureConstants;
 import org.blackpanther.ecosystem.agent.Resource;
 import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.behaviour.DraughtsmanBehaviour;
+import org.blackpanther.ecosystem.behaviour.PredatorBehaviour;
+import org.blackpanther.ecosystem.behaviour.PreyBehaviour;
 import org.blackpanther.ecosystem.factory.PopulationFactory;
 import org.blackpanther.ecosystem.factory.fields.FieldMould;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
@@ -16,7 +18,6 @@ import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
 import org.blackpanther.ecosystem.gui.settings.fields.DoubleSpinnerField;
 import org.blackpanther.ecosystem.gui.settings.fields.IntegerSpinnerField;
 import org.blackpanther.ecosystem.gui.settings.fields.SettingField;
-import org.blackpanther.ecosystem.gui.settings.fields.mutable.BehaviorField;
 import org.blackpanther.ecosystem.math.Geometry;
 
 import javax.swing.*;
@@ -48,7 +49,7 @@ public class EnvironmentBoard extends JPanel {
     private static final String LABEL_ENVIRONMENT_AGENT = "Agent number : %d";
     private static final String LABEL_ENVIRONMENT_GENERATION = "#Generation %d";
     private static final String NO_ENVIRONMENT = "No Environment Set";
-    private static final Dimension PREFERRED_SIZE = new Dimension(280, 800);
+    private static final Dimension PREFERRED_SIZE = new Dimension(280, 600);
 
     private EnvironmentInformationInstance informationBoard =
             new EnvironmentInformationInstance();
@@ -72,10 +73,6 @@ public class EnvironmentBoard extends JPanel {
         }
     }
 
-    private void updateInformation(FieldsConfiguration information) {
-        informationBoard.updateInformation(information);
-    }
-
     /*=========================================================================
                          MESSAGES
       =========================================================================*/
@@ -89,6 +86,10 @@ public class EnvironmentBoard extends JPanel {
     }
 
     public void updateInformation(Configuration information) {
+        informationBoard.updateInformation(information);
+    }
+
+    public void updateInformation(FieldsConfiguration information) {
         informationBoard.updateInformation(information);
     }
 
@@ -453,9 +454,13 @@ public class EnvironmentBoard extends JPanel {
                                 generatePositiveDoubleModel(),
                                 0.0, Configuration.getParameter(SPEED_THRESHOLD, Double.class)));
                 put(CREATURE_BEHAVIOR,
-                        new BehaviorField(CREATURE_BEHAVIOR, new BehaviorManager[]{
-                                DraughtsmanBehaviour.getInstance()
-                        }));
+                        new org.blackpanther.ecosystem.gui.settings.fields.mutable.BehaviorField(
+                                CREATURE_BEHAVIOR,
+                                new BehaviorManager[]{
+                                        DraughtsmanBehaviour.getInstance(),
+                                        PreyBehaviour.getInstance(),
+                                        PredatorBehaviour.getInstance()
+                                }));
             }};
         }
 

@@ -1,6 +1,7 @@
 package org.blackpanther.ecosystem.gui.actions;
 
 import org.blackpanther.ecosystem.Configuration;
+import org.blackpanther.ecosystem.gui.GUIMonitor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,21 +15,21 @@ import java.io.ObjectOutputStream;
  * @author MACHIZAUD Andréa
  * @version 1.1-alpha - Thu May 19 01:22:55 CEST 2011
  */
-public class ConfigurationSaveAction
+public class ConfigurationSave
         extends FileBrowserAction {
 
-    private ConfigurationSaveAction() {
+    private ConfigurationSave() {
         super("Save current configuration",
                 "Configuration files",
                 "environment-conf");
     }
 
     private static class ConfigurationSaveActionHolder {
-        private static final ConfigurationSaveAction instance =
-                new ConfigurationSaveAction();
+        private static final ConfigurationSave instance =
+                new ConfigurationSave();
     }
 
-    public static ConfigurationSaveAction getInstance() {
+    public static ConfigurationSave getInstance() {
         return ConfigurationSaveActionHolder.instance;
     }
 
@@ -65,7 +66,8 @@ public class ConfigurationSaveAction
                         ObjectOutputStream os = new ObjectOutputStream(
                                 new FileOutputStream(
                                         file));
-                        os.writeObject(Configuration.Configuration);
+                        os.writeObject(Configuration.Configuration.textCopy());
+                        os.writeObject(GUIMonitor.Monitor.dumpFieldsConfiguration());
                         os.close();
                         JOptionPane.showMessageDialog(
                                 parent,

@@ -359,7 +359,7 @@ public class Environment
      * @throws CloneNotSupportedException
      */
     @Override
-    public Environment clone() throws CloneNotSupportedException {
+    public Environment clone() {
         Environment copy = new Environment(getBounds().getWidth(), getBounds().getHeight());
         for (Creature monster : creaturePool)
             copy.add(monster.clone());
@@ -508,7 +508,7 @@ public class Environment
          *         <code>false</code> otherwise.
          */
         public boolean trace(Creature that, Point2D from, Point2D to) {
-            Line2D agentLine = new Line2D.Double(from, to);
+            Line2D agentLine = TraceHandler.trace(from, to, that);
             //go fly away little birds, you no longer belong to me ...
             if (!bounds.contains(to)) {
                 //detect which border has been crossed and where
@@ -546,9 +546,8 @@ public class Environment
             }
 
             //Everything went better than expected
-            Line2D line = TraceHandler.trace(from, to, that);
-            internalDrawHistory.add(line);
-            getEventSupport().fireLineEvent(LineEvent.Type.ADDED, line);
+            internalDrawHistory.add(agentLine);
+            getEventSupport().fireLineEvent(LineEvent.Type.ADDED, agentLine);
             return false;
         }
     }
