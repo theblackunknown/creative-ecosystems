@@ -151,7 +151,7 @@ public abstract class Agent
      */
 
     public void setLocation(double abscissa, double ordinate) {
-        getState(AGENT_LOCATION, Point2D.class).setLocation(abscissa, ordinate);
+        currentState.put(AGENT_LOCATION, new Point2D.Double(abscissa, ordinate));
     }
 
     public void setEnergy(Double energy) {
@@ -161,9 +161,13 @@ public abstract class Agent
     }
 
     @Override
-    public Agent clone(){
+    public Agent clone() {
         try {
-            return (Agent) super.clone();
+            Agent copy = (Agent) super.clone();
+            copy.currentState = new HashMap<String, Object>(this.currentState);
+            copy.genotype = new HashMap<String, Object>(this.genotype);
+            copy.mutableTable = new HashMap<String, Boolean>(this.mutableTable);
+            return copy;
         } catch (CloneNotSupportedException e) {
             throw new Error(e);
         }

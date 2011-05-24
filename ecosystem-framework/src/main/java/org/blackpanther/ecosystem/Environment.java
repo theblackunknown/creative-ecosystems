@@ -92,6 +92,7 @@ public class Environment
      */
     protected EnvironmentMonitor eventSupport;
     private Stack<Creature> nextGenerationBuffer = new Stack<Creature>();
+    private Stack<Creature> deadAgents = new Stack<Creature>();
     private Line2D[] boundLines = new Line2D[4];
 
     public Environment(double width, double height) {
@@ -322,15 +323,12 @@ public class Environment
 
         //update all agents
         //if they die, they are simply not kept in the next creaturePool
-        Iterator<Creature> poolIterator = creaturePool.iterator();
-        while (poolIterator.hasNext()) {
-            Creature monster = poolIterator.next();
+        for (Creature monster : creaturePool)
             monster.update(this);
-            if (!monster.isAlive()) {
-                poolIterator.remove();
-            }
-        }
+        for (Creature monster : deadAgents)
+            creaturePool.remove(monster);
 
+        deadAgents.clear();
         creaturePool.addAll(nextGenerationBuffer);
         nextGenerationBuffer.clear();
     }
@@ -352,12 +350,6 @@ public class Environment
         return String.format("Environment#%s", Long.toHexString(id));
     }
 
-    /**
-     * FIXME Didn't work
-     *
-     * @return
-     * @throws CloneNotSupportedException
-     */
     @Override
     public Environment clone() {
         Environment copy = new Environment(getBounds().getWidth(), getBounds().getHeight());
@@ -392,6 +384,10 @@ public class Environment
     public void nextGeneration(Creature child) {
         child.attachTo(this);
         nextGenerationBuffer.push(child);
+    }
+
+    public void kill(Creature dead) {
+        deadAgents.push(dead);
     }
 
     long comparison = 0;

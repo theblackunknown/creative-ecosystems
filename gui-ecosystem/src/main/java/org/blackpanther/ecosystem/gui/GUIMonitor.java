@@ -237,9 +237,9 @@ public enum GUIMonitor {
         drawPanel.addResources(creatures);
     }
 
-    public void makeBackup() {
+    public void makeBackup(Environment env) {
         EnvironmentSaveBackup.getInstance().backup(
-                drawPanel.dumpCurrentEnvironment(),
+                env,
                 Configuration,
                 environmentBoard.createConfiguration()
         );

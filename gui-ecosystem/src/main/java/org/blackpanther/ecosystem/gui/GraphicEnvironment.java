@@ -201,10 +201,10 @@ public class GraphicEnvironment
             for (Resource resource : monitoredEnvironment.getResources()) {
                 Color resourceColor = resource.getGene(AGENT_NATURAL_COLOR, Color.class);
                 Point2D center = internalMouseMonitor.environmentToPanel(resource.getLocation());
-                double radius = internalMouseMonitor.environmentToPanel(
-                        (internalMouseMonitor.environmentToPanel(
-                                Configuration.getParameter(CONSUMMATION_RADIUS, Double.class)))
-                                * CREATURE_RADIUS);
+                double radius =
+                        (internalMouseMonitor.environmentToPanel(resource.getEnergy()
+                                / Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class)))
+                                * CREATURE_RADIUS;
                 g2d.setPaint(new RadialGradientPaint(
                         center,
                         (float) radius,
@@ -427,7 +427,7 @@ public class GraphicEnvironment
         public void update(EvolutionEvent e) {
             switch (e.getType()) {
                 case STARTED:
-                    Monitor.makeBackup();
+                    Monitor.makeBackup(monitoredEnvironment.clone());
                 case CYCLE_END:
                     Monitor.updateEnvironmentInformation(
                             monitoredEnvironment, EnvironmentInformation.State.RUNNING);

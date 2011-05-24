@@ -78,6 +78,7 @@ public class Creature
     public void detachFromEnvironment(Environment env) {
         require(alive, this + " wasn't alive, thus not bounded to any environment");
         alive = false;
+        env.kill(this);
         super.detachFromEnvironment(env);
     }
 
