@@ -28,7 +28,8 @@ public abstract class Agent
     /**
      * Serializable identifier
      */
-    private static final Long serialVersionUID = 3L;
+
+    private static final long serialVersionUID = 6L;
     private static long idGenerator = 0;
 
     /*=========================================

@@ -46,7 +46,7 @@ public class Environment
                     Environment.class.getCanonicalName()
             );
 
-    private static final Long serialVersionUID = 1L;
+    private static final long serialVersionUID = 5L;
 
     private static long idGenerator = 0L;
     private static int AREA_COLUMN_NUMBER = 50;
