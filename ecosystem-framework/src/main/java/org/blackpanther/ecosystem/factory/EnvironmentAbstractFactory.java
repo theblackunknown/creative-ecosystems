@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/21/11
+ * @version 1.0-alpha - Tue May 24 23:49:57 CEST 2011
  */
 public class EnvironmentAbstractFactory {
 

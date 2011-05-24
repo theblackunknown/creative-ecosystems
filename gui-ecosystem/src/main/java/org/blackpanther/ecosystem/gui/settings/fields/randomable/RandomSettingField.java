@@ -11,7 +11,7 @@ import static org.blackpanther.ecosystem.helper.Helper.createLabeledField;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/22/11
+ * @version 1.0-alpha - Tue May 24 23:49:59 CEST 2011
  */
 public abstract class RandomSettingField<T>
         extends SettingField<T>

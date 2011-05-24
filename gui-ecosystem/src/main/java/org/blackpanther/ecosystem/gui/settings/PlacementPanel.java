@@ -18,7 +18,7 @@ import static org.blackpanther.ecosystem.helper.Helper.createLabeledField;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 22/05/11
+ * @version 1.0-alpha - Tue May 24 23:49:59 CEST 2011
  */
 abstract class PlacementPanel<T extends Agent> extends JPanel {
 

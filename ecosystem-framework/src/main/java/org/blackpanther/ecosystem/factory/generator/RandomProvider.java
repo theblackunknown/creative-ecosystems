@@ -11,7 +11,7 @@ import java.awt.geom.Point2D;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/21/11
+ * @version 1.0-alpha - Tue May 24 23:49:58 CEST 2011
  */
 public abstract class RandomProvider<T>
         extends ValueProvider<T> {

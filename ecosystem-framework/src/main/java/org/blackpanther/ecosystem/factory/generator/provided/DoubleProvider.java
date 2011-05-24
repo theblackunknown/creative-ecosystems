@@ -4,7 +4,7 @@ import org.blackpanther.ecosystem.factory.generator.StandardProvider;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/22/11
+ * @version 1.0-alpha - Tue May 24 23:49:58 CEST 2011
  */
 public class DoubleProvider
         extends StandardProvider<Double> {

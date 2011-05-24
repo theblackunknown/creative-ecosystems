@@ -8,7 +8,7 @@ import java.awt.*;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/23/11
+ * @version 1.0-alpha - Tue May 24 23:49:59 CEST 2011
  */
 public class IntegerSpinnerField
         extends SettingField<Integer> {
