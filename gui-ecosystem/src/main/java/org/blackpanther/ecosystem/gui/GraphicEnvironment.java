@@ -1,6 +1,5 @@
 package org.blackpanther.ecosystem.gui;
 
-import org.blackpanther.ecosystem.ColorfulTrace;
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.agent.Creature;
 import org.blackpanther.ecosystem.agent.Resource;
@@ -9,6 +8,7 @@ import org.blackpanther.ecosystem.factory.EnvironmentAbstractFactory;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
 import org.blackpanther.ecosystem.factory.fields.StateFieldMould;
 import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
+import org.blackpanther.ecosystem.line.AgentLine;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
@@ -74,7 +74,7 @@ public class GraphicEnvironment
     /**
      * Buffer which retains next line to draw at the next repaint() call
      */
-    private Stack<ColorfulTrace> lineBuffer = new Stack<ColorfulTrace>();
+    private Stack<AgentLine> lineBuffer = new Stack<AgentLine>();
     private Stack<Creature> nextCycleCreaturesBuffer = new Stack<Creature>();
 
     private Timer runEnvironment;
@@ -146,7 +146,7 @@ public class GraphicEnvironment
             paintCreatures(g);
             //Draw all environment's lines
             for (Line2D line : monitoredEnvironment.getHistory())
-                paintLine(g, (ColorfulTrace) line);
+                paintLine(g, (AgentLine) line);
         }
     }
 
@@ -224,7 +224,7 @@ public class GraphicEnvironment
         }
     }
 
-    private void paintLine(Graphics g, ColorfulTrace graphicalLine) {
+    private void paintLine(Graphics g, AgentLine graphicalLine) {
         Graphics2D g2d = (Graphics2D) g;
         Random rand = Configuration.getRandom();
 
@@ -396,7 +396,7 @@ public class GraphicEnvironment
                 case ADDED:
                     //if a line has been added to monitored environment,
                     // add it to lineBuffer
-                    lineBuffer.add((ColorfulTrace) e.getValue());
+                    lineBuffer.add((AgentLine) e.getValue());
                     logger.log(Level.FINEST, "{0} added to line buffer, lineBuffer size : {1}",
                             new Object[]{e.getValue(), lineBuffer.size()});
                     break;

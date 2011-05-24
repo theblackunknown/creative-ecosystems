@@ -3,7 +3,7 @@ package org.blackpanther.ecosystem;
 import org.blackpanther.ecosystem.agent.Creature;
 import org.blackpanther.ecosystem.agent.Resource;
 import org.blackpanther.ecosystem.event.*;
-import org.blackpanther.ecosystem.factory.TraceFactory;
+import org.blackpanther.ecosystem.line.TraceHandler;
 import org.blackpanther.ecosystem.math.Geometry;
 
 import java.awt.geom.Dimension2D;
@@ -352,6 +352,12 @@ public class Environment
         return String.format("Environment#%s", Long.toHexString(id));
     }
 
+    /**
+     * FIXME Didn't work
+     *
+     * @return
+     * @throws CloneNotSupportedException
+     */
     @Override
     public Environment clone() throws CloneNotSupportedException {
         Environment copy = new Environment(getBounds().getWidth(), getBounds().getHeight());
@@ -502,14 +508,15 @@ public class Environment
          *         <code>false</code> otherwise.
          */
         public boolean trace(Creature that, Point2D from, Point2D to) {
+            Line2D agentLine = new Line2D.Double(from, to);
             //go fly away little birds, you no longer belong to me ...
             if (!bounds.contains(to)) {
                 //detect which border has been crossed and where
                 for (Line2D border : boundLines) {
-                    Point2D intersection = getIntersection(border, new Line2D.Double(from, to));
+                    Point2D intersection = getIntersection(border, agentLine);
 
                     if (intersection != null) {
-                        Line2D realLine = TraceFactory.getInstance().trace(from, intersection, that);
+                        Line2D realLine = TraceHandler.trace(from, intersection, that);
                         //We add a drawn line from agent's old location till intersection
                         internalDrawHistory.add(realLine);
 
@@ -522,21 +529,24 @@ public class Environment
             }
 
             for (Line2D historyLine : internalDrawHistory) {
-                Point2D intersection = getIntersection(historyLine, new Line2D.Double(from, to));
-                if (intersection != null
-                        //Intersection with the line's start is not an intersection
-                        && !intersection.equals(from)) {
-                    Line2D realLine = TraceFactory.getInstance().trace(from, intersection, that);
-                    //We add a drawn line from agent's old location till intersection
-                    internalDrawHistory.add(realLine);
-                    getEventSupport().fireLineEvent(LineEvent.Type.ADDED, realLine);
-                    //Yes, unfortunately, the agent died - this is Sparta here dude
-                    return true;
+                //check if this line can cross the history line before computing intersection (compute is cheaper)
+                if (!TraceHandler.canCross(agentLine, historyLine)) {
+                    Point2D intersection = getIntersection(historyLine, agentLine);
+                    if (intersection != null
+                            //Intersection with the line's start is not an intersection
+                            && !intersection.equals(from)) {
+                        Line2D realLine = TraceHandler.trace(from, intersection, that);
+                        //We add a drawn line from agent's old location till intersection
+                        internalDrawHistory.add(realLine);
+                        getEventSupport().fireLineEvent(LineEvent.Type.ADDED, realLine);
+                        //Yes, unfortunately, the agent died - this is Sparta here dude
+                        return true;
+                    }
                 }
             }
 
             //Everything went better than expected
-            Line2D line = TraceFactory.getInstance().trace(from, to, that);
+            Line2D line = TraceHandler.trace(from, to, that);
             internalDrawHistory.add(line);
             getEventSupport().fireLineEvent(LineEvent.Type.ADDED, line);
             return false;
