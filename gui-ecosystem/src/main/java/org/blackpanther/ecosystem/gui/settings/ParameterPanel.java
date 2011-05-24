@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 22/05/11
+ * @version 1.0-alpha - Tue May 24 23:49:59 CEST 2011
  */
 abstract class ParameterPanel
         extends JPanel {

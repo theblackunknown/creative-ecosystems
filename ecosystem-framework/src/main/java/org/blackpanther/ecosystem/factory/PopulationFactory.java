@@ -17,7 +17,7 @@ import static org.blackpanther.ecosystem.factory.generator.StandardProvider.Stan
 
 /**
  * @author MACHIZAUD Andréa
- * @version 22/05/11
+ * @version 1.0-alpha - Tue May 24 23:49:57 CEST 2011
  */
 public class PopulationFactory {
     private static final java.util.logging.Logger logger =

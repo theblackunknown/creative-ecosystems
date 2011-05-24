@@ -8,7 +8,7 @@ import java.awt.event.ActionEvent;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/24/11
+ * @version 1.0-alpha - Tue May 24 23:49:58 CEST 2011
  */
 public class ToggleResources
     extends AbstractAction{

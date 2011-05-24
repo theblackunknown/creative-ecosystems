@@ -11,7 +11,7 @@ import static org.blackpanther.ecosystem.agent.AgentConstants.AGENT_NATURAL_COLO
 
 /**
  * @author MACHIZAUD Andréa
- * @version 5/22/11
+ * @version 1.0-alpha - Tue May 24 23:49:57 CEST 2011
  */
 public final class TraceHandler {
     private TraceHandler() {

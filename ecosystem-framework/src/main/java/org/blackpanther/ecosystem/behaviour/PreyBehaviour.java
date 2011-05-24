@@ -14,7 +14,7 @@ import static org.blackpanther.ecosystem.math.Geometry.PI_2;
 
 /**
  * @author MACHIZAUD Andréa
- * @version 19/05/11
+ * @version 1.0-alpha - Tue May 24 23:49:57 CEST 2011
  */
 public class PreyBehaviour
         extends DraughtsmanBehaviour {
