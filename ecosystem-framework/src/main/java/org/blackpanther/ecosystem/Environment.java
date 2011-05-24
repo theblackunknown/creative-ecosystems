@@ -1,6 +1,5 @@
 package org.blackpanther.ecosystem;
 
-import org.blackpanther.ecosystem.agent.Agent;
 import org.blackpanther.ecosystem.agent.Creature;
 import org.blackpanther.ecosystem.agent.Resource;
 import org.blackpanther.ecosystem.event.*;
@@ -219,13 +218,17 @@ public class Environment
      * @param mosntergent the monster
      */
     public final void add(final Creature monster) {
-        monster.attachTo(this);
-        creaturePool.add(monster);
+        if (bounds.contains(monster.getLocation())) {
+            monster.attachTo(this);
+            creaturePool.add(monster);
+        }
     }
 
     public final void add(final Resource resource) {
-        resource.attachTo(this);
-        resourcePool.add(resource);
+        if (bounds.contains(resource.getLocation())) {
+            resource.attachTo(this);
+            resourcePool.add(resource);
+        }
     }
 
 
@@ -351,7 +354,16 @@ public class Environment
 
     @Override
     public Environment clone() throws CloneNotSupportedException {
-        return (Environment) super.clone();
+        Environment copy = new Environment(getBounds().getWidth(), getBounds().getHeight());
+        for (Creature monster : creaturePool)
+            copy.add(monster.clone());
+        for (Resource resource : resourcePool)
+            copy.add(resource.clone());
+        for (int i = 0; i < copy.space.length; i++)
+            for (int j = 0; j < copy.space[0].length; j++)
+                copy.space[i][j].internalDrawHistory.addAll(
+                        space[i][j].internalDrawHistory);
+        return copy;
     }
 
     /*=====================================================================

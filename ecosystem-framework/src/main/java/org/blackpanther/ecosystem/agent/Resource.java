@@ -25,7 +25,12 @@ public class Resource
     }
 
     @Override
-    public void setEnergy(Double energy) {
-        super.setEnergy(energy);
+    public Resource clone() {
+        return (Resource) super.clone();
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
     }
 }

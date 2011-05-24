@@ -51,6 +51,9 @@ public class GraphicEnvironment
     public static final int ZOOM_OPTION = 1 << 3;
     public static final int CREATURE_OPTION = 1 << 4;
 
+    public static final Double CREATURE_RADIUS = 10.0;
+    public static final Float LINE_WIDTH = 3.0f;
+
     private int options =
             BOUNDS_OPTION
                     | RESOURCE_OPTION
@@ -136,18 +139,14 @@ public class GraphicEnvironment
      */
     private void paintEnvironment(Graphics g) {
         g.clearRect(0, 0, getWidth(), getHeight());
-
         //repaint environment structure if it has been erased
         if (monitoredEnvironment != null) {
-
             paintBackground(g);
             paintResources(g);
             paintCreatures(g);
-
             //Draw all environment's lines
             for (Line2D line : monitoredEnvironment.getHistory())
                 paintLine(g, (ColorfulTrace) line);
-
         }
     }
 
@@ -173,12 +172,15 @@ public class GraphicEnvironment
 
     private void paintCreatures(Graphics g) {
         //agent initial painting activated
-        if ((options & CREATURE_OPTION) == CREATURE_OPTION) {
+        if ((options & CREATURE_OPTION) == CREATURE_OPTION
+                && !runEnvironment.isRunning()) {
             Graphics2D g2d = (Graphics2D) g;
             for (Creature monster : monitoredEnvironment.getCreaturePool()) {
                 Point2D center = internalMouseMonitor.environmentToPanel(monster.getLocation());
-                double radius = internalMouseMonitor.environmentToPanel(monster.getEnergy()
-                        / Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class));
+                double radius =
+                        (internalMouseMonitor.environmentToPanel(monster.getEnergy()
+                                / Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class)))
+                                * CREATURE_RADIUS;
                 g2d.setPaint(new RadialGradientPaint(
                         center,
                         (float) radius,
@@ -197,14 +199,21 @@ public class GraphicEnvironment
 
     private void paintResources(Graphics g) {
         //resource painting activated
-        if ((options & RESOURCE_OPTION) == RESOURCE_OPTION)
+        if ((options & RESOURCE_OPTION) == RESOURCE_OPTION) {
+            Graphics2D g2d = (Graphics2D) g;
             for (Resource resource : monitoredEnvironment.getResources()) {
                 Color resourceColor = resource.getGene(AGENT_NATURAL_COLOR, Color.class);
-                g.setColor(resourceColor);
                 Point2D center = internalMouseMonitor.environmentToPanel(resource.getLocation());
-                double radius = internalMouseMonitor.environmentToPanel(
-                        //TODO Consummation radius specific to resources
-                        Configuration.getParameter(CONSUMMATION_RADIUS, Double.class));
+                double radius =
+                        (internalMouseMonitor.environmentToPanel(
+                                Configuration.getParameter(CONSUMMATION_RADIUS, Double.class)))
+                                * CREATURE_RADIUS;
+                g2d.setPaint(new RadialGradientPaint(
+                        center,
+                        (float) radius,
+                        new float[]{0.0f, 1.0f},
+                        new Color[]{resourceColor, currentBackground}
+                ));
                 g.fillOval(
                         (int) (center.getX() - radius),
                         (int) (center.getY() - radius),
@@ -212,17 +221,12 @@ public class GraphicEnvironment
                         (int) (radius * 2.0)
                 );
             }
+        }
     }
 
     private void paintLine(Graphics g, ColorfulTrace graphicalLine) {
         Graphics2D g2d = (Graphics2D) g;
         Random rand = Configuration.getRandom();
-
-        g2d.setStroke(new BasicStroke(
-                rand.nextFloat(),
-                BasicStroke.CAP_ROUND,
-                BasicStroke.JOIN_ROUND
-        ));
 
         Color basicColor = graphicalLine.getColor();
         double randomNumber = rand.nextDouble();
@@ -232,11 +236,24 @@ public class GraphicEnvironment
             basicColor = basicColor.brighter();
         }
 
-        g2d.setColor(basicColor);
-
         Point2D start = internalMouseMonitor.environmentToPanel(graphicalLine.getP1());
         Point2D end = internalMouseMonitor.environmentToPanel(graphicalLine.getP2());
-        g.drawLine(
+
+        float strokeWidth = (rand.nextFloat() * 0.3f) + LINE_WIDTH;
+
+        g2d.setStroke(new BasicStroke(
+                strokeWidth,
+                BasicStroke.CAP_ROUND,
+                BasicStroke.JOIN_ROUND
+        ));
+
+        g2d.setPaint(new RadialGradientPaint(
+                start,
+                strokeWidth,
+                new float[]{0.0f, 1.0f},
+                new Color[]{basicColor, currentBackground}
+        ));
+        g2d.drawLine(
                 (int) start.getX(),
                 (int) start.getY(),
                 (int) end.getX(),
@@ -272,6 +289,7 @@ public class GraphicEnvironment
         if (monitoredEnvironment != null) {
             drawEnvironment.start();
             runEnvironment.start();
+            repaintEnvironment();
         }
     }
 
@@ -279,17 +297,15 @@ public class GraphicEnvironment
         if (monitoredEnvironment != null) {
             drawEnvironment.stop();
             runEnvironment.stop();
+            repaintEnvironment();
         }
     }
 
     public void setOption(int option, boolean shouldBePainted) {
-        System.out.println(Integer.toBinaryString(options));
-        System.out.println(Integer.toBinaryString(option));
         if (shouldBePainted)
             options |= option;
         else
             options &= ~option;
-        System.out.println(Integer.toBinaryString(options));
         switch (option) {
             case BOUNDS_OPTION:
             case RESOURCE_OPTION:
@@ -344,9 +360,10 @@ public class GraphicEnvironment
 
     public void addCreatures(Collection<Creature> creatures) {
         if (monitoredEnvironment != null
-                && !runEnvironment.isRunning())
+                && !runEnvironment.isRunning()) {
             monitoredEnvironment.addCreatures(creatures);
-        else
+            repaintEnvironment();
+        } else
             nextCycleCreaturesBuffer.addAll(creatures);
     }
 
@@ -396,8 +413,10 @@ public class GraphicEnvironment
         @Override
         public void actionPerformed(ActionEvent e) {
             monitoredEnvironment.runNextCycle();
-            if (!nextCycleCreaturesBuffer.isEmpty())
+            if (!nextCycleCreaturesBuffer.isEmpty()) {
                 monitoredEnvironment.addCreatures(nextCycleCreaturesBuffer);
+                nextCycleCreaturesBuffer.clear();
+            }
         }
 
         /**
@@ -409,8 +428,6 @@ public class GraphicEnvironment
         public void update(EvolutionEvent e) {
             switch (e.getType()) {
                 case STARTED:
-                    setOption(CREATURE_OPTION, false);
-                    Monitor.disableOptionButton(CREATURE_OPTION);
                     try {
                         backup = monitoredEnvironment.clone();
                     } catch (CloneNotSupportedException e1) {
@@ -457,11 +474,11 @@ public class GraphicEnvironment
 
         private DropMode dropMode = GraphicEnvironment.DropMode.NONE;
         private Timer dropTimer = new Timer(200, this);
-        private Point nextItemPosition;
+        private Point mouseLocation = null;
 
         private final double UP_SCALE_THRESHOLD = 20.0;
         private final double DOWN_SCALE_THRESHOLD = 0.1;
-        private final double SCALE_GROW_STEP = 0.2;
+        private final double SCALE_GROW_STEP = 0.1;
 
         private final int WHEEL_UP = -1;
         private final int WHEEL_DOWN = 1;
@@ -469,8 +486,6 @@ public class GraphicEnvironment
         private double panelScale = 1.0;
         private int panelAbscissaDifferential = 0;
         private int panelOrdinateDifferential = 0;
-
-        private Point oldMouseLocation = null;
 
         /**
          * Adapt environment coordinates to panel ones
@@ -494,6 +509,22 @@ public class GraphicEnvironment
             );
         }
 
+        public Point2D panelToEnvironment(Point2D panelPosition) {
+            //get current panel's dimension
+            Dimension panelDimension = getBounds().getSize();
+
+            //minus because environment is real mathematics cartesian coordinate
+            double environmentAbscissa = ((panelPosition.getX() - panelAbscissaDifferential) - (panelDimension.getWidth() / 2.0))
+                    / panelScale;
+            double environmentOrdinate = ((panelDimension.getHeight() / 2.0) - (panelPosition.getY() - panelOrdinateDifferential))
+                    / panelScale;
+
+            return new Point2D.Double(
+                    environmentAbscissa,
+                    environmentOrdinate
+            );
+        }
+
         public Double environmentToPanel(Double distance) {
             //get current panel's dimension
             Dimension panelDimension = getBounds().getSize();
@@ -509,22 +540,6 @@ public class GraphicEnvironment
             ));
 
             return panelDistance;
-        }
-
-        public Point2D panelToEnvironment(Point2D panelPosition) {
-            //get current panel's dimension
-            Dimension panelDimension = getBounds().getSize();
-
-            //minus because environment is real mathematics cartesian coordinate
-            double environmentAbscissa = (panelPosition.getX() - (panelDimension.getWidth() / 2.0) - panelAbscissaDifferential)
-                    / panelScale;
-            double environmentOrdinate = ((panelDimension.getHeight() / 2.0) - panelPosition.getY() - panelOrdinateDifferential)
-                    / panelScale;
-
-            return new Point2D.Double(
-                    environmentAbscissa,
-                    environmentOrdinate
-            );
         }
 
         public void setDropMode(DropMode mode) {
@@ -552,25 +567,14 @@ public class GraphicEnvironment
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            if (isActivated(SCROLL_OPTION)
-                    && e.getModifiers() == InputEvent.CTRL_MASK) {
-                oldMouseLocation = null;
-                logger.finer(String.format(
-                        "Panel differential updated to (%d,%d)",
-                        panelAbscissaDifferential,
-                        panelOrdinateDifferential
-                ));
-                repaintEnvironment();
-            } else {
-                switch (dropMode) {
-                    case AGENT:
-                    case RESOURCE:
-                        if (dropTimer.isRunning())
-                            dropTimer.stop();
-                        nextItemPosition = null;
-                        break;
-                }
+            switch (dropMode) {
+                case AGENT:
+                case RESOURCE:
+                    if (dropTimer.isRunning())
+                        dropTimer.stop();
+                    break;
             }
+            mouseLocation = null;
         }
 
         @Override
@@ -579,26 +583,12 @@ public class GraphicEnvironment
                     && e.getModifiers() == InputEvent.CTRL_MASK) {
                 switch (e.getWheelRotation()) {
                     case WHEEL_UP:
-                        if (panelScale < UP_SCALE_THRESHOLD) {
+                        if (panelScale < UP_SCALE_THRESHOLD)
                             panelScale += SCALE_GROW_STEP;
-                            panelStructureHasChanged = true;
-                            logger.finer(String.format(
-                                    "Panel zoom scale updated from %.1f to %.1f",
-                                    panelScale - SCALE_GROW_STEP,
-                                    panelScale
-                            ));
-                        }
                         break;
                     case WHEEL_DOWN:
-                        if (panelScale > DOWN_SCALE_THRESHOLD) {
+                        if (panelScale > DOWN_SCALE_THRESHOLD)
                             panelScale -= SCALE_GROW_STEP;
-                            panelStructureHasChanged = true;
-                            logger.finer(String.format(
-                                    "Panel zoom scale updated from %.1f to %.1f",
-                                    panelScale + SCALE_GROW_STEP,
-                                    panelScale
-                            ));
-                        }
                         break;
                 }
                 repaintEnvironment();
@@ -610,20 +600,20 @@ public class GraphicEnvironment
             if (isActivated(SCROLL_OPTION)
                     && (e.getModifiers() & InputEvent.CTRL_MASK) == InputEvent.CTRL_MASK) {
                 Point currentMousePoint = e.getPoint();
-                if (oldMouseLocation != null) {
+                if (mouseLocation != null) {
                     //calculate diff
                     panelAbscissaDifferential +=
-                            (currentMousePoint.x - oldMouseLocation.x);
+                            (currentMousePoint.x - mouseLocation.x);
                     panelOrdinateDifferential +=
-                            (currentMousePoint.y - oldMouseLocation.y);
+                            (currentMousePoint.y - mouseLocation.y);
                     repaintEnvironment();
                 }
-                oldMouseLocation = currentMousePoint;
+                mouseLocation = currentMousePoint;
             } else {
                 switch (dropMode) {
                     case AGENT:
                     case RESOURCE:
-                        nextItemPosition = e.getPoint();
+                        mouseLocation = e.getPoint();
                         if (!dropTimer.isRunning())
                             dropTimer.start();
                         break;
@@ -634,8 +624,8 @@ public class GraphicEnvironment
         @Override
         public void actionPerformed(ActionEvent e) {
             require(monitoredEnvironment.getTime() == 0);
-            require(nextItemPosition != null);
-            dropAgent(nextItemPosition);
+            require(mouseLocation != null);
+            dropAgent(mouseLocation);
         }
 
         @SuppressWarnings("unchecked")

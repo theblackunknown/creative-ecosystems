@@ -4,6 +4,7 @@ import org.blackpanther.ecosystem.agent.Agent;
 import org.blackpanther.ecosystem.Environment;
 
 import java.awt.geom.Line2D;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;

@@ -487,6 +487,9 @@ public class EnvironmentBoard extends JPanel {
                                 AGENT_ENERGY,
                                 generatePositiveDoubleModel(),
                                 0.0, Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class)));
+                put(AGENT_NATURAL_COLOR,
+                        new org.blackpanther.ecosystem.gui.settings.fields.randomable.ColorField(
+                                AGENT_NATURAL_COLOR));
             }};
         }
 
@@ -498,6 +501,8 @@ public class EnvironmentBoard extends JPanel {
 
         @Override
         void fillUpGenotype(Box layout) {
+            for (String genotypeParameter : AgentConstants.AGENT_GENOTYPE)
+                layout.add(parameters.get(genotypeParameter));
         }
     }
 

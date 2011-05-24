@@ -233,6 +233,13 @@ public class Creature
     }
 
     @Override
+    public Creature clone() {
+        Creature copy = (Creature) super.clone();
+        copy.alive = false;
+        return copy;
+    }
+
+    @Override
     public String toString() {
         return super.toString() + "[Age=" + getAge() + ",Energy=" + getEnergy() + "]";
     }

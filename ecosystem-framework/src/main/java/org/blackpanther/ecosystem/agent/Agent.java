@@ -161,6 +161,15 @@ public abstract class Agent
     }
 
     @Override
+    public Agent clone(){
+        try {
+            return (Agent) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new Error(e);
+        }
+    }
+
+    @Override
     public String toString() {
         return super.toString() + "[Agent" + Long.toHexString(id) + "]";
     }

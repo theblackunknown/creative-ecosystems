@@ -218,6 +218,7 @@ public enum GUIMonitor {
                     "Save this environment's configuration",
                     JOptionPane.YES_NO_OPTION)) {
                 case JOptionPane.OK_OPTION:
+                    backup.clearAllExternalsListeners();
                     EnvironmentSaveAction.getInstance().save(backup);
                     break;
             }
