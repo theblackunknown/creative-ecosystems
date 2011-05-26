@@ -51,8 +51,6 @@ public class WorldFrame
         if (APPLICATION_ICON != null)
             setIconImage(APPLICATION_ICON);
 
-        setJMenuBar(buildMenuBar());
-
         GraphicEnvironment graphicEnvironment =
                 new GraphicEnvironment();
         Monitor.registerDrawPanel(
@@ -89,6 +87,8 @@ public class WorldFrame
         pack();
         setExtendedState(MAXIMIZED_BOTH);
 
+        setJMenuBar(buildMenuBar());
+
         Monitor.resetEnvironment();
     }
 
@@ -117,11 +117,18 @@ public class WorldFrame
         environment.addSeparator();
         environment.add(SaveImageAction.getInstance());
 
-        painting.add(ToggleBounds.getInstance());
-        painting.add(ToggleCreatures.getInstance());
-        painting.add(ToggleResources.getInstance());
-        painting.add(ToggleFancyLines.getInstance());
+        JCheckBox[] togglers = new JCheckBox[5];
+        for (int i= 0; i < togglers.length; i ++) {
+            togglers[i] = new JCheckBox();
+            togglers[i].setSelected(true);
+            painting.add(togglers[i]);
+        }
 
+        togglers[0].setAction(ToggleBounds.getInstance());
+        togglers[1].setAction(ToggleCreatures.getInstance());
+        togglers[2].setAction(ToggleResources.getInstance());
+        togglers[3].setAction(ToggleFancyLines.getInstance());
+        togglers[4].setAction(ToggleLineObstruction.getInstance());
 
         menuBar.add(environment);
         menuBar.add(painting);

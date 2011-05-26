@@ -1,8 +1,10 @@
 package org.blackpanther.ecosystem.factory.generator.random;
 
-import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.Configuration;
+import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.behaviour.DraughtsmanBehaviour;
+import org.blackpanther.ecosystem.behaviour.PredatorBehaviour;
+import org.blackpanther.ecosystem.behaviour.PreyBehaviour;
 import org.blackpanther.ecosystem.factory.generator.RandomProvider;
 
 /**
@@ -14,8 +16,8 @@ public class BehaviorProvider
 
     private static final BehaviorManager[] possibleBehaviours = new BehaviorManager[]{
             DraughtsmanBehaviour.getInstance()
-//            , PredatorBehaviour.getInstance()
-//            , PreyBehaviour.getInstance()
+            , PredatorBehaviour.getInstance()
+            , PreyBehaviour.getInstance()
     };
 
     private BehaviorProvider(){}

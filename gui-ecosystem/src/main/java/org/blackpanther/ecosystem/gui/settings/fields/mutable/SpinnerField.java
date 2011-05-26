@@ -1,5 +1,8 @@
 package org.blackpanther.ecosystem.gui.settings.fields.mutable;
 
+import org.blackpanther.ecosystem.factory.fields.FieldMould;
+import org.blackpanther.ecosystem.factory.fields.GeneFieldMould;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -51,5 +54,14 @@ public class SpinnerField
     @Override
     public boolean isMutable() {
         return mutable.isSelected();
+    }
+
+    @Override
+    public FieldMould<Double> toMould() {
+        return new GeneFieldMould<Double>(
+                getMainComponent().getName(),
+                new org.blackpanther.ecosystem.factory.generator.random.DoubleProvider(min,max),
+                isMutable()
+        );
     }
 }

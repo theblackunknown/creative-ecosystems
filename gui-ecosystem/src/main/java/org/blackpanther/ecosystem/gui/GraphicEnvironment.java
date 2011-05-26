@@ -23,7 +23,8 @@ import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.blackpanther.ecosystem.Configuration.*;
+import static org.blackpanther.ecosystem.Configuration.Configuration;
+import static org.blackpanther.ecosystem.Configuration.ENERGY_AMOUNT_THRESHOLD;
 import static org.blackpanther.ecosystem.agent.AgentConstants.AGENT_LOCATION;
 import static org.blackpanther.ecosystem.agent.AgentConstants.AGENT_NATURAL_COLOR;
 import static org.blackpanther.ecosystem.factory.generator.StandardProvider.StandardProvider;
@@ -111,7 +112,7 @@ public class GraphicEnvironment
         return (options & option) == option;
     }
 
-    private void repaintEnvironment() {
+    void repaintEnvironment() {
         panelStructureHasChanged = true;
         repaint();
     }

@@ -25,6 +25,8 @@ public interface ApplicationConstants {
     public static final String SPEED_VARIATION = "speed-variation";
     public static final String COLOR_VARIATION = "color-variation";
 
+    public static final String LINE_OBSTRUCTION_OPTION = "line-obstruction";
+
     /*=========================================================================
                           TYPE
       =========================================================================*/
@@ -49,6 +51,9 @@ public interface ApplicationConstants {
     public static final String[] POSITIVE_INTEGER = new String[]{
             MAX_AGENT_NUMBER,
             COLOR_VARIATION
+    };
+    public static final String[] BOOLEAN = new String[]{
+            LINE_OBSTRUCTION_OPTION
     };
 
     /*=========================================================================

@@ -5,7 +5,6 @@ import org.blackpanther.ecosystem.factory.fields.FieldMould;
 import org.blackpanther.ecosystem.factory.fields.StateFieldMould;
 
 import javax.swing.*;
-import java.awt.*;
 
 /**
  * @author MACHIZAUD Andréa
@@ -15,8 +14,8 @@ public class SpinnerField
         extends RandomSettingField<Double> {
 
     private JSpinner valueSelector;
-    private double min;
-    private double max;
+    protected double min;
+    protected double max;
 
     public SpinnerField(String name, SpinnerModel model, double min, double max) {
         super(name);

@@ -4,7 +4,6 @@ import org.blackpanther.ecosystem.factory.fields.FieldMould;
 import org.blackpanther.ecosystem.factory.fields.StateFieldMould;
 
 import javax.swing.*;
-import java.awt.*;
 
 /**
  * @author MACHIZAUD Andréa
@@ -44,8 +43,8 @@ public class IntegerSpinnerField
     @Override
     public FieldMould<Integer> toMould() {
         return new StateFieldMould<Integer>(
-                valueSelector.getName(),
-                new org.blackpanther.ecosystem.factory.generator.provided.IntegerProvider((Integer) valueSelector.getValue())
+                getMainComponent().getName(),
+                new org.blackpanther.ecosystem.factory.generator.provided.IntegerProvider(getValue())
         );
     }
 }

@@ -7,6 +7,8 @@ import java.awt.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 
+import static org.blackpanther.ecosystem.ApplicationConstants.LINE_OBSTRUCTION_OPTION;
+import static org.blackpanther.ecosystem.Configuration.Configuration;
 import static org.blackpanther.ecosystem.agent.AgentConstants.AGENT_NATURAL_COLOR;
 
 /**
@@ -30,7 +32,8 @@ public final class TraceHandler {
 
     public static boolean canCross(Line2D a, Line2D b) {
         return a instanceof AgentLine && b instanceof AgentLine
-                && ((AgentLine) a).getSpecies().equals(PredatorBehaviour.class)
-                && !((AgentLine) b).getSpecies().equals(PredatorBehaviour.class);
+                && (!Configuration.getParameter(LINE_OBSTRUCTION_OPTION, Boolean.class)
+                || ((AgentLine) a).getSpecies().equals(PredatorBehaviour.class)
+                && !((AgentLine) b).getSpecies().equals(PredatorBehaviour.class));
     }
 }

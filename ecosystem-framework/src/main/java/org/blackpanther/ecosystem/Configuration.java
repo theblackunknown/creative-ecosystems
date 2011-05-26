@@ -39,6 +39,7 @@ public enum Configuration
         Arrays.sort(DOUBLE_UNBOUNDED);
         Arrays.sort(POSITIVE_DOUBLE);
         Arrays.sort(POSITIVE_INTEGER);
+        Arrays.sort(BOOLEAN);
 
         Logger classLogger = Logger.getLogger(Configuration.class.getCanonicalName());
         //load application properties
@@ -118,6 +119,23 @@ public enum Configuration
                 }
             }
         }
+
+        for (String parameter : BOOLEAN) {
+            value = properties.getProperty(parameter);
+            if (isValid(value)) {
+                try {
+                    setParameter(
+                            parameter,
+                            Boolean.parseBoolean(parameter),
+                            Boolean.class
+                    );
+                } catch (NumberFormatException e) {
+                    logger.log(Level.SEVERE,
+                            "Couldn't parse " + parameter
+                                    + ", it must be a boolean value!", e);
+                }
+            }
+        }
     }
 
     public <T> void setParameter(String parameterName, T parameterValue, Class<T> parameterType) {
@@ -178,6 +196,12 @@ public enum Configuration
                 Integer value = (Integer) paramValue;
                 require(0 <= value,
                         "Invalid value for " + paramName + " : '" + paramValue + "'");
+            }
+        } else if (Arrays.binarySearch(BOOLEAN, paramName) >= 0) {
+            if (!paramType.equals(Boolean.class)) {
+                throw new IllegalArgumentException(
+                        "Invalid value this parameter, it must be a "
+                                + Boolean.class.getCanonicalName() + " class");
             }
         } else {
             throw new IllegalArgumentException("Invalid parameter name : " + paramName);

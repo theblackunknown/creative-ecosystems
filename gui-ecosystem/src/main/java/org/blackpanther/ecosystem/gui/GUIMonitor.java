@@ -73,7 +73,7 @@ public enum GUIMonitor {
         environmentCommandsPanel.environmentSet();
     }
 
-    public void updateSettingFields(FieldsConfiguration configuration){
+    public void updateSettingFields(FieldsConfiguration configuration) {
         require(environmentBoard != null);
         environmentBoard.updateInformation(Configuration);
         environmentBoard.updateInformation(configuration);

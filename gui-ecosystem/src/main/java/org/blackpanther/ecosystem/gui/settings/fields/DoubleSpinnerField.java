@@ -43,9 +43,8 @@ public class DoubleSpinnerField
     @Override
     public FieldMould<Double> toMould() {
         return new StateFieldMould<Double>(
-                valueSelector.getName(),
-                new org.blackpanther.ecosystem.factory.generator.provided.DoubleProvider((Double) valueSelector.getValue())
+                getMainComponent().getName(),
+                new org.blackpanther.ecosystem.factory.generator.provided.DoubleProvider(getValue())
         );
-
     }
 }

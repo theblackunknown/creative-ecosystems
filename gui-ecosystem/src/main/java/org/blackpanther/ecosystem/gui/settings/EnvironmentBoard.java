@@ -271,7 +271,6 @@ public class EnvironmentBoard extends JPanel {
             environmentLabel.setText(NO_ENVIRONMENT);
             environmentAgentCounter.setText(NO_ENVIRONMENT);
             environmentGenerationLabel.setText(NO_ENVIRONMENT);
-            panelSelector.setSelectedItem(APPLICATION_PARAMETERS);
             panelSelector.setEnabled(false);
         }
 
@@ -493,7 +492,7 @@ public class EnvironmentBoard extends JPanel {
                                 generatePositiveDoubleModel(),
                                 0.0, Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class)));
                 put(AGENT_NATURAL_COLOR,
-                        new org.blackpanther.ecosystem.gui.settings.fields.randomable.ColorField(
+                        new org.blackpanther.ecosystem.gui.settings.fields.mutable.ColorField(
                                 AGENT_NATURAL_COLOR));
             }};
         }
