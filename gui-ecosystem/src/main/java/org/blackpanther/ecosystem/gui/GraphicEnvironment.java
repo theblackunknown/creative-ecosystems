@@ -53,8 +53,8 @@ public class GraphicEnvironment
     public static final int CREATURE_OPTION = 1 << 4;
     public static final int FANCY_LINE_OPTION = 1 << 5;
 
-    public static final Double CREATURE_RADIUS = 10.0;
-    public static final Double LINE_WIDTH = 3.0;
+    public static Double CREATURE_RADIUS = 10.0;
+    public static Double LINE_WIDTH = 3.0;
 
     private int options =
             BOUNDS_OPTION
@@ -371,6 +371,11 @@ public class GraphicEnvironment
         monitoredEnvironment.addResources(resources);
         if (isActivated(RESOURCE_OPTION))
             repaintEnvironment();
+    }
+
+    public void changeLineWidth(double value) {
+        LINE_WIDTH = value;
+        repaintEnvironment();
     }
 
     /**

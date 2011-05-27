@@ -4,13 +4,11 @@ import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.agent.Creature;
 import org.blackpanther.ecosystem.agent.Resource;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
-import org.blackpanther.ecosystem.gui.actions.EnvironmentSave;
 import org.blackpanther.ecosystem.gui.actions.EnvironmentSaveBackup;
 import org.blackpanther.ecosystem.gui.commands.EnvironmentCommands;
 import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
 import org.blackpanther.ecosystem.gui.settings.EnvironmentBoard;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
@@ -205,28 +203,6 @@ public enum GUIMonitor {
         drawPanel.setDropMode(mode);
     }
 
-    /**
-     * delegator to disable commands' option button
-     */
-    public void disableOptionButton(int option) {
-        require(environmentCommandsPanel != null);
-        environmentCommandsPanel.disableOptionButton(option);
-    }
-
-    private void proposeSaveEnvironment(Environment backup) {
-        if (backup != null)
-            switch (JOptionPane.showConfirmDialog(
-                    null,
-                    "Would you like to save initial environment state ?",
-                    "Save this environment's configuration",
-                    JOptionPane.YES_NO_OPTION)) {
-                case JOptionPane.OK_OPTION:
-                    backup.clearAllExternalsListeners();
-                    EnvironmentSave.getInstance().save(backup);
-                    break;
-            }
-    }
-
     public void addCreatures(Collection<Creature> creatures) {
         require(drawPanel != null);
         drawPanel.addCreatures(creatures);
@@ -247,5 +223,9 @@ public enum GUIMonitor {
 
     public FieldsConfiguration dumpFieldsConfiguration() {
         return environmentBoard.createConfiguration();
+    }
+
+    public void updateLineWidth(double value) {
+        drawPanel.changeLineWidth(value);
     }
 }

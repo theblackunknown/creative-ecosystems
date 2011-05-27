@@ -130,6 +130,9 @@ public class WorldFrame
         togglers[3].setAction(ToggleFancyLines.getInstance());
         togglers[4].setAction(ToggleLineObstruction.getInstance());
 
+        painting.addSeparator();
+        painting.add(ChangeBackgroundColor.getInstance());
+
         menuBar.add(environment);
         menuBar.add(painting);
 

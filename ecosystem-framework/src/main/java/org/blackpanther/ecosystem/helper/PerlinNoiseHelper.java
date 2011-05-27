@@ -29,14 +29,20 @@ public final class PerlinNoiseHelper {
         Random fixedRandom = new Random(42L);
 
         for (int i = 0; i < longueur_max; i++)
-            for(int j = 0; j < hauteur_max;j++)
-            internal[i][j] = fixedRandom.nextDouble();
+            for (int j = 0; j < hauteur_max; j++)
+                internal[i][j] = fixedRandom.nextDouble();
 
         return internal;
     }
 
     private static double builtinNoise(int i, int j) {
-        return builtin_noise[i][j];
+        return builtin_noise
+                [i < 0
+                ? -i
+                : i]
+                [j < 0
+                ? -j
+                : j];
     }
 
     private static double linearInterpolation(double a, double b, double x) {
@@ -63,7 +69,7 @@ public final class PerlinNoiseHelper {
     }
 
     public static double coherentNoise(Point2D location) {
-        return coherentNoise(location.getX(),location.getY());
+        return coherentNoise(location.getX(), location.getY());
     }
 
     public static double coherentNoise(double x, double y) {

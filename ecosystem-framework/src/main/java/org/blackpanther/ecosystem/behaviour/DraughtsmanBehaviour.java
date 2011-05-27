@@ -258,12 +258,10 @@ public class DraughtsmanBehaviour
                 )),
                 new GeneFieldMould(AGENT_NATURAL_COLOR, StandardProvider(
                         parent.isMutable(AGENT_NATURAL_COLOR)
-                                ? normalizeColor(mutate(
+                                ? mutate(
                                 parent,
-                                parent.getGene(AGENT_NATURAL_COLOR, Double.class),
-                                Configuration.getParameter(COLOR_VARIATION, Double.class)
-                                        * coherentNoise(parent.getLocation())))
-                                : parent.getGene(AGENT_NATURAL_COLOR, Double.class)),
+                                parent.getGene(AGENT_NATURAL_COLOR, Color.class))
+                                : parent.getGene(AGENT_NATURAL_COLOR, Color.class)),
                         parent.isMutable(AGENT_NATURAL_COLOR)
                 ),
                 new GeneFieldMould(CREATURE_MOVEMENT_COST, StandardProvider(
