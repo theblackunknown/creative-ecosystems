@@ -61,7 +61,9 @@ public class BehaviorField
     public FieldMould<BehaviorManager> toMould() {
         return new GeneFieldMould<BehaviorManager>(
                 getMainComponent().getName(),
-                org.blackpanther.ecosystem.factory.generator.random.BehaviorProvider.getInstance(),
+                isRandomized()
+                ? org.blackpanther.ecosystem.factory.generator.random.BehaviorProvider.getInstance()
+                : new org.blackpanther.ecosystem.factory.generator.provided.BehaviorProvider(getValue()),
                 isMutable()
         );
     }

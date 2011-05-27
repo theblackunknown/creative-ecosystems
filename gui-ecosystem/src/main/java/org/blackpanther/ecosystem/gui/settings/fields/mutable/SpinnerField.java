@@ -20,8 +20,8 @@ public class SpinnerField
 
     private JCheckBox mutable;
 
-    public SpinnerField(String name, SpinnerModel model, double min, double max) {
-        super(name, model, min, max);
+    public SpinnerField(String name, SpinnerModel model) {
+        super(name, model);
     }
 
     @Override
@@ -58,9 +58,14 @@ public class SpinnerField
 
     @Override
     public FieldMould<Double> toMould() {
+        SpinnerNumberModel model = (SpinnerNumberModel) valueSelector.getModel();
+        Double min = (Double) model.getMinimum();
+        Double max = (Double) model.getMaximum();
         return new GeneFieldMould<Double>(
                 getMainComponent().getName(),
-                new org.blackpanther.ecosystem.factory.generator.random.DoubleProvider(min,max),
+                isRandomized()
+                        ? new org.blackpanther.ecosystem.factory.generator.random.DoubleProvider(min, max)
+                        : new org.blackpanther.ecosystem.factory.generator.provided.DoubleProvider(getValue()),
                 isMutable()
         );
     }

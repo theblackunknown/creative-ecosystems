@@ -26,7 +26,7 @@ public class IntegerSpinnerField
     }
 
     @Override
-    protected JComponent getMainComponent() {
+    public JComponent getMainComponent() {
         return valueSelector;
     }
 

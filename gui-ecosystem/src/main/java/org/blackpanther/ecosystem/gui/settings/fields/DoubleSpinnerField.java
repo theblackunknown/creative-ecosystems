@@ -26,7 +26,7 @@ public class DoubleSpinnerField
     }
 
     @Override
-    protected JComponent getMainComponent() {
+    public JComponent getMainComponent() {
         return valueSelector;
     }
 

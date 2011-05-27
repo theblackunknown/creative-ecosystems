@@ -9,7 +9,7 @@ import java.awt.geom.Point2D;
 
 import static org.blackpanther.ecosystem.ApplicationConstants.LINE_OBSTRUCTION_OPTION;
 import static org.blackpanther.ecosystem.Configuration.Configuration;
-import static org.blackpanther.ecosystem.agent.AgentConstants.AGENT_NATURAL_COLOR;
+import static org.blackpanther.ecosystem.agent.CreatureConstants.CREATURE_NATURAL_COLOR;
 
 /**
  * @author MACHIZAUD Andréa
@@ -20,7 +20,7 @@ public final class TraceHandler {
     }
 
     public static AgentLine trace(Point2D from, Point2D to, Creature monster) {
-        Color genotypeColor = monster.getGene(AGENT_NATURAL_COLOR, Color.class);
+        Color genotypeColor = monster.getGene(CREATURE_NATURAL_COLOR, Color.class);
         Color phenotypeColor = monster.getColor();
         Color expressedColor = new Color(
                 (genotypeColor.getRed() + phenotypeColor.getRed()) / 2,

@@ -2,10 +2,7 @@ package org.blackpanther.ecosystem.gui.settings;
 
 import org.blackpanther.ecosystem.ApplicationConstants;
 import org.blackpanther.ecosystem.Configuration;
-import org.blackpanther.ecosystem.agent.AgentConstants;
-import org.blackpanther.ecosystem.agent.Creature;
-import org.blackpanther.ecosystem.agent.CreatureConstants;
-import org.blackpanther.ecosystem.agent.Resource;
+import org.blackpanther.ecosystem.agent.*;
 import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.behaviour.DraughtsmanBehaviour;
 import org.blackpanther.ecosystem.behaviour.PredatorBehaviour;
@@ -18,10 +15,10 @@ import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
 import org.blackpanther.ecosystem.gui.settings.fields.DoubleSpinnerField;
 import org.blackpanther.ecosystem.gui.settings.fields.IntegerSpinnerField;
 import org.blackpanther.ecosystem.gui.settings.fields.SettingField;
-import org.blackpanther.ecosystem.math.Geometry;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.beans.EventHandler;
@@ -32,6 +29,7 @@ import java.util.logging.Logger;
 
 import static org.blackpanther.ecosystem.Configuration.*;
 import static org.blackpanther.ecosystem.agent.Agent.*;
+import static org.blackpanther.ecosystem.agent.ResourceConstants.*;
 import static org.blackpanther.ecosystem.gui.formatter.RangeModels.*;
 
 /**
@@ -71,6 +69,9 @@ public class EnvironmentBoard extends JPanel {
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Initial Fields Configuration not found", e);
         }
+
+        //initialize fields
+        updateInformation(Configuration);
     }
 
     /*=========================================================================
@@ -204,9 +205,6 @@ public class EnvironmentBoard extends JPanel {
 
             add(information, BorderLayout.NORTH);
             add(box, BorderLayout.CENTER);
-
-            //initialize fields
-            updateInformation(Configuration);
         }
 
         /**
@@ -288,16 +286,36 @@ public class EnvironmentBoard extends JPanel {
             agentFieldMould.toArray(mouldArray);
             return new FieldsConfiguration(mouldArray);
         }
+
+        public void updateFieldRange(String name, Double thresholdValue) {
+            internalCreatureParametersPanel.updateFieldRange(name, thresholdValue);
+            internalResourceParametersPanel.updateFieldRange(name, thresholdValue);
+        }
     }
 
     /**
      * Handle panel switching by a card layout
      */
 
-    class ApplicationParameterPanel extends ParameterPanel {
+    public class ApplicationParameterPanel extends ParameterPanel {
 
         public ApplicationParameterPanel(String name) {
             super(name);
+            for (String thresholdParameter : ApplicationConstants.THRESHOLD) {
+                JSpinner spinner = (JSpinner) parameters.get(thresholdParameter).getMainComponent();
+                spinner.addChangeListener(EventHandler.create(
+                        ChangeListener.class,
+                        this,
+                        "delegateUpdateFieldRange",
+                        "source"
+                ));
+            }
+        }
+
+        public void delegateUpdateFieldRange(JSpinner thresholdField) {
+            informationBoard.updateFieldRange(
+                    thresholdField.getName(),
+                    (Double) thresholdField.getValue());
         }
 
         @Override
@@ -309,7 +327,7 @@ public class EnvironmentBoard extends JPanel {
 
                 for (String parameter : ApplicationConstants.POSITIVE_DOUBLE)
                     put(parameter,
-                            new DoubleSpinnerField(parameter, generatePositiveDoubleModel()));
+                            new DoubleSpinnerField(parameter, generateDoubleModel(Double.MAX_VALUE)));
 
                 for (String parameter : ApplicationConstants.POSITIVE_INTEGER)
                     put(parameter,
@@ -366,92 +384,85 @@ public class EnvironmentBoard extends JPanel {
         @Override
         protected Map<String, SettingField> generateParameters() {
             return new TreeMap<String, SettingField>() {{
-                put(AGENT_ENERGY,
+                put(CREATURE_ENERGY,
                         new org.blackpanther.ecosystem.gui.settings.fields.randomable.SpinnerField(
-                                AGENT_ENERGY,
-                                generatePositiveDoubleModel(),
-                                0.0, Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class)));
+                                CREATURE_ENERGY,
+                                generateDoubleModel(
+                                        Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class))));
                 put(CREATURE_COLOR,
                         new org.blackpanther.ecosystem.gui.settings.fields.randomable.ColorField(CREATURE_COLOR));
                 put(CREATURE_ORIENTATION,
                         new org.blackpanther.ecosystem.gui.settings.fields.randomable.SpinnerField(
                                 CREATURE_ORIENTATION,
-                                generatePositiveDoubleModel(),
-                                0.0, Geometry.PI_2));
+                                generateAngleModel()));
                 put(CREATURE_CURVATURE,
                         new org.blackpanther.ecosystem.gui.settings.fields.randomable.SpinnerField(
                                 CREATURE_CURVATURE,
-                                generateDoubleModel(),
-                                -Configuration.getParameter(CURVATURE_THRESHOLD, Double.class),
-                                Configuration.getParameter(CURVATURE_THRESHOLD, Double.class)));
+                                generateDoubleModel(
+                                        -Configuration.getParameter(CURVATURE_THRESHOLD, Double.class),
+                                        Configuration.getParameter(CURVATURE_THRESHOLD, Double.class))));
                 put(CREATURE_SPEED,
                         new org.blackpanther.ecosystem.gui.settings.fields.randomable.SpinnerField(
                                 CREATURE_SPEED,
-                                generatePositiveDoubleModel(),
-                                0.0, Configuration.getParameter(SPEED_THRESHOLD, Double.class)));
+                                generateDoubleModel(
+                                        Configuration.getParameter(SPEED_THRESHOLD, Double.class))));
 
-                put(AGENT_NATURAL_COLOR,
-                        new org.blackpanther.ecosystem.gui.settings.fields.mutable.ColorField(AGENT_NATURAL_COLOR));
+                put(CREATURE_NATURAL_COLOR,
+                        new org.blackpanther.ecosystem.gui.settings.fields.mutable.ColorField(CREATURE_NATURAL_COLOR));
                 put(CREATURE_MOVEMENT_COST,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_MOVEMENT_COST,
-                                generatePercentageModel(),
-                                0.0, 1.0));
+                                generatePercentageModel()));
                 put(CREATURE_FECUNDATION_COST,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_FECUNDATION_COST,
-                                generatePositiveDoubleModel(),
-                                0.0, Configuration.getParameter(FECUNDATION_CONSUMMATION_THRESHOLD, Double.class)));
+                                generateDoubleModel(
+                                        Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class))));
                 put(CREATURE_FECUNDATION_LOSS,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_FECUNDATION_LOSS,
-                                generatePercentageModel(),
-                                0.0, 1.0));
+                                generatePercentageModel()
+                        ));
                 put(CREATURE_GREED,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_GREED,
-                                generatePercentageModel(),
-                                0.0, 1.0));
+                                generatePercentageModel()
+                        ));
                 put(CREATURE_FLEE,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_FLEE,
-                                generatePercentageModel(),
-                                0.0, 1.0));
+                                generatePercentageModel()
+                        ));
                 put(CREATURE_SENSOR_RADIUS,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_SENSOR_RADIUS,
-                                generatePositiveDoubleModel(),
-                                0.0, Configuration.getParameter(SENSOR_THRESHOLD, Double.class)));
+                                generateDoubleModel(
+                                        Configuration.getParameter(SENSOR_THRESHOLD, Double.class))));
                 put(CREATURE_IRRATIONALITY,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_IRRATIONALITY,
-                                generatePercentageModel(),
-                                0.0, 1.0));
+                                generatePercentageModel()));
                 put(CREATURE_MORTALITY,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_MORTALITY,
-                                generatePercentageModel(),
-                                0.0, 1.0));
+                                generatePercentageModel()));
                 put(CREATURE_FECUNDITY,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_FECUNDITY,
-                                generatePercentageModel(),
-                                0.0, 1.0));
+                                generatePercentageModel()));
                 put(CREATURE_MUTATION,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_MUTATION,
-                                generatePercentageModel(),
-                                0.0, 1.0));
+                                generatePercentageModel()));
                 put(CREATURE_ORIENTATION_LAUNCHER,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_ORIENTATION_LAUNCHER,
-                                generatePositiveDoubleModel(),
-                                0.0, Geometry.PI_2));
+                                generateAngleModel()));
                 put(CREATURE_SPEED_LAUNCHER,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_SPEED_LAUNCHER,
-                                generatePositiveDoubleModel(),
-                                0.0, Configuration.getParameter(SPEED_THRESHOLD, Double.class)));
+                                generateDoubleModel(
+                                        Configuration.getParameter(SPEED_THRESHOLD, Double.class))));
                 put(CREATURE_BEHAVIOR,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.BehaviorField(
                                 CREATURE_BEHAVIOR,
@@ -486,26 +497,26 @@ public class EnvironmentBoard extends JPanel {
         @Override
         protected Map<String, SettingField> generateParameters() {
             return new TreeMap<String, SettingField>() {{
-                put(AGENT_ENERGY,
+                put(RESOURCE_ENERGY,
                         new org.blackpanther.ecosystem.gui.settings.fields.randomable.SpinnerField(
-                                AGENT_ENERGY,
-                                generatePositiveDoubleModel(),
-                                0.0, Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class)));
-                put(AGENT_NATURAL_COLOR,
+                                RESOURCE_ENERGY,
+                                generateDoubleModel(
+                                        Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class))));
+                put(RESOURCE_NATURAL_COLOR,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.ColorField(
-                                AGENT_NATURAL_COLOR));
+                                RESOURCE_NATURAL_COLOR));
             }};
         }
 
         @Override
         void fillUpState(Box layout) {
-            for (String stateParameter : AgentConstants.CUSTOMIZABLE_AGENT_STATE)
+            for (String stateParameter : CUSTOMIZABLE_RESOURCE_STATE)
                 layout.add(parameters.get(stateParameter));
         }
 
         @Override
         void fillUpGenotype(Box layout) {
-            for (String genotypeParameter : AgentConstants.AGENT_GENOTYPE)
+            for (String genotypeParameter : RESOURCE_GENOTYPE)
                 layout.add(parameters.get(genotypeParameter));
         }
     }

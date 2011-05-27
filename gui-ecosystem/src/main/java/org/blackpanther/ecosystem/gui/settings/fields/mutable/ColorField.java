@@ -60,7 +60,9 @@ public class ColorField
     public FieldMould<Color> toMould() {
         return new GeneFieldMould<Color>(
                 getMainComponent().getName(),
-                new org.blackpanther.ecosystem.factory.generator.random.ColorProvider(),
+                isRandomized()
+                        ? org.blackpanther.ecosystem.factory.generator.random.ColorProvider.getInstance()
+                        : new org.blackpanther.ecosystem.factory.generator.provided.ColorProvider(getValue()),
                 isMutable()
         );
     }

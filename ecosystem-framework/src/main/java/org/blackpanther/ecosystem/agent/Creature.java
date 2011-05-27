@@ -6,6 +6,7 @@ import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
 import org.blackpanther.ecosystem.math.Geometry;
 
+import javax.tools.JavaCompiler;
 import java.awt.*;
 
 import static org.blackpanther.ecosystem.factory.fields.FieldsConfiguration.checkCreatureConfiguration;
@@ -85,6 +86,11 @@ public class Creature
     /*=========================================================================
                             SETTERS
     =========================================================================*/
+
+    @Override
+    public double getEnergy() {
+        return getState(CREATURE_ENERGY, Double.class);
+    }
 
     public Color getColor() {
         return getState(CREATURE_COLOR, Color.class);
@@ -191,6 +197,13 @@ public class Creature
     /*=========================================================================
                             GETTERS
     =========================================================================*/
+
+    @Override
+    public void setEnergy(Double energy) {
+        currentState.put(CREATURE_ENERGY, energy < 0.0
+                ? 0.0
+                : energy);
+    }
 
     public void setColor(int red, int green, int blue) {
         currentState.put(CREATURE_COLOR, new Color(

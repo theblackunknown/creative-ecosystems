@@ -13,15 +13,24 @@ import javax.swing.*;
 public class SpinnerField
         extends RandomSettingField<Double> {
 
-    private JSpinner valueSelector;
-    protected double min;
-    protected double max;
+    protected JSpinner valueSelector;
 
-    public SpinnerField(String name, SpinnerModel model, double min, double max) {
+    public SpinnerField(String name, SpinnerModel model) {
         super(name);
-        this.min = min;
-        this.max = max;
         valueSelector.setModel(model);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void updateRange(Double min, Double max) {
+        SpinnerNumberModel model = (SpinnerNumberModel) valueSelector.getModel();
+        model.setMinimum(min);
+        model.setMaximum(max);
+        Comparable currentValue = (Comparable) valueSelector.getValue();
+        if (currentValue.compareTo(model.getMaximum()) > 0) {
+            valueSelector.setValue(model.getMaximum());
+        } else if (currentValue.compareTo(model.getMinimum()) < 0) {
+            valueSelector.setValue(model.getMinimum());
+        }
     }
 
     @Override
@@ -32,7 +41,7 @@ public class SpinnerField
     }
 
     @Override
-    protected JComponent getMainComponent() {
+    public JComponent getMainComponent() {
         return valueSelector;
     }
 
@@ -45,17 +54,24 @@ public class SpinnerField
     public Double getValue() {
         if (!isRandomized())
             return (Double) valueSelector.getValue();
-        else
+        else {
+            SpinnerNumberModel model = (SpinnerNumberModel) valueSelector.getModel();
+            Double min = (Double) model.getMinimum();
+            Double max = (Double) model.getMaximum();
             return min
                     + Configuration.Configuration.getRandom().nextDouble() * (max - min);
+        }
     }
 
     @Override
     public FieldMould<Double> toMould() {
+        SpinnerNumberModel model = (SpinnerNumberModel) valueSelector.getModel();
+        Double min = (Double) model.getMinimum();
+        Double max = (Double) model.getMaximum();
         return new StateFieldMould<Double>(
                 valueSelector.getName(),
                 isRandomized()
-                        ? new org.blackpanther.ecosystem.factory.generator.random.DoubleProvider(min,max)
+                        ? new org.blackpanther.ecosystem.factory.generator.random.DoubleProvider(min, max)
                         : new org.blackpanther.ecosystem.factory.generator.provided.DoubleProvider((Double) valueSelector.getValue())
         );
     }

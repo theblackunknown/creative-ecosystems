@@ -36,17 +36,7 @@ public class ColorField
     }
 
     @Override
-    public FieldMould<Color> toMould() {
-        return new StateFieldMould<Color>(
-                colorSelector.getName(),
-                isRandomized()
-                        ? org.blackpanther.ecosystem.factory.generator.random.ColorProvider.getInstance()
-                        : new org.blackpanther.ecosystem.factory.generator.provided.ColorProvider(colorSelector.getBackground())
-        );
-    }
-
-    @Override
-    protected JComponent getMainComponent() {
+    public JComponent getMainComponent() {
         return colorSelector;
     }
 
@@ -74,5 +64,15 @@ public class ColorField
                 colorSelector.getBackground());
         if (selectedColor != null)
             colorSelector.setBackground(selectedColor);
+    }
+
+    @Override
+    public FieldMould<Color> toMould() {
+        return new StateFieldMould<Color>(
+                colorSelector.getName(),
+                isRandomized()
+                        ? org.blackpanther.ecosystem.factory.generator.random.ColorProvider.getInstance()
+                        : new org.blackpanther.ecosystem.factory.generator.provided.ColorProvider(colorSelector.getBackground())
+        );
     }
 }

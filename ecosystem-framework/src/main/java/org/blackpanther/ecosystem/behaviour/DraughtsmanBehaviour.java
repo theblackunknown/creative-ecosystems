@@ -89,11 +89,11 @@ public class DraughtsmanBehaviour
                 that.setEnergy(that.getEnergy() + closestResource.getTarget().getEnergy());
                 that.setColor(
                         (that.getColor().getRed()
-                                + closestResource.getTarget().getGene(AGENT_NATURAL_COLOR, Color.class).getRed()) / 2,
+                                + closestResource.getTarget().getGene(CREATURE_NATURAL_COLOR, Color.class).getRed()) / 2,
                         (that.getColor().getGreen()
-                                + closestResource.getTarget().getGene(AGENT_NATURAL_COLOR, Color.class).getGreen()) / 2,
+                                + closestResource.getTarget().getGene(CREATURE_NATURAL_COLOR, Color.class).getGreen()) / 2,
                         (that.getColor().getBlue()
-                                + closestResource.getTarget().getGene(AGENT_NATURAL_COLOR, Color.class).getBlue()) / 2
+                                + closestResource.getTarget().getGene(CREATURE_NATURAL_COLOR, Color.class).getBlue()) / 2
                 );
 
                 closestResource.getTarget().detachFromEnvironment(env);
@@ -233,8 +233,6 @@ public class DraughtsmanBehaviour
 
     @SuppressWarnings("unchecked")
     private FieldsConfiguration generateConfigurationFromParent(Creature parent) {
-
-
         return new FieldsConfiguration(
                 new StateFieldMould(CREATURE_COLOR, StandardProvider(
                         parent.getColor()
@@ -242,7 +240,7 @@ public class DraughtsmanBehaviour
                 new StateFieldMould(AGENT_LOCATION, StandardProvider(
                         parent.getLocation()
                 )),
-                new StateFieldMould(AGENT_ENERGY, StandardProvider(
+                new StateFieldMould(CREATURE_ENERGY, StandardProvider(
                         parent.getEnergy() * parent.getGene(CREATURE_FECUNDATION_LOSS, Double.class)
                 )),
                 new StateFieldMould(CREATURE_CURVATURE, StandardProvider(
@@ -256,13 +254,13 @@ public class DraughtsmanBehaviour
                 new StateFieldMould(CREATURE_SPEED, StandardProvider(
                         parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class)
                 )),
-                new GeneFieldMould(AGENT_NATURAL_COLOR, StandardProvider(
-                        parent.isMutable(AGENT_NATURAL_COLOR)
+                new GeneFieldMould(CREATURE_NATURAL_COLOR, StandardProvider(
+                        parent.isMutable(CREATURE_NATURAL_COLOR)
                                 ? mutate(
                                 parent,
-                                parent.getGene(AGENT_NATURAL_COLOR, Color.class))
-                                : parent.getGene(AGENT_NATURAL_COLOR, Color.class)),
-                        parent.isMutable(AGENT_NATURAL_COLOR)
+                                parent.getGene(CREATURE_NATURAL_COLOR, Color.class))
+                                : parent.getGene(CREATURE_NATURAL_COLOR, Color.class)),
+                        parent.isMutable(CREATURE_NATURAL_COLOR)
                 ),
                 new GeneFieldMould(CREATURE_MOVEMENT_COST, StandardProvider(
                         parent.getGene(CREATURE_MOVEMENT_COST, Double.class)),
@@ -424,20 +422,20 @@ public class DraughtsmanBehaviour
                 normalizeColor(mutate(
                         parent,
                         normalValue.getRed(),
-                        Configuration.getParameter(COLOR_VARIATION, Double.class)
+                        Configuration.getParameter(COLOR_VARIATION, Integer.class)
                                 * coherentNoise(parent.getLocation())
                 )),
                 normalizeColor(mutate(
                         parent,
                         normalValue.getGreen(),
-                        Configuration.getParameter(COLOR_VARIATION, Double.class)
+                        Configuration.getParameter(COLOR_VARIATION, Integer.class)
                                 * coherentNoise(parent.getLocation())
 
                 )),
                 normalizeColor(mutate(
                         parent,
                         normalValue.getBlue(),
-                        Configuration.getParameter(COLOR_VARIATION, Double.class)
+                        Configuration.getParameter(COLOR_VARIATION, Integer.class)
                                 * coherentNoise(parent.getLocation())
 
                 ))

@@ -22,21 +22,20 @@ public final class Helper {
 
     static {
         Arrays.sort(AgentConstants.AGENT_STATE);
-        Arrays.sort(AgentConstants.AGENT_GENOTYPE);
         Arrays.sort(CreatureConstants.CREATURE_STATE);
         Arrays.sort(CreatureConstants.CREATURE_GENOTYPE);
     }
 
     public static boolean isGene(String trait) {
         return Arrays.binarySearch(CreatureConstants.CREATURE_GENOTYPE, trait) >= 0
-                || Arrays.binarySearch(AgentConstants.AGENT_GENOTYPE, trait) >= 0;
+                || Arrays.binarySearch(ResourceConstants.RESOURCE_GENOTYPE, trait) >= 0;
     }
 
     public static boolean isGene(Class species, String trait) {
-        if (species.equals(Agent.class) || species.equals(Resource.class))
-            return Arrays.binarySearch(AgentConstants.AGENT_GENOTYPE, trait) >= 0;
-        else if (species.equals(Creature.class))
+        if (species.equals(Creature.class))
             return Arrays.binarySearch(CreatureConstants.CREATURE_GENOTYPE, trait) >= 0;
+        else if (species.equals(Resource.class))
+            return Arrays.binarySearch(ResourceConstants.RESOURCE_GENOTYPE, trait) >= 0;
         else
             throw new IllegalArgumentException("Unknown species : " + species);
     }
