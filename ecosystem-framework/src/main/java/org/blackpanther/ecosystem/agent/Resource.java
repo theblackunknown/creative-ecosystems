@@ -16,6 +16,13 @@ public class Resource
     public Resource(FieldsConfiguration config) {
         super(config);
         checkResourceConfiguration(config);
+        for (String stateTrait : BUILD_PROVIDED_RESOURCE_STATE)
+            currentState.put(stateTrait, config.getValue(stateTrait));
+
+        for (String genotypeTrait : RESOURCE_GENOTYPE) {
+            genotype.put(genotypeTrait, config.getValue(genotypeTrait));
+            mutableTable.put(genotypeTrait, config.isMutable(Resource.class, genotypeTrait));
+        }
     }
 
     /**

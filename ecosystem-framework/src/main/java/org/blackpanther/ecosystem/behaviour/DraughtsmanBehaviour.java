@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import static java.lang.Math.*;
 import static org.blackpanther.ecosystem.Configuration.*;
 import static org.blackpanther.ecosystem.agent.Agent.*;
+import static org.blackpanther.ecosystem.agent.ResourceConstants.RESOURCE_NATURAL_COLOR;
 import static org.blackpanther.ecosystem.factory.generator.StandardProvider.StandardProvider;
 import static org.blackpanther.ecosystem.helper.Helper.*;
 import static org.blackpanther.ecosystem.helper.PerlinNoiseHelper.coherentNoise;
@@ -74,6 +75,9 @@ public class DraughtsmanBehaviour
         move(env, agent);
         //Step 4 - grow up
         growUp(env, agent);
+
+        if (agent.isAlive() && agent.getEnergy() < 10e-1)
+            agent.detachFromEnvironment(env);
     }
 
     protected void react(Environment env, Creature that, SenseResult analysis) {
@@ -89,11 +93,11 @@ public class DraughtsmanBehaviour
                 that.setEnergy(that.getEnergy() + closestResource.getTarget().getEnergy());
                 that.setColor(
                         (that.getColor().getRed()
-                                + closestResource.getTarget().getGene(CREATURE_NATURAL_COLOR, Color.class).getRed()) / 2,
+                                + closestResource.getTarget().getGene(RESOURCE_NATURAL_COLOR, Color.class).getRed()) / 2,
                         (that.getColor().getGreen()
-                                + closestResource.getTarget().getGene(CREATURE_NATURAL_COLOR, Color.class).getGreen()) / 2,
+                                + closestResource.getTarget().getGene(RESOURCE_NATURAL_COLOR, Color.class).getGreen()) / 2,
                         (that.getColor().getBlue()
-                                + closestResource.getTarget().getGene(CREATURE_NATURAL_COLOR, Color.class).getBlue()) / 2
+                                + closestResource.getTarget().getGene(RESOURCE_NATURAL_COLOR, Color.class).getBlue()) / 2
                 );
 
                 closestResource.getTarget().detachFromEnvironment(env);
@@ -220,7 +224,7 @@ public class DraughtsmanBehaviour
                 //Step 2 - loss of energy
                 that.setEnergy(
                         that.getEnergy() *
-                                (1 - that.getGene(CREATURE_FECUNDATION_LOSS, Double.class))
+                                (1.0 - that.getGene(CREATURE_FECUNDATION_LOSS, Double.class))
                 );
 
                 //Add into environment

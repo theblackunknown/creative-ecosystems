@@ -31,9 +31,16 @@ public final class TraceHandler {
     }
 
     public static boolean canCross(Line2D a, Line2D b) {
-        return a instanceof AgentLine && b instanceof AgentLine
-                && (!Configuration.getParameter(LINE_OBSTRUCTION_OPTION, Boolean.class)
-                || ((AgentLine) a).getSpecies().equals(PredatorBehaviour.class)
-                && !((AgentLine) b).getSpecies().equals(PredatorBehaviour.class));
+        //if option is not activated, cross is available to anyone
+        if (a instanceof AgentLine && b instanceof AgentLine) {
+            if (!Configuration.getParameter(LINE_OBSTRUCTION_OPTION, Boolean.class))
+                return true;
+
+            AgentLine first = (AgentLine) a;
+            AgentLine second = (AgentLine) b;
+            return first.getSpecies().equals(PredatorBehaviour.class)
+                    && !second.getSpecies().equals(PredatorBehaviour.class);
+        } else
+            return false;
     }
 }

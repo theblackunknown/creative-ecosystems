@@ -134,7 +134,7 @@ public final class Helper {
             resourceRelativeOrientation -= PI_2;
         else if (resourceRelativeOrientation < -PI)
             resourceRelativeOrientation += PI_2;
-        return (alpha + resourceRelativeOrientation) % PI_2;
+        return (resourceRelativeOrientation) % PI_2;
     }
 
     public static URL getURL(String imagePath) {

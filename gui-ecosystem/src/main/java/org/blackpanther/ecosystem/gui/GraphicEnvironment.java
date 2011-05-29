@@ -3,7 +3,6 @@ package org.blackpanther.ecosystem.gui;
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.agent.Creature;
 import org.blackpanther.ecosystem.agent.Resource;
-import org.blackpanther.ecosystem.agent.ResourceConstants;
 import org.blackpanther.ecosystem.event.*;
 import org.blackpanther.ecosystem.factory.EnvironmentAbstractFactory;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
@@ -27,7 +26,7 @@ import java.util.logging.Logger;
 import static org.blackpanther.ecosystem.Configuration.Configuration;
 import static org.blackpanther.ecosystem.Configuration.ENERGY_AMOUNT_THRESHOLD;
 import static org.blackpanther.ecosystem.agent.AgentConstants.AGENT_LOCATION;
-import static org.blackpanther.ecosystem.agent.ResourceConstants.*;
+import static org.blackpanther.ecosystem.agent.ResourceConstants.RESOURCE_NATURAL_COLOR;
 import static org.blackpanther.ecosystem.factory.generator.StandardProvider.StandardProvider;
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 import static org.blackpanther.ecosystem.helper.Helper.require;
@@ -438,6 +437,10 @@ public class GraphicEnvironment
                 case CYCLE_END:
                     Monitor.updateEnvironmentInformation(
                             monitoredEnvironment, EnvironmentInformation.State.RUNNING);
+                    if (monitoredEnvironment.getCreaturePool().size() == 0) {
+                    drawEnvironment.stop();
+                    runEnvironment.stop();
+                    }
                     break;
                 case ENDED:
                     Monitor.updateEnvironmentInformation(
@@ -531,7 +534,6 @@ public class GraphicEnvironment
             //get current panel's dimension
             Dimension panelDimension = getBounds().getSize();
 
-            //minus because environment is real mathematics cartesian coordinate
             double panelDistance = distance * panelScale;
 
             logger.finest(String.format(

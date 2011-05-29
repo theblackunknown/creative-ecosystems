@@ -200,7 +200,7 @@ public class Creature
 
     @Override
     public void setEnergy(Double energy) {
-        currentState.put(CREATURE_ENERGY, energy < 0.0
+        currentState.put(CREATURE_ENERGY, energy < 10e-2
                 ? 0.0
                 : energy);
     }

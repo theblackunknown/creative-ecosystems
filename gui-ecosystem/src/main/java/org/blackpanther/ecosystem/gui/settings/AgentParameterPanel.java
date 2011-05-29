@@ -3,7 +3,10 @@ package org.blackpanther.ecosystem.gui.settings;
 import org.blackpanther.ecosystem.agent.ResourceConstants;
 import org.blackpanther.ecosystem.factory.fields.FieldMould;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
+import org.blackpanther.ecosystem.factory.fields.StateFieldMould;
 import org.blackpanther.ecosystem.gui.settings.fields.SettingField;
+import org.blackpanther.ecosystem.gui.settings.fields.mutable.Mutable;
+import org.blackpanther.ecosystem.gui.settings.fields.randomable.RandomSettingField;
 import org.blackpanther.ecosystem.gui.settings.fields.randomable.SpinnerField;
 
 import javax.swing.*;
@@ -71,9 +74,11 @@ public abstract class AgentParameterPanel
 
     @SuppressWarnings("unchecked")
     public void updateInformation(FieldsConfiguration information) {
-        for (Map.Entry<String, SettingField> entry : parameters.entrySet())
-            entry.getValue().setValue(
+        for (Map.Entry<String, SettingField> entry : parameters.entrySet()) {
+            SettingField field = entry.getValue();
+            field.setValue(
                     information.getValue(entry.getKey()));
+        }
     }
 
     public Collection<FieldMould> getMoulds() {

@@ -126,7 +126,7 @@ public enum Configuration
                 try {
                     setParameter(
                             parameter,
-                            Boolean.parseBoolean(parameter),
+                            Boolean.parseBoolean(value),
                             Boolean.class
                     );
                 } catch (NumberFormatException e) {
@@ -208,10 +208,10 @@ public enum Configuration
         }
     }
 
-    public Properties textCopy(){
+    public Properties textCopy() {
         Properties copy = new Properties();
-        for(Map.Entry<String,Object> parameter : applicationProperties.entrySet())
-            copy.put(parameter.getKey(),String.valueOf(parameter.getValue()));
+        for (Map.Entry<String, Object> parameter : applicationProperties.entrySet())
+            copy.put(parameter.getKey(), String.valueOf(parameter.getValue()));
         return copy;
     }
 

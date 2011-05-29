@@ -86,13 +86,9 @@ public enum GUIMonitor {
         require(environmentCommandsPanel != null);
         environmentBoard.updateInformation(EnvironmentInformation.dump(env, state));
         switch (state) {
-            case RUNNING:
-                break;
             case PAUSED:
-                drawPanel.stopSimulation();
-                break;
             case FROZEN:
-                environmentCommandsPanel.environmentFrozen();
+                drawPanel.stopSimulation();
                 break;
         }
     }

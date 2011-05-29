@@ -150,6 +150,10 @@ public class FieldsConfiguration
         return mould.getValue();
     }
 
+    public FieldMould getField(String traitName) {
+        return wrappedFieldProvider.get(traitName);
+    }
+
     public boolean isMutable(Class species, String trait) {
         isGene(species, trait);
         try {

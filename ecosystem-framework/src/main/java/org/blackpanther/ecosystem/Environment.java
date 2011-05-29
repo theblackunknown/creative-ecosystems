@@ -16,7 +16,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static org.blackpanther.ecosystem.SensorTarget.detected;
-import static org.blackpanther.ecosystem.helper.Helper.*;
+import static org.blackpanther.ecosystem.helper.Helper.EPSILON;
+import static org.blackpanther.ecosystem.helper.Helper.computeOrientation;
 import static org.blackpanther.ecosystem.math.Geometry.getIntersection;
 
 /**
@@ -80,11 +81,6 @@ public class Environment
      *                       MISCELLANEOUS
      *=========================================================================
      */
-
-    /**
-     * Mark whether this environment has been frozen or not
-     */
-    private boolean endReached;
     /**
      * Component that can monitor an environment
      *
@@ -283,8 +279,6 @@ public class Environment
      * </p>
      */
     public final void runNextCycle() {
-        require(!endReached, "This environment has been frozen");
-
         if (timetracker == 0)
             getEventSupport().fireEvolutionEvent(EvolutionEvent.Type.STARTED);
 
@@ -301,17 +295,17 @@ public class Environment
         ));
         totalComparison = 0;
 
+        //update timeline
+        logger.info(String.format(
+                "%s 's cycle %d ended, %d agents remaining",
+                this,
+                timetracker,
+                creaturePool.size()));
+        timetracker++;
+        getEventSupport().fireEvolutionEvent(EvolutionEvent.Type.CYCLE_END);
+
         if (creaturePool.size() == 0) {
             endThisWorld();
-        } else {
-            //update timeline
-            logger.info(String.format(
-                    "%s 's cycle %d ended, %d agents remaining",
-                    this,
-                    timetracker,
-                    creaturePool.size()));
-            timetracker++;
-            getEventSupport().fireEvolutionEvent(EvolutionEvent.Type.CYCLE_END);
         }
     }
 
@@ -323,8 +317,9 @@ public class Environment
 
         //update all agents
         //if they die, they are simply not kept in the next creaturePool
-        for (Creature monster : creaturePool)
+        for (Creature monster : creaturePool) {
             monster.update(this);
+        }
         for (Creature monster : deadAgents)
             creaturePool.remove(monster);
 
@@ -338,11 +333,8 @@ public class Environment
      * and freeze its state
      */
     public final void endThisWorld() {
-        endReached = true;
-        logger.info(String.format("The evolution's game ended. %s's statistics[%d cycle]", this, timetracker));
+        logger.info(String.format("The evolution's game paused. %s's statistics[%d cycle]", this, timetracker));
         getEventSupport().fireEvolutionEvent(EvolutionEvent.Type.ENDED);
-        creaturePool.clear();
-        nextGenerationBuffer.clear();
     }
 
     @Override
