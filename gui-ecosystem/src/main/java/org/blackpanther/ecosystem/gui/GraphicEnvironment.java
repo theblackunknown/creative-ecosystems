@@ -232,6 +232,18 @@ public class GraphicEnvironment
         Color basicColor = graphicalLine.getColor();
 
 
+        double strokeWidth =
+                internalMouseMonitor.environmentToPanel(
+                        graphicalLine.getPower()
+                                / Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class))
+                        * LINE_WIDTH;
+
+        g2d.setStroke(new BasicStroke(
+                (float) strokeWidth,
+                BasicStroke.CAP_ROUND,
+                BasicStroke.JOIN_ROUND
+        ));
+
         if (isActivated(FANCY_LINE_OPTION)) {
             double randomNumber = rand.nextGaussian();
             if (randomNumber < 0.0) {
@@ -239,25 +251,9 @@ public class GraphicEnvironment
             } else if (randomNumber > 1.0) {
                 basicColor = basicColor.brighter();
             }
-
-            float strokeWidth = internalMouseMonitor.environmentToPanel(
-                    (rand.nextDouble() * 0.3) + LINE_WIDTH).floatValue();
-
-            g2d.setStroke(new BasicStroke(
-                    strokeWidth,
-                    BasicStroke.CAP_ROUND,
-                    BasicStroke.JOIN_ROUND
-            ));
-
-            g2d.setPaint(new LinearGradientPaint(
-                    start,
-                    end,
-                    new float[]{0.0f, 1.0f},
-                    new Color[]{basicColor, currentBackground}
-            ));
-        } else {
-            g2d.setColor(basicColor);
         }
+
+        g2d.setColor(basicColor);
 
         g2d.drawLine(
                 (int) start.getX(),
@@ -438,8 +434,8 @@ public class GraphicEnvironment
                     Monitor.updateEnvironmentInformation(
                             monitoredEnvironment, EnvironmentInformation.State.RUNNING);
                     if (monitoredEnvironment.getCreaturePool().size() == 0) {
-                    drawEnvironment.stop();
-                    runEnvironment.stop();
+                        drawEnvironment.stop();
+                        runEnvironment.stop();
                     }
                     break;
                 case ENDED:
@@ -627,7 +623,6 @@ public class GraphicEnvironment
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            require(monitoredEnvironment.getTime() == 0);
             require(mouseLocation != null);
             dropAgent(mouseLocation);
         }

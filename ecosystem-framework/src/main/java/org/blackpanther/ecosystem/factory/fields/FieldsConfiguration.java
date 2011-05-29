@@ -21,6 +21,8 @@ import static org.blackpanther.ecosystem.helper.Helper.isGene;
 public class FieldsConfiguration
         implements Serializable, Cloneable {
 
+    private static final long serialVersionUID = 1L;
+
     public static final String[] UNBOUNDED_FIELDS = new String[]{
             CREATURE_CURVATURE,
     };

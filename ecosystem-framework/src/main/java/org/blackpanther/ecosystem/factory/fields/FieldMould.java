@@ -11,6 +11,8 @@ import java.io.Serializable;
 public abstract class FieldMould<T>
         implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private String name;
     private ValueProvider<T> provider;
 

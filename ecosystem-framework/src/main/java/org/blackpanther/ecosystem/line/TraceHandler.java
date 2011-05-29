@@ -27,7 +27,7 @@ public final class TraceHandler {
                 (genotypeColor.getGreen() + phenotypeColor.getGreen()) / 2,
                 (genotypeColor.getBlue() + phenotypeColor.getBlue()) / 2
         );
-        return new AgentLine(from, to, expressedColor, monster.getBehaviour().getClass());
+        return new AgentLine(from, to, expressedColor, monster.getBehaviour().getClass(), monster.getEnergy());
     }
 
     public static boolean canCross(Line2D a, Line2D b) {

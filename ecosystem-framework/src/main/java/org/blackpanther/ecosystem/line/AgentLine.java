@@ -2,6 +2,7 @@ package org.blackpanther.ecosystem.line;
 
 import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 
+import javax.tools.JavaCompiler;
 import java.awt.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
@@ -15,13 +16,15 @@ public class AgentLine
 
     private Color color;
     private Class<? extends BehaviorManager> species;
+    private java.lang.Double power;
 
     public AgentLine(Point2D x, Point2D y,
-                         Color c,
-                         Class<? extends BehaviorManager> species) {
+                     Color c,
+                     Class<? extends BehaviorManager> species, double energy) {
         super(x, y);
         this.color = c;
         this.species = species;
+        this.power = energy;
     }
 
     public Color getColor() {
@@ -30,5 +33,9 @@ public class AgentLine
 
     public Class<? extends BehaviorManager> getSpecies() {
         return species;
+    }
+
+    public java.lang.Double getPower() {
+        return power;
     }
 }

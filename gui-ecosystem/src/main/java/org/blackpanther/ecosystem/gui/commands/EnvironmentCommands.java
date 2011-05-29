@@ -42,7 +42,7 @@ public class EnvironmentCommands
         paintAgent = new JToggleButton("Agent dropper");
         paintResource = new JToggleButton("Resource dropper");
 
-        JSlider lineWidth = new JSlider(1,5);
+        JSlider lineWidth = new JSlider(5,10);
 
         ActionListener toggleListener = EventHandler.create(
                 ActionListener.class,
