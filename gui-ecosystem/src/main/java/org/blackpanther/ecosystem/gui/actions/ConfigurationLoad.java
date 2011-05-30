@@ -43,20 +43,6 @@ public class ConfigurationLoad
                 ? ((Component) e.getSource()).getParent()
                 : null;
 
-        boolean checkNeeded = Monitor.dumpCurrentEnvironment() != null;
-
-        if (checkNeeded) {
-            int returnVal = JOptionPane.showConfirmDialog(parent,
-                    "Current environment will be lost !",
-                    "Warning before loading external conf",
-                    JOptionPane.YES_NO_OPTION);
-
-            if (returnVal != JOptionPane.OK_OPTION) {
-                JOptionPane.showMessageDialog(parent, "Loading aborted");
-                return;
-            }
-        }
-
         switch (fc.showOpenDialog(parent)) {
             case JFileChooser.APPROVE_OPTION:
                 File selectedFile = fc.getSelectedFile();
@@ -68,7 +54,6 @@ public class ConfigurationLoad
                     Properties environmentProperties = (Properties) os.readObject();
                     FieldsConfiguration agentConfiguration = (FieldsConfiguration) os.readObject();
                     os.close();
-                    Monitor.resetEnvironment();
                     Configuration.Configuration.loadConfiguration(environmentProperties);
                     Monitor.updateSettingFields(agentConfiguration);
                     JOptionPane.showMessageDialog(
