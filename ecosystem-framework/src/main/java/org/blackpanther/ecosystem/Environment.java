@@ -15,6 +15,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import static org.blackpanther.ecosystem.ApplicationConstants.LINE_OBSTRUCTION_OPTION;
+import static org.blackpanther.ecosystem.Configuration.Configuration;
 import static org.blackpanther.ecosystem.SensorTarget.detected;
 import static org.blackpanther.ecosystem.helper.Helper.EPSILON;
 import static org.blackpanther.ecosystem.helper.Helper.computeOrientation;
@@ -73,7 +75,7 @@ public class Environment
     /**
      * Population
      */
-    protected Collection<Creature> creaturePool = new ArrayList<Creature>();
+    protected List<Creature> creaturePool = new ArrayList<Creature>();
     private Collection<Resource> resourcePool = new ArrayList<Resource>();
 
     /*
@@ -88,7 +90,6 @@ public class Environment
      */
     protected EnvironmentMonitor eventSupport;
     private Stack<Creature> nextGenerationBuffer = new Stack<Creature>();
-    private Stack<Creature> deadAgents = new Stack<Creature>();
     private Line2D[] boundLines = new Line2D[4];
 
     public Environment(double width, double height) {
@@ -320,10 +321,12 @@ public class Environment
         for (Creature monster : creaturePool) {
             monster.update(this);
         }
-        for (Creature monster : deadAgents)
-            creaturePool.remove(monster);
+        for (int i = 0; i < creaturePool.size(); )
+            if (!creaturePool.get(i).isAlive())
+                creaturePool.remove(i);
+            else
+                i++;
 
-        deadAgents.clear();
         creaturePool.addAll(nextGenerationBuffer);
         nextGenerationBuffer.clear();
     }
@@ -376,10 +379,6 @@ public class Environment
     public void nextGeneration(Creature child) {
         child.attachTo(this);
         nextGenerationBuffer.push(child);
-    }
-
-    public void kill(Creature dead) {
-        deadAgents.push(dead);
     }
 
     long comparison = 0;
@@ -516,21 +515,26 @@ public class Environment
                 throw new RuntimeException("Border detection failed");
             }
 
-            for (Line2D historyLine : internalDrawHistory) {
-                //check if this line can cross the history line before computing intersection (compute is cheaper)
-                if (!TraceHandler.canCross(agentLine, historyLine)) {
-                    Point2D intersection = getIntersection(historyLine, agentLine);
-                    if (intersection != null
-                            //Intersection with the line's start is not an intersection
-                            && !intersection.equals(from)) {
-                        Line2D realLine = TraceHandler.trace(from, intersection, that);
-                        //We add a drawn line from agent's old location till intersection
-                        internalDrawHistory.add(realLine);
-                        getEventSupport().fireLineEvent(LineEvent.Type.ADDED, realLine);
-                        //Yes, unfortunately, the agent died - this is Sparta here dude
-                        return true;
+            //no intersection can happen with this option
+            if (Configuration.getParameter(LINE_OBSTRUCTION_OPTION, Boolean.class)) {
+
+                for (Line2D historyLine : internalDrawHistory) {
+                    //check if this line can cross the history line before computing intersection (compute is cheaper)
+                    if (!TraceHandler.canCross(agentLine, historyLine)) {
+                        Point2D intersection = getIntersection(historyLine, agentLine);
+                        if (intersection != null
+                                //Intersection with the line's start is not an intersection
+                                && !intersection.equals(from)) {
+                            Line2D realLine = TraceHandler.trace(from, intersection, that);
+                            //We add a drawn line from agent's old location till intersection
+                            internalDrawHistory.add(realLine);
+                            getEventSupport().fireLineEvent(LineEvent.Type.ADDED, realLine);
+                            //Yes, unfortunately, the agent died - this is Sparta here dude
+                            return true;
+                        }
                     }
                 }
+
             }
 
             //Everything went better than expected

@@ -127,8 +127,8 @@ public class WorldFrame
         togglers[0].setAction(ToggleBounds.getInstance());
         togglers[1].setAction(ToggleCreatures.getInstance());
         togglers[2].setAction(ToggleResources.getInstance());
-        togglers[3].setAction(ToggleFancyLines.getInstance());
-        togglers[4].setAction(ToggleLineObstruction.getInstance());
+        togglers[3].setAction(ToggleLineObstruction.getInstance());
+        togglers[4].setAction(TogglePerlinNoise.getInstance());
 
         painting.addSeparator();
         painting.add(ChangeBackgroundColor.getInstance());

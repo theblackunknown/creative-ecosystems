@@ -1,5 +1,6 @@
 package org.blackpanther.ecosystem.factory.fields;
 
+import org.blackpanther.ecosystem.factory.generator.RandomProvider;
 import org.blackpanther.ecosystem.factory.generator.ValueProvider;
 
 import java.io.Serializable;
@@ -27,5 +28,9 @@ public abstract class FieldMould<T>
 
     public T getValue() {
         return provider.getValue();
+    }
+
+    public boolean isRandomized(){
+        return provider instanceof RandomProvider;
     }
 }

@@ -2,7 +2,9 @@ package org.blackpanther.ecosystem.gui.settings;
 
 import org.blackpanther.ecosystem.ApplicationConstants;
 import org.blackpanther.ecosystem.Configuration;
-import org.blackpanther.ecosystem.agent.*;
+import org.blackpanther.ecosystem.agent.Creature;
+import org.blackpanther.ecosystem.agent.CreatureConstants;
+import org.blackpanther.ecosystem.agent.Resource;
 import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.behaviour.DraughtsmanBehaviour;
 import org.blackpanther.ecosystem.behaviour.PredatorBehaviour;
@@ -18,7 +20,6 @@ import org.blackpanther.ecosystem.gui.settings.fields.SettingField;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.beans.EventHandler;
@@ -286,11 +287,6 @@ public class EnvironmentBoard extends JPanel {
             agentFieldMould.toArray(mouldArray);
             return new FieldsConfiguration(mouldArray);
         }
-
-        public void updateFieldRange(String name, Double thresholdValue) {
-            internalCreatureParametersPanel.updateFieldRange(name, thresholdValue);
-            internalResourceParametersPanel.updateFieldRange(name, thresholdValue);
-        }
     }
 
     /**
@@ -301,21 +297,6 @@ public class EnvironmentBoard extends JPanel {
 
         public ApplicationParameterPanel(String name) {
             super(name);
-            for (String thresholdParameter : ApplicationConstants.THRESHOLD) {
-                JSpinner spinner = (JSpinner) parameters.get(thresholdParameter).getMainComponent();
-                spinner.addChangeListener(EventHandler.create(
-                        ChangeListener.class,
-                        this,
-                        "delegateUpdateFieldRange",
-                        "source"
-                ));
-            }
-        }
-
-        public void delegateUpdateFieldRange(JSpinner thresholdField) {
-            informationBoard.updateFieldRange(
-                    thresholdField.getName(),
-                    (Double) thresholdField.getValue());
         }
 
         @Override
@@ -327,7 +308,7 @@ public class EnvironmentBoard extends JPanel {
 
                 for (String parameter : ApplicationConstants.POSITIVE_DOUBLE)
                     put(parameter,
-                            new DoubleSpinnerField(parameter, generateDoubleModel(Double.MAX_VALUE)));
+                            new DoubleSpinnerField(parameter, generatePositiveDoubleModel()));
 
                 for (String parameter : ApplicationConstants.POSITIVE_INTEGER)
                     put(parameter,
@@ -387,8 +368,7 @@ public class EnvironmentBoard extends JPanel {
                 put(CREATURE_ENERGY,
                         new org.blackpanther.ecosystem.gui.settings.fields.randomable.SpinnerField(
                                 CREATURE_ENERGY,
-                                generateDoubleModel(
-                                        Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class))));
+                                generatePositiveDoubleModel()));
                 put(CREATURE_COLOR,
                         new org.blackpanther.ecosystem.gui.settings.fields.randomable.ColorField(CREATURE_COLOR));
                 put(CREATURE_ORIENTATION,
@@ -398,14 +378,11 @@ public class EnvironmentBoard extends JPanel {
                 put(CREATURE_CURVATURE,
                         new org.blackpanther.ecosystem.gui.settings.fields.randomable.SpinnerField(
                                 CREATURE_CURVATURE,
-                                generateDoubleModel(
-                                        -Configuration.getParameter(CURVATURE_THRESHOLD, Double.class),
-                                        Configuration.getParameter(CURVATURE_THRESHOLD, Double.class))));
+                                generateDoubleModel()));
                 put(CREATURE_SPEED,
                         new org.blackpanther.ecosystem.gui.settings.fields.randomable.SpinnerField(
                                 CREATURE_SPEED,
-                                generateDoubleModel(
-                                        Configuration.getParameter(SPEED_THRESHOLD, Double.class))));
+                                generatePositiveDoubleModel()));
 
                 put(CREATURE_NATURAL_COLOR,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.ColorField(CREATURE_NATURAL_COLOR));
@@ -416,8 +393,7 @@ public class EnvironmentBoard extends JPanel {
                 put(CREATURE_FECUNDATION_COST,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_FECUNDATION_COST,
-                                generateDoubleModel(
-                                        Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class))));
+                                generatePositiveDoubleModel()));
                 put(CREATURE_FECUNDATION_LOSS,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_FECUNDATION_LOSS,
@@ -436,8 +412,11 @@ public class EnvironmentBoard extends JPanel {
                 put(CREATURE_SENSOR_RADIUS,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_SENSOR_RADIUS,
-                                generateDoubleModel(
-                                        Configuration.getParameter(SENSOR_THRESHOLD, Double.class))));
+                                generatePositiveDoubleModel()));
+                put(CREATURE_CONSUMMATION_RADIUS,
+                        new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
+                                CREATURE_CONSUMMATION_RADIUS,
+                                generateDoubleModel()));
                 put(CREATURE_IRRATIONALITY,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_IRRATIONALITY,
@@ -457,12 +436,14 @@ public class EnvironmentBoard extends JPanel {
                 put(CREATURE_ORIENTATION_LAUNCHER,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_ORIENTATION_LAUNCHER,
-                                generateAngleModel()));
+                                generateDoubleModel(
+                                        -Math.PI,
+                                        Math.PI
+                                )));
                 put(CREATURE_SPEED_LAUNCHER,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_SPEED_LAUNCHER,
-                                generateDoubleModel(
-                                        Configuration.getParameter(SPEED_THRESHOLD, Double.class))));
+                                generateDoubleModel(-1.0,1.0)));
                 put(CREATURE_BEHAVIOR,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.BehaviorField(
                                 CREATURE_BEHAVIOR,
@@ -500,8 +481,7 @@ public class EnvironmentBoard extends JPanel {
                 put(RESOURCE_ENERGY,
                         new org.blackpanther.ecosystem.gui.settings.fields.randomable.SpinnerField(
                                 RESOURCE_ENERGY,
-                                generateDoubleModel(
-                                        Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class))));
+                                generatePositiveDoubleModel()));
                 put(RESOURCE_NATURAL_COLOR,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.ColorField(
                                 RESOURCE_NATURAL_COLOR));

@@ -6,4 +6,6 @@ package org.blackpanther.ecosystem.gui.settings.fields.mutable;
  */
 public interface Mutable {
     public boolean isMutable();
+
+    void setMutable(boolean mutable);
 }

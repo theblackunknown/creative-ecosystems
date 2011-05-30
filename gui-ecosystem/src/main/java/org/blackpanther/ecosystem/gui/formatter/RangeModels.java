@@ -33,17 +33,12 @@ public final class RangeModels {
     }
 
     // Domain : Real
-    public static SpinnerNumberModel generateDoubleModel(Double max) {
-        return generateDoubleModel(0.0, max);
-    }
-
-    // Domain : Real
     public static SpinnerNumberModel generateDoubleModel(Double min, Double max) {
         return new SpinnerNumberModel(
-                Double.valueOf(0.0),
-                min == null ? null : min,
-                max == null ? null : max,
-                Double.valueOf(1.0));
+                0.0,
+                min == null ? -Double.MAX_VALUE : min,
+                max == null ?  Double.MAX_VALUE : max,
+                1.0);
     }
 
     // Domain : [0.0,1.0]

@@ -5,6 +5,7 @@ import org.blackpanther.ecosystem.math.Geometry;
 
 import java.awt.*;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -39,6 +40,7 @@ public class FieldsConfiguration
             CREATURE_SPEED_LAUNCHER,
             CREATURE_FECUNDATION_COST,
             CREATURE_SENSOR_RADIUS,
+            CREATURE_CONSUMMATION_RADIUS,
     };
 
     public static final String[] PROBABILITY_FIELDS = new String[]{
@@ -61,6 +63,15 @@ public class FieldsConfiguration
     public static final String[] BEHAVIOR_FIELDS = new String[]{
             CREATURE_BEHAVIOR
     };
+
+    static {
+        Arrays.sort(UNBOUNDED_FIELDS);
+        Arrays.sort(ANGLE_FIELDS);
+        Arrays.sort(POSITIVE_FIELDS);
+        Arrays.sort(PROBABILITY_FIELDS);
+        Arrays.sort(COLOR_FIELDS);
+        Arrays.sort(BEHAVIOR_FIELDS);
+    }
 
     private Map<String, FieldMould> wrappedFieldProvider = new HashMap<String, FieldMould>();
 

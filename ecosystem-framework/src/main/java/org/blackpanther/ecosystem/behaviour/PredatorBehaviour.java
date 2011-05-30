@@ -1,6 +1,8 @@
 package org.blackpanther.ecosystem.behaviour;
 
-import org.blackpanther.ecosystem.*;
+import org.blackpanther.ecosystem.Environment;
+import org.blackpanther.ecosystem.SenseResult;
+import org.blackpanther.ecosystem.SensorTarget;
 import org.blackpanther.ecosystem.agent.Agent;
 import org.blackpanther.ecosystem.agent.Creature;
 
@@ -10,9 +12,7 @@ import java.util.Iterator;
 
 import static java.lang.Math.PI;
 import static org.blackpanther.ecosystem.agent.Agent.CREATURE_GREED;
-import static org.blackpanther.ecosystem.agent.Agent.CREATURE_MOVEMENT_COST;
-import static org.blackpanther.ecosystem.Configuration.CONSUMMATION_RADIUS;
-import static org.blackpanther.ecosystem.Configuration.Configuration;
+import static org.blackpanther.ecosystem.agent.CreatureConstants.CREATURE_CONSUMMATION_RADIUS;
 import static org.blackpanther.ecosystem.math.Geometry.PI_2;
 
 /**
@@ -39,13 +39,11 @@ public class PredatorBehaviour
                 getClosestPrey(that.getLocation(), analysis.getNearCreatures());
 
         //run after closest prey
-        if (closestPrey != null) {
+        if (closestPrey != null && closestPrey.getTarget().isAlive()) {
 
             //check if we can still move and reach the target
             double resourceDistance = that.getLocation().distance(closestPrey.getTarget().getLocation());
-            if (that.getEnergy() >=
-                    that.getGene(CREATURE_MOVEMENT_COST, Double.class) * that.getSpeed()
-                    && resourceDistance < Configuration.getParameter(CONSUMMATION_RADIUS, Double.class)) {
+            if (resourceDistance < that.getGene(CREATURE_CONSUMMATION_RADIUS, Double.class)) {
 
                 //we eat it
                 that.setEnergy(that.getEnergy() + closestPrey.getTarget().getEnergy());

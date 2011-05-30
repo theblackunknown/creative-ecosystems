@@ -57,6 +57,11 @@ public class SpinnerField
     }
 
     @Override
+    public void setMutable(boolean mutable) {
+        this.mutable.setSelected(mutable);
+    }
+
+    @Override
     public FieldMould<Double> toMould() {
         SpinnerNumberModel model = (SpinnerNumberModel) valueSelector.getModel();
         Double min = (Double) model.getMinimum();

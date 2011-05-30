@@ -42,7 +42,9 @@ public class EnvironmentCommands
         paintAgent = new JToggleButton("Agent dropper");
         paintResource = new JToggleButton("Resource dropper");
 
-        JSlider lineWidth = new JSlider(5,10);
+        JSlider lineWidthLinear = new JSlider(1, 10, 1);
+        JSlider lineWidthExponential = new JSlider(0, 10, 0);
+        JSlider colorBlender = new JSlider(0, 100, 50);
 
         ActionListener toggleListener = EventHandler.create(
                 ActionListener.class,
@@ -51,10 +53,23 @@ public class EnvironmentCommands
                 "source"
         );
 
-        lineWidth.addChangeListener(EventHandler.create(
+        lineWidthLinear.addChangeListener(EventHandler.create(
                 ChangeListener.class,
                 this,
-                "updateLineWidth",
+                "updateLineWidthLinear",
+                ""
+        ));
+
+        lineWidthExponential.addChangeListener(EventHandler.create(
+                ChangeListener.class,
+                this,
+                "updateLineWidthExponential",
+                ""
+        ));
+        colorBlender.addChangeListener(EventHandler.create(
+                ChangeListener.class,
+                this,
+                "updateColorRatio",
                 ""
         ));
 
@@ -87,17 +102,33 @@ public class EnvironmentCommands
         add(resetEnvironment);
         add(evolutionFlowButton);
         add(Box.createVerticalStrut(40));
-        add(lineWidth);
+        add(lineWidthLinear);
+        add(lineWidthExponential);
+        add(colorBlender);
 
         setBorder(
                 BorderFactory.createEtchedBorder(EtchedBorder.RAISED)
         );
     }
 
-    public void updateLineWidth(ChangeEvent e){
-        JSlider source =(JSlider)e.getSource();
-        if(!source.getValueIsAdjusting()) {
-            Monitor.updateLineWidth((double) source.getValue());
+    public void updateLineWidthLinear(ChangeEvent e) {
+        JSlider source = (JSlider) e.getSource();
+        if (!source.getValueIsAdjusting()) {
+            Monitor.updateLineWidthLinear(source.getValue());
+        }
+    }
+
+    public void updateLineWidthExponential(ChangeEvent e) {
+        JSlider source = (JSlider) e.getSource();
+        if (!source.getValueIsAdjusting()) {
+            Monitor.updateLineWidthExponential(source.getValue() / 10.0);
+        }
+    }
+
+    public void updateColorRatio(ChangeEvent e) {
+        JSlider source = (JSlider) e.getSource();
+        if (!source.getValueIsAdjusting()) {
+            Monitor.changeColorRatio(source.getValue() / 100.0);
         }
     }
 

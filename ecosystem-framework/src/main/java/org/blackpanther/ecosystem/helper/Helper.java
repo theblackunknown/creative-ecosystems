@@ -129,11 +129,23 @@ public final class Helper {
 
         double alpha = (absoluteReferenceAngle % PI_2);
         double beta = (absoluteTargetAngle % PI_2);
-        double resourceRelativeOrientation = (beta - alpha);
-        if (resourceRelativeOrientation > PI)
+        double resourceRelativeOrientation = beta + alpha;
+        if (resourceRelativeOrientation > PI_2)
             resourceRelativeOrientation -= PI_2;
-        else if (resourceRelativeOrientation < -PI)
+        else if (resourceRelativeOrientation < 0.0)
             resourceRelativeOrientation += PI_2;
+
+        String format = String.format(
+                "old orientation : %.2fPI%n " +
+                        "resource orientation : %.2fPI%n " +
+                        "raw diff orientation : %.2fPI%n " +
+                        "resource relative orientation : %.2fPI%n ",
+                alpha / PI,
+                beta / PI,
+                (beta + alpha) / PI,
+                resourceRelativeOrientation / PI
+        );
+
         return (resourceRelativeOrientation) % PI_2;
     }
 

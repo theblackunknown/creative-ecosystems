@@ -18,13 +18,10 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
-import java.util.Random;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.blackpanther.ecosystem.Configuration.Configuration;
-import static org.blackpanther.ecosystem.Configuration.ENERGY_AMOUNT_THRESHOLD;
 import static org.blackpanther.ecosystem.agent.AgentConstants.AGENT_LOCATION;
 import static org.blackpanther.ecosystem.agent.ResourceConstants.RESOURCE_NATURAL_COLOR;
 import static org.blackpanther.ecosystem.factory.generator.StandardProvider.StandardProvider;
@@ -43,26 +40,27 @@ public class GraphicEnvironment
             );
 
     private static final Dimension DEFAULT_DIMENSION = new Dimension(800, 600);
-    private static final Integer EVOLUTION_DELAY = 200;
-    private static final Integer PAINTER_DELAY = 160;
+    private static final Integer EVOLUTION_DELAY = 0;
+    private static final Integer PAINTER_DELAY = 80;
 
     public static final int BOUNDS_OPTION = 1;
     public static final int RESOURCE_OPTION = 1 << 1;
     public static final int SCROLL_OPTION = 1 << 2;
     public static final int ZOOM_OPTION = 1 << 3;
     public static final int CREATURE_OPTION = 1 << 4;
-    public static final int FANCY_LINE_OPTION = 1 << 5;
 
-    public static Double CREATURE_RADIUS = 10.0;
-    public static Double LINE_WIDTH = 3.0;
+    public static final Double AGENT_RADIUS = 10.0;
+
+    private double lineWidthLinear = 1.0;
+    private double lineWidthExponential = 0.0;
+    private double ratio = 0.5;
 
     private int options =
             BOUNDS_OPTION
                     | RESOURCE_OPTION
                     | SCROLL_OPTION
                     | ZOOM_OPTION
-                    | CREATURE_OPTION
-                    | FANCY_LINE_OPTION;
+                    | CREATURE_OPTION;
 
     private Environment monitoredEnvironment;
     private MouseMonitor internalMouseMonitor =
@@ -176,9 +174,7 @@ public class GraphicEnvironment
             for (Creature monster : monitoredEnvironment.getCreaturePool()) {
                 Point2D center = internalMouseMonitor.environmentToPanel(monster.getLocation());
                 double radius =
-                        (internalMouseMonitor.environmentToPanel(monster.getEnergy()
-                                / Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class)))
-                                * CREATURE_RADIUS;
+                        internalMouseMonitor.environmentToPanel(AGENT_RADIUS);
                 g2d.setPaint(new RadialGradientPaint(
                         center,
                         (float) radius,
@@ -203,9 +199,7 @@ public class GraphicEnvironment
                 Color resourceColor = resource.getGene(RESOURCE_NATURAL_COLOR, Color.class);
                 Point2D center = internalMouseMonitor.environmentToPanel(resource.getLocation());
                 double radius =
-                        (internalMouseMonitor.environmentToPanel(resource.getEnergy()
-                                / Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class)))
-                                * CREATURE_RADIUS;
+                        internalMouseMonitor.environmentToPanel(AGENT_RADIUS);
                 g2d.setPaint(new RadialGradientPaint(
                         center,
                         (float) radius,
@@ -224,19 +218,21 @@ public class GraphicEnvironment
 
     private void paintLine(Graphics g, AgentLine graphicalLine) {
         Graphics2D g2d = (Graphics2D) g;
-        Random rand = Configuration.getRandom();
-
 
         Point2D start = internalMouseMonitor.environmentToPanel(graphicalLine.getP1());
         Point2D end = internalMouseMonitor.environmentToPanel(graphicalLine.getP2());
-        Color basicColor = graphicalLine.getColor();
 
+        Color genotypeColor = graphicalLine.getGenotypeColor();
+        Color phenotypeColor = graphicalLine.getPhenotypeColor();
+
+        Color expressedColor = new Color(
+                (int) (genotypeColor.getRed() * ratio + phenotypeColor.getRed() * (1.0 - ratio)),
+                (int) (genotypeColor.getGreen() * ratio + phenotypeColor.getGreen() * (1.0 - ratio)),
+                (int) (genotypeColor.getBlue() * ratio + phenotypeColor.getBlue() * (1.0 - ratio))
+        );
 
         double strokeWidth =
-                internalMouseMonitor.environmentToPanel(
-                        graphicalLine.getPower()
-                                / Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class))
-                        * LINE_WIDTH;
+                lineWidthLinear * Math.pow(graphicalLine.getPower(), lineWidthExponential);
 
         g2d.setStroke(new BasicStroke(
                 (float) strokeWidth,
@@ -244,16 +240,7 @@ public class GraphicEnvironment
                 BasicStroke.JOIN_ROUND
         ));
 
-        if (isActivated(FANCY_LINE_OPTION)) {
-            double randomNumber = rand.nextGaussian();
-            if (randomNumber < 0.0) {
-                basicColor = basicColor.darker();
-            } else if (randomNumber > 1.0) {
-                basicColor = basicColor.brighter();
-            }
-        }
-
-        g2d.setColor(basicColor);
+        g2d.setColor(expressedColor);
 
         g2d.drawLine(
                 (int) start.getX(),
@@ -313,7 +300,6 @@ public class GraphicEnvironment
             case BOUNDS_OPTION:
             case RESOURCE_OPTION:
             case CREATURE_OPTION:
-            case FANCY_LINE_OPTION:
                 repaintEnvironment();
         }
     }
@@ -354,23 +340,43 @@ public class GraphicEnvironment
         internalMouseMonitor.setDropMode(mode);
     }
 
-    public void addCreatures(Collection<Creature> creatures) {
+    public void addCreatures(Creature creature) {
         if (monitoredEnvironment != null
                 && !runEnvironment.isRunning()) {
-            monitoredEnvironment.addCreatures(creatures);
+            monitoredEnvironment.add(creature);
             repaintEnvironment();
         } else
-            nextCycleCreaturesBuffer.addAll(creatures);
+            nextCycleCreaturesBuffer.add(creature);
     }
 
-    public void addResources(Collection<Resource> resources) {
-        monitoredEnvironment.addResources(resources);
+    public void addCreatures(Collection<Creature> creatures) {
+        for (Creature monster : creatures)
+            addCreatures(monster);
+    }
+
+    public void addResources(Resource resource) {
+        monitoredEnvironment.add(resource);
         if (isActivated(RESOURCE_OPTION))
             repaintEnvironment();
     }
 
-    public void changeLineWidth(double value) {
-        LINE_WIDTH = value;
+    public void addResources(Collection<Resource> resources) {
+        for (Resource resource : resources)
+            addResources(resource);
+    }
+
+    public void changeLineWidthLinear(double value) {
+        lineWidthLinear = value;
+        repaintEnvironment();
+    }
+
+    public void changeLineWidthExponential(double value) {
+        lineWidthExponential = value;
+        repaintEnvironment();
+    }
+
+    public void changeRatio(double newRatio) {
+        ratio = newRatio;
         repaintEnvironment();
     }
 
@@ -433,10 +439,6 @@ public class GraphicEnvironment
                 case CYCLE_END:
                     Monitor.updateEnvironmentInformation(
                             monitoredEnvironment, EnvironmentInformation.State.RUNNING);
-                    if (monitoredEnvironment.getCreaturePool().size() == 0) {
-                        drawEnvironment.stop();
-                        runEnvironment.stop();
-                    }
                     break;
                 case ENDED:
                     Monitor.updateEnvironmentInformation(
@@ -479,7 +481,7 @@ public class GraphicEnvironment
 
         private final double UP_SCALE_THRESHOLD = 20.0;
         private final double DOWN_SCALE_THRESHOLD = 0.1;
-        private final double SCALE_GROW_STEP = 0.1;
+        private final double SCALE_GROW_STEP = 0.15;
 
         private final int WHEEL_UP = -1;
         private final int WHEEL_DOWN = 1;
@@ -629,27 +631,29 @@ public class GraphicEnvironment
 
         @SuppressWarnings("unchecked")
         private void dropAgent(Point position) {
-            Point2D environmentPosition =
-                    internalMouseMonitor.panelToEnvironment(position);
-            FieldsConfiguration configuration = Monitor.fetchConfiguration();
-            configuration.updateMould(new StateFieldMould(
-                    AGENT_LOCATION,
-                    StandardProvider(environmentPosition)
-            ));
-            switch (dropMode) {
-                case AGENT:
-                    monitoredEnvironment.add(EnvironmentAbstractFactory
-                            .getFactory(Creature.class)
-                            .createAgent(configuration));
-                    break;
-                case RESOURCE:
-                    setOption(RESOURCE_OPTION, true);
-                    monitoredEnvironment.add(EnvironmentAbstractFactory
-                            .getFactory(Resource.class)
-                            .createAgent(configuration));
-                    break;
+            if (dropMode != DropMode.NONE) {
+                Point2D environmentPosition =
+                        internalMouseMonitor.panelToEnvironment(position);
+                FieldsConfiguration configuration = Monitor.fetchConfiguration();
+                configuration.updateMould(new StateFieldMould(
+                        AGENT_LOCATION,
+                        StandardProvider(environmentPosition)
+                ));
+                switch (dropMode) {
+                    case AGENT:
+                        addCreatures(EnvironmentAbstractFactory
+                                .getFactory(Creature.class)
+                                .createAgent(configuration));
+                        break;
+                    case RESOURCE:
+                        setOption(RESOURCE_OPTION, true);
+                        addResources(EnvironmentAbstractFactory
+                                .getFactory(Resource.class)
+                                .createAgent(configuration));
+                        break;
+                }
+                repaintEnvironment();
             }
-            repaintEnvironment();
         }
     }
 }

@@ -1,6 +1,8 @@
 package org.blackpanther.ecosystem.behaviour;
 
-import org.blackpanther.ecosystem.*;
+import org.blackpanther.ecosystem.Environment;
+import org.blackpanther.ecosystem.SenseResult;
+import org.blackpanther.ecosystem.SensorTarget;
 import org.blackpanther.ecosystem.agent.Agent;
 import org.blackpanther.ecosystem.agent.Creature;
 
@@ -19,14 +21,15 @@ import static org.blackpanther.ecosystem.math.Geometry.PI_2;
 public class PreyBehaviour
         extends DraughtsmanBehaviour {
 
-    private PreyBehaviour(){}
+    private PreyBehaviour() {
+    }
 
     private static class PreyBehaviourHolder {
         private static final PreyBehaviour instance =
-            new PreyBehaviour();
+                new PreyBehaviour();
     }
 
-    public static PreyBehaviour getInstance(){
+    public static PreyBehaviour getInstance() {
         return PreyBehaviourHolder.instance;
     }
 
@@ -43,7 +46,7 @@ public class PreyBehaviour
                 getClosestPredator(that.getLocation(), analysis.getNearCreatures());
 
         //run away closest predator
-        if (closestPredator != null) {
+        if (closestPredator != null && closestPredator.getTarget().isAlive()) {
             double flee = that.getGene(CREATURE_FLEE, Double.class);
             double alpha = (that.getOrientation() % PI_2);
             double beta = closestPredator.getOrientation();

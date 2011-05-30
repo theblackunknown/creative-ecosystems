@@ -57,6 +57,11 @@ public class ColorField
     }
 
     @Override
+    public void setMutable(boolean mutable) {
+        this.mutable.setSelected(mutable);
+    }
+
+    @Override
     public FieldMould<Color> toMould() {
         return new GeneFieldMould<Color>(
                 getMainComponent().getName(),

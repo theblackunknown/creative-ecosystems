@@ -21,6 +21,7 @@ public interface CreatureConstants
     public static final String CREATURE_GREED = "creature-greed";
     public static final String CREATURE_FLEE = "creature-flee";
     public static final String CREATURE_SENSOR_RADIUS = "creature-sensor-radius";
+    public static final String CREATURE_CONSUMMATION_RADIUS = "creature-consummation-radius";
     public static final String CREATURE_IRRATIONALITY = "creature-irrationality";
     public static final String CREATURE_MORTALITY = "creature-mortality";
     public static final String CREATURE_FECUNDITY = "creature-fecundity";
@@ -47,6 +48,7 @@ public interface CreatureConstants
             CREATURE_GREED,
             CREATURE_FLEE,
             CREATURE_SENSOR_RADIUS,
+            CREATURE_CONSUMMATION_RADIUS,
             CREATURE_IRRATIONALITY,
             CREATURE_MORTALITY,
             CREATURE_FECUNDITY,

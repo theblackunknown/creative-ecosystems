@@ -6,7 +6,6 @@ import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
 import org.blackpanther.ecosystem.math.Geometry;
 
-import javax.tools.JavaCompiler;
 import java.awt.*;
 
 import static org.blackpanther.ecosystem.factory.fields.FieldsConfiguration.checkCreatureConfiguration;
@@ -79,7 +78,6 @@ public class Creature
     public void detachFromEnvironment(Environment env) {
         require(alive, this + " wasn't alive, thus not bounded to any environment");
         alive = false;
-        env.kill(this);
         super.detachFromEnvironment(env);
     }
 

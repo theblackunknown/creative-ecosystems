@@ -10,7 +10,6 @@ public interface ApplicationConstants {
     public static final String SPACE_HEIGHT = "space-height";
 
     public static final String MAX_AGENT_NUMBER = "max-agent-number";
-    public static final String CONSUMMATION_RADIUS = "consummation-radius";
 
     public static final String SPEED_THRESHOLD = "speed-threshold";
     public static final String ENERGY_AMOUNT_THRESHOLD = "energy-threshold";
@@ -24,6 +23,7 @@ public interface ApplicationConstants {
     public static final String COLOR_VARIATION = "color-variation";
 
     public static final String LINE_OBSTRUCTION_OPTION = "line-obstruction";
+    public static final String PERLIN_NOISE_OPTION = "perlin-noise";
 
     /*=========================================================================
                           TYPE
@@ -42,14 +42,14 @@ public interface ApplicationConstants {
             SPEED_THRESHOLD,
             SENSOR_THRESHOLD,
             ENERGY_AMOUNT_THRESHOLD,
-            CONSUMMATION_RADIUS,
     };
     public static final String[] POSITIVE_INTEGER = new String[]{
             MAX_AGENT_NUMBER,
             COLOR_VARIATION
     };
     public static final String[] BOOLEAN = new String[]{
-            LINE_OBSTRUCTION_OPTION
+            LINE_OBSTRUCTION_OPTION,
+            PERLIN_NOISE_OPTION,
     };
 
     /*=========================================================================
@@ -59,7 +59,6 @@ public interface ApplicationConstants {
     public static final String[] MISCELLANEOUS = new String[]{
             SPACE_WIDTH,
             SPACE_HEIGHT,
-            CONSUMMATION_RADIUS,
             MAX_AGENT_NUMBER,
     };
 

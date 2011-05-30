@@ -88,6 +88,7 @@ public enum GUIMonitor {
         switch (state) {
             case PAUSED:
             case FROZEN:
+                environmentCommandsPanel.notifyPause();
                 drawPanel.stopSimulation();
                 break;
         }
@@ -221,7 +222,15 @@ public enum GUIMonitor {
         return environmentBoard.createConfiguration();
     }
 
-    public void updateLineWidth(double value) {
-        drawPanel.changeLineWidth(value);
+    public void updateLineWidthLinear(double value) {
+        drawPanel.changeLineWidthLinear(value);
+    }
+
+    public void updateLineWidthExponential(double value) {
+        drawPanel.changeLineWidthExponential(value);
+    }
+
+    public void changeColorRatio(double v) {
+        drawPanel.changeRatio(v);
     }
 }

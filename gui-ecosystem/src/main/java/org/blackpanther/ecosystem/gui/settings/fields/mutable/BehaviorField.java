@@ -58,6 +58,11 @@ public class BehaviorField
     }
 
     @Override
+    public void setMutable(boolean mutable) {
+        this.mutable.setSelected(mutable);
+    }
+
+    @Override
     public FieldMould<BehaviorManager> toMould() {
         return new GeneFieldMould<BehaviorManager>(
                 getMainComponent().getName(),
