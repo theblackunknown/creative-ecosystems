@@ -277,7 +277,7 @@ public class DraughtsmanBehaviour
                                 parent.getGene(CREATURE_ORIENTATION_LAUNCHER, Double.class))
                 )),
                 new StateFieldMould(CREATURE_SPEED, StandardProvider(
-                        parent.getSpeed() * (1 + parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class))
+                        parent.getSpeed() * (1.0 + parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class))
                 )),
                 new GeneFieldMould(CREATURE_NATURAL_COLOR, StandardProvider(
                         parent.isMutable(CREATURE_NATURAL_COLOR)

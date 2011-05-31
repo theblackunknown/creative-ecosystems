@@ -1,18 +1,12 @@
 package org.blackpanther.ecosystem.math;
 
-import org.junit.BeforeClass;
-
-
 import org.junit.Test;
 
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
-import java.io.IOException;
-import java.util.logging.LogManager;
 
 import static org.blackpanther.ecosystem.math.Geometry.getIntersection;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  * @author MACHIZAUD Andréa
@@ -58,6 +52,14 @@ public class GeometryTester {
                 getIntersection(
                         new Line2D.Double(0.0, 1.0, 3.0, -2.0),
                         new Line2D.Double(0.0, 0.0, 0.0, -2.0)
+                )
+        );
+
+        assertNotNull(
+                "???",
+                getIntersection(
+                        new Line2D.Double(198.0, 383.73, 199.82, 377.18),
+                        new Line2D.Double(200.55, 383.55, 197.63, 377.72)
                 )
         );
 

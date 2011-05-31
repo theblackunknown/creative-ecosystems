@@ -134,7 +134,8 @@ public class GraphicEnvironment
      * @param g
      */
     private void paintEnvironment(Graphics g) {
-        g.clearRect(0, 0, getWidth(), getHeight());
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, getWidth(), getHeight());
         //repaint environment structure if it has been erased
         if (monitoredEnvironment != null) {
             paintBackground(g);
@@ -565,6 +566,9 @@ public class GraphicEnvironment
         @Override
         public void mouseClicked(MouseEvent e) {
             dropAgent(e.getPoint());
+            System.out.println(e.getPoint());
+            System.out.println(panelToEnvironment(e.getPoint()));
+            System.out.println();
         }
 
         @Override
