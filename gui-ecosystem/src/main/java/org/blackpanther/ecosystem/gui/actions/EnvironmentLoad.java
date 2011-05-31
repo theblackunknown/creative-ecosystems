@@ -2,6 +2,7 @@ package org.blackpanther.ecosystem.gui.actions;
 
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
+import org.blackpanther.ecosystem.gui.WorldFrame;
 
 import javax.swing.*;
 import java.awt.*;
@@ -55,6 +56,12 @@ public class EnvironmentLoad
                     FieldsConfiguration agentConfiguration = (FieldsConfiguration) os.readObject();
                     os.close();
                     Configuration.loadConfiguration(applicationParameters);
+                    WorldFrame.getInstance().updateCheckBoxMenuItem(
+                            LINE_OBSTRUCTION_OPTION,
+                            Configuration.getParameter(LINE_OBSTRUCTION_OPTION, Boolean.class));
+                    WorldFrame.getInstance().updateCheckBoxMenuItem(
+                            PERLIN_NOISE_OPTION,
+                            Configuration.getParameter(PERLIN_NOISE_OPTION, Boolean.class));
                     Monitor.updateSettingFields(agentConfiguration);
                     Monitor.setCurrentEnvironment(environment);
                     JOptionPane.showMessageDialog(
