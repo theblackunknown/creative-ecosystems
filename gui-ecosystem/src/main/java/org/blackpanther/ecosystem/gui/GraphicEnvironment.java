@@ -2,6 +2,7 @@ package org.blackpanther.ecosystem.gui;
 
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.agent.Creature;
+import org.blackpanther.ecosystem.agent.CreatureConstants;
 import org.blackpanther.ecosystem.agent.Resource;
 import org.blackpanther.ecosystem.event.*;
 import org.blackpanther.ecosystem.factory.EnvironmentAbstractFactory;
@@ -176,11 +177,22 @@ public class GraphicEnvironment
                 Point2D center = internalMouseMonitor.environmentToPanel(monster.getLocation());
                 double radius =
                         internalMouseMonitor.environmentToPanel(AGENT_RADIUS);
+
+
+                Color genotypeColor = monster.getGene(CreatureConstants.CREATURE_NATURAL_COLOR,Color.class);
+                Color phenotypeColor = monster.getColor();
+
+                Color expressedColor = new Color(
+                        (int) (genotypeColor.getRed() * ratio + phenotypeColor.getRed() * (1.0 - ratio)),
+                        (int) (genotypeColor.getGreen() * ratio + phenotypeColor.getGreen() * (1.0 - ratio)),
+                        (int) (genotypeColor.getBlue() * ratio + phenotypeColor.getBlue() * (1.0 - ratio))
+                );
+
                 g2d.setPaint(new RadialGradientPaint(
                         center,
                         (float) radius,
                         new float[]{0.0f, 1.0f},
-                        new Color[]{monster.getColor(), currentBackground}
+                        new Color[]{expressedColor, currentBackground}
                 ));
                 g2d.fillOval(
                         (int) (center.getX() - radius),

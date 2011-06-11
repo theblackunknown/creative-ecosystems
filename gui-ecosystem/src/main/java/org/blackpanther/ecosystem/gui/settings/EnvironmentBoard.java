@@ -389,7 +389,7 @@ public class EnvironmentBoard extends JPanel {
                 put(CREATURE_MOVEMENT_COST,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_MOVEMENT_COST,
-                                generatePercentageModel()));
+                                generatePositiveDoubleModel()));
                 put(CREATURE_FECUNDATION_COST,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_FECUNDATION_COST,
@@ -443,7 +443,7 @@ public class EnvironmentBoard extends JPanel {
                 put(CREATURE_SPEED_LAUNCHER,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.SpinnerField(
                                 CREATURE_SPEED_LAUNCHER,
-                                generateDoubleModel(-1.0,Double.MAX_VALUE)));
+                                generateDoubleModel(-1.0, Double.MAX_VALUE)));
                 put(CREATURE_BEHAVIOR,
                         new org.blackpanther.ecosystem.gui.settings.fields.mutable.BehaviorField(
                                 CREATURE_BEHAVIOR,
