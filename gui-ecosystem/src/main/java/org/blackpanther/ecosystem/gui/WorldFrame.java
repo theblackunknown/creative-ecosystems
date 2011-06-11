@@ -116,6 +116,7 @@ public class WorldFrame
         environment.add(EnvironmentSaveBackup.getInstance());
         environment.addSeparator();
         environment.add(EnvironmentLoad.getInstance());
+        environment.add(EnvironmentFromFile.getInstance());
         environment.addSeparator();
         environment.add(SaveImageAction.getInstance());
 

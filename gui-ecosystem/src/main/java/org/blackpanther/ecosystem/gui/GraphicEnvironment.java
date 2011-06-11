@@ -179,7 +179,7 @@ public class GraphicEnvironment
                         internalMouseMonitor.environmentToPanel(AGENT_RADIUS);
 
 
-                Color genotypeColor = monster.getGene(CreatureConstants.CREATURE_NATURAL_COLOR,Color.class);
+                Color genotypeColor = monster.getGene(CreatureConstants.CREATURE_NATURAL_COLOR, Color.class);
                 Color phenotypeColor = monster.getColor();
 
                 Color expressedColor = new Color(
@@ -207,18 +207,12 @@ public class GraphicEnvironment
     private void paintResources(Graphics g) {
         //resource painting activated
         if ((options & RESOURCE_OPTION) == RESOURCE_OPTION) {
-            Graphics2D g2d = (Graphics2D) g;
             for (Resource resource : monitoredEnvironment.getResources()) {
                 Color resourceColor = resource.getGene(RESOURCE_NATURAL_COLOR, Color.class);
                 Point2D center = internalMouseMonitor.environmentToPanel(resource.getLocation());
-                double radius =
-                        internalMouseMonitor.environmentToPanel(AGENT_RADIUS);
-                g2d.setPaint(new RadialGradientPaint(
-                        center,
-                        (float) radius,
-                        new float[]{0.0f, 1.0f},
-                        new Color[]{resourceColor, currentBackground}
-                ));
+                double radius = 5.0;
+//                        internalMouseMonitor.environmentToPanel(AGENT_RADIUS);
+                g.setColor(resourceColor);
                 g.fillOval(
                         (int) (center.getX() - radius),
                         (int) (center.getY() - radius),

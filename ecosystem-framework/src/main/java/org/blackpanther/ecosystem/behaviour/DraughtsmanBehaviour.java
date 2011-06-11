@@ -89,15 +89,16 @@ public class DraughtsmanBehaviour
             //check if we can still move and reach resource
             double resourceDistance = that.getLocation().distance(closestResource.getTarget().getLocation());
             if (resourceDistance < that.getGene(CREATURE_CONSUMMATION_RADIUS, Double.class)) {
+                Resource res = closestResource.getTarget();
                 //we eat it
                 that.setEnergy(that.getEnergy() + closestResource.getTarget().getEnergy());
                 that.setColor(
-                        (that.getColor().getRed()
-                                + closestResource.getTarget().getGene(RESOURCE_NATURAL_COLOR, Color.class).getRed()) / 2,
-                        (that.getColor().getGreen()
-                                + closestResource.getTarget().getGene(RESOURCE_NATURAL_COLOR, Color.class).getGreen()) / 2,
-                        (that.getColor().getBlue()
-                                + closestResource.getTarget().getGene(RESOURCE_NATURAL_COLOR, Color.class).getBlue()) / 2
+                        (int) ((that.getColor().getRed() * that.getEnergy() + res.getGene(RESOURCE_NATURAL_COLOR, Color.class).getRed() * res.getEnergy())
+                                / (that.getEnergy() + res.getEnergy())),
+                        (int) ((that.getColor().getGreen() * that.getEnergy() + res.getGene(RESOURCE_NATURAL_COLOR, Color.class).getGreen() * res.getEnergy())
+                                / (that.getEnergy() + res.getEnergy())),
+                        (int) ((that.getColor().getBlue() * that.getEnergy() + res.getGene(RESOURCE_NATURAL_COLOR, Color.class).getBlue() * res.getEnergy())
+                                / (that.getEnergy() + res.getEnergy()))
                 );
 
                 closestResource.getTarget().detachFromEnvironment(env);
@@ -183,7 +184,7 @@ public class DraughtsmanBehaviour
                 double oldCurvature = that.getCurvature();
                 that.setCurvature(
                         that.getCurvature() + (
-                                randomValue(that,-1.0,1.0) * that.getIrrationality()
+                                randomValue(that, -1.0, 1.0) * that.getIrrationality()
                         )
                 );
                 logger.finer(String.format("Changed %s 's curvature from %s to %s",
@@ -245,14 +246,14 @@ public class DraughtsmanBehaviour
     }
 
     private static double randomValue(Creature that) {
-        return randomValue(that,0.0,1.0);
+        return randomValue(that, 0.0, 1.0);
     }
 
     private static double randomValue(Creature that, double min, double max) {
-        if( Configuration.getParameter(PERLIN_NOISE_OPTION,Boolean.class) ) {
+        if (Configuration.getParameter(PERLIN_NOISE_OPTION, Boolean.class)) {
             return min + coherentNoise(that.getLocation()) * (max - min);
         } else {
-            return min + Configuration.getRandom().nextDouble() * (max-min);
+            return min + Configuration.getRandom().nextDouble() * (max - min);
         }
     }
 
@@ -301,7 +302,7 @@ public class DraughtsmanBehaviour
                                 parent,
                                 parent.getGene(CREATURE_FECUNDATION_LOSS, Double.class),
                                 Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
-                                        * randomValue(parent,-1.0,1.0)))
+                                        * randomValue(parent, -1.0, 1.0)))
                                 : parent.getGene(CREATURE_FECUNDATION_LOSS, Double.class)),
                         parent.isMutable(CREATURE_FECUNDATION_LOSS)
                 ),
@@ -311,7 +312,7 @@ public class DraughtsmanBehaviour
                                 parent,
                                 parent.getGene(CREATURE_GREED, Double.class),
                                 Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
-                                        * randomValue(parent,-1.0,1.0)))
+                                        * randomValue(parent, -1.0, 1.0)))
                                 : parent.getGene(CREATURE_GREED, Double.class)),
                         parent.isMutable(CREATURE_GREED)
                 ),
@@ -321,7 +322,7 @@ public class DraughtsmanBehaviour
                                 parent,
                                 parent.getGene(CREATURE_FLEE, Double.class),
                                 Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
-                                        * randomValue(parent,-1.0,1.0)))
+                                        * randomValue(parent, -1.0, 1.0)))
                                 : parent.getGene(CREATURE_FLEE, Double.class)),
                         parent.isMutable(CREATURE_FLEE)
                 ),
@@ -331,7 +332,7 @@ public class DraughtsmanBehaviour
                                 parent,
                                 parent.getGene(CREATURE_SENSOR_RADIUS, Double.class),
                                 Configuration.getParameter(SPEED_VARIATION, Double.class)
-                                        * randomValue(parent,-1.0,1.0)))
+                                        * randomValue(parent, -1.0, 1.0)))
                                 : parent.getGene(CREATURE_SENSOR_RADIUS, Double.class)),
                         parent.isMutable(CREATURE_SENSOR_RADIUS)
                 ),
@@ -341,7 +342,7 @@ public class DraughtsmanBehaviour
                                 parent,
                                 parent.getGene(CREATURE_CONSUMMATION_RADIUS, Double.class),
                                 Configuration.getParameter(SPEED_VARIATION, Double.class)
-                                        * randomValue(parent,-1.0,1.0)))
+                                        * randomValue(parent, -1.0, 1.0)))
                                 : parent.getGene(CREATURE_CONSUMMATION_RADIUS, Double.class)),
                         parent.isMutable(CREATURE_CONSUMMATION_RADIUS)
                 ),
@@ -351,7 +352,7 @@ public class DraughtsmanBehaviour
                                 parent,
                                 parent.getGene(CREATURE_IRRATIONALITY, Double.class),
                                 Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
-                                        * randomValue(parent,-1.0,1.0)))
+                                        * randomValue(parent, -1.0, 1.0)))
                                 : parent.getGene(CREATURE_IRRATIONALITY, Double.class)),
                         parent.isMutable(CREATURE_IRRATIONALITY)
                 ),
@@ -361,7 +362,7 @@ public class DraughtsmanBehaviour
                                 parent,
                                 parent.getGene(CREATURE_MORTALITY, Double.class),
                                 Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
-                                        * randomValue(parent,-1.0,1.0)))
+                                        * randomValue(parent, -1.0, 1.0)))
                                 : parent.getGene(CREATURE_MORTALITY, Double.class)),
                         parent.isMutable(CREATURE_MORTALITY)
                 ),
@@ -371,7 +372,7 @@ public class DraughtsmanBehaviour
                                 parent,
                                 parent.getGene(CREATURE_FECUNDITY, Double.class),
                                 Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
-                                        * randomValue(parent,-1.0,1.0)))
+                                        * randomValue(parent, -1.0, 1.0)))
                                 : parent.getGene(CREATURE_FECUNDITY, Double.class)),
                         parent.isMutable(CREATURE_FECUNDITY)
                 ),
@@ -381,7 +382,7 @@ public class DraughtsmanBehaviour
                                 parent,
                                 parent.getGene(CREATURE_MUTATION, Double.class),
                                 Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
-                                        * randomValue(parent,-1.0,1.0)))
+                                        * randomValue(parent, -1.0, 1.0)))
                                 : parent.getGene(CREATURE_MUTATION, Double.class)),
                         parent.isMutable(CREATURE_MUTATION)
                 ),
@@ -391,7 +392,7 @@ public class DraughtsmanBehaviour
                                 parent,
                                 parent.getGene(CREATURE_ORIENTATION_LAUNCHER, Double.class),
                                 Configuration.getParameter(ANGLE_VARIATION, Double.class)
-                                        * randomValue(parent,-1.0,1.0)))
+                                        * randomValue(parent, -1.0, 1.0)))
                                 : parent.getGene(CREATURE_ORIENTATION_LAUNCHER, Double.class)),
                         parent.isMutable(CREATURE_ORIENTATION_LAUNCHER)
                 ),
@@ -400,7 +401,7 @@ public class DraughtsmanBehaviour
                                 ? normalizePositiveDouble(mutate(
                                 parent,
                                 parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class),
-                                randomValue(parent,-1.0,1.0)))
+                                randomValue(parent, -1.0, 1.0)))
                                 : parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class)),
                         parent.isMutable(CREATURE_SPEED_LAUNCHER)
                 ),
@@ -444,13 +445,13 @@ public class DraughtsmanBehaviour
                         parent,
                         normalValue.getRed(),
                         Configuration.getParameter(COLOR_VARIATION, Integer.class)
-                                * randomValue(parent,-1.0,1.0)
+                                * randomValue(parent, -1.0, 1.0)
                 )),
                 normalizeColor(mutate(
                         parent,
                         normalValue.getGreen(),
                         Configuration.getParameter(COLOR_VARIATION, Integer.class)
-                                * randomValue(parent,-1.0,1.0)
+                                * randomValue(parent, -1.0, 1.0)
 
                 )),
                 normalizeColor(mutate(
