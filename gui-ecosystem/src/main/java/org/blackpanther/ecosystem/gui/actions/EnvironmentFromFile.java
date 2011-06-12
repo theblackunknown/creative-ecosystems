@@ -1,5 +1,7 @@
 package org.blackpanther.ecosystem.gui.actions;
 
+import org.blackpanther.ecosystem.ApplicationConstants;
+import org.blackpanther.ecosystem.Configuration;
 import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.agent.Resource;
 import org.blackpanther.ecosystem.agent.ResourceConstants;
@@ -68,6 +70,7 @@ public class EnvironmentFromFile
         private JLabel path = new JLabel(NO_FILE_SELECTED);
         private JSpinner defaultEnergy = new JSpinner(generatePositiveDoubleModel());
         private JSpinner dropperStep = new JSpinner(generateIntegerModel(1, Integer.MAX_VALUE));
+        private boolean excludeWhite = false;
 
         JButton accept = new JButton("Accept");
         private File selectedFile = null;
@@ -92,6 +95,14 @@ public class EnvironmentFromFile
 
             JLabel dropperStepLabel = new JLabel("Drop step (in pixels) : ");
             dropperStepLabel.setLabelFor(dropperStep);
+
+            JCheckBox excludeWhite = new JCheckBox("Exclude white color ? ", false);
+            excludeWhite.addActionListener(EventHandler.create(
+                    ActionListener.class,
+                    this,
+                    "updateExcludeWhiteProperty",
+                    "source.selected"
+            ));
 
             chooseFile.addActionListener(EventHandler.create(
                     ActionListener.class,
@@ -124,6 +135,7 @@ public class EnvironmentFromFile
             top.add(path);
             top.add(labeledEnergyField);
             top.add(labeledDropperField);
+            top.add(excludeWhite);
 
             Box commands = new Box(X_AXIS);
             commands.add(accept);
@@ -138,6 +150,10 @@ public class EnvironmentFromFile
             setContentPane(content);
 
             pack();
+        }
+
+        public void updateExcludeWhiteProperty(boolean shouldBeExcluded){
+            excludeWhite = shouldBeExcluded;
         }
 
         public void updateFilePath() throws IOException {
@@ -160,6 +176,16 @@ public class EnvironmentFromFile
             try {
                 BufferedImage inputImage = ImageIO.read(selectedFile);
                 Dimension imageDimension = new Dimension(inputImage.getWidth(), inputImage.getHeight());
+                Configuration.Configuration.setParameter(
+                        ApplicationConstants.SPACE_WIDTH,
+                        imageDimension.getWidth(),
+                        Double.class
+                );
+                Configuration.Configuration.setParameter(
+                        ApplicationConstants.SPACE_HEIGHT,
+                        imageDimension.getHeight(),
+                        Double.class
+                );
                 Environment imageEnvironment = new Environment(imageDimension);
                 Double resourceEnergyAmount = (Double) defaultEnergy.getValue();
                 Integer dropStep = (Integer) dropperStep.getValue();
@@ -172,6 +198,11 @@ public class EnvironmentFromFile
 
                 for (int i = 0; i < imageDimension.getWidth(); i+= dropStep)
                     for (int j = 0; j < imageDimension.getHeight(); j+= dropStep) {
+                        Color pixelColor = new Color(inputImage.getRGB(i, j));
+
+                        if( pixelColor.equals(Color.WHITE) && excludeWhite )
+                            continue;
+
                         resourceConfiguration.updateMould(new StateFieldMould(
                                 AGENT_LOCATION,
                                 StandardProvider(
@@ -180,7 +211,7 @@ public class EnvironmentFromFile
                         resourceConfiguration.updateMould(new StateFieldMould(
                                 ResourceConstants.RESOURCE_NATURAL_COLOR,
                                 StandardProvider(
-                                        new Color(inputImage.getRGB(i, j))
+                                        pixelColor
                                 )
                         ));
                         imageEnvironment.add(new Resource(resourceConfiguration));

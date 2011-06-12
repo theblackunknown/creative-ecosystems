@@ -250,17 +250,6 @@ public class GraphicEnvironment
                 (int) ((genotypeColor.getBlue() * genotypeInfluence + phenotypeColor.getBlue() * phenotypeInfluence)
                         / (phenotypeInfluence + genotypeInfluence))
         );
-        System.out.println(String.format(
-                "power %s%n" +
-                        "genotype %s (influence %s)%n" +
-                        "phenotype %s (influence %s)%n" +
-                        "complexion %s%n",
-                power,
-                genotypeColor, genotypeInfluence,
-                phenotypeColor, phenotypeInfluence,
-                complexion
-        ));
-
         double strokeWidth =
                 lineWidthLinear * Math.pow(graphicalLine.getPower(), lineWidthExponential);
 
