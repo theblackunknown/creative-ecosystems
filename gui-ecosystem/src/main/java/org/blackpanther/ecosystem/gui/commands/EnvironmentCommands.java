@@ -44,7 +44,7 @@ public class EnvironmentCommands
 
         JSlider lineWidthLinear = new JSlider(1, 10, 1);
         JSlider lineWidthExponential = new JSlider(0, 10, 0);
-        JSlider colorBlender = new JSlider(0, 100, 50);
+        JSlider colorBlender = new JSlider(0, 1000000, 10000);
 
         ActionListener toggleListener = EventHandler.create(
                 ActionListener.class,

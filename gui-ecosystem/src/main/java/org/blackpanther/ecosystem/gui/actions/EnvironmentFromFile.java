@@ -23,7 +23,9 @@ import static javax.swing.BoxLayout.X_AXIS;
 import static javax.swing.BoxLayout.Y_AXIS;
 import static org.blackpanther.ecosystem.agent.AgentConstants.AGENT_LOCATION;
 import static org.blackpanther.ecosystem.factory.generator.StandardProvider.StandardProvider;
+import static org.blackpanther.ecosystem.gui.formatter.RangeModels.generateIntegerModel;
 import static org.blackpanther.ecosystem.gui.formatter.RangeModels.generatePositiveDoubleModel;
+import static org.blackpanther.ecosystem.gui.formatter.RangeModels.generatePositiveIntegerModel;
 import static org.blackpanther.ecosystem.helper.Helper.require;
 
 /**
@@ -65,6 +67,7 @@ public class EnvironmentFromFile
 
         private JLabel path = new JLabel(NO_FILE_SELECTED);
         private JSpinner defaultEnergy = new JSpinner(generatePositiveDoubleModel());
+        private JSpinner dropperStep = new JSpinner(generateIntegerModel(1, Integer.MAX_VALUE));
 
         JButton accept = new JButton("Accept");
         private File selectedFile = null;
@@ -73,6 +76,8 @@ public class EnvironmentFromFile
             super(WorldFrame.getInstance());
             defaultEnergy.setValue(100.0);
             defaultEnergy.setPreferredSize(new Dimension(100, 30));
+            dropperStep.setValue(1);
+            dropperStep.setPreferredSize(new Dimension(100, 30));
 
             accept.setEnabled(false);
 
@@ -84,6 +89,9 @@ public class EnvironmentFromFile
 
             JLabel energyAmountLabel = new JLabel("Initial amount for resources : ");
             energyAmountLabel.setLabelFor(defaultEnergy);
+
+            JLabel dropperStepLabel = new JLabel("Drop step (in pixels) : ");
+            dropperStepLabel.setLabelFor(dropperStep);
 
             chooseFile.addActionListener(EventHandler.create(
                     ActionListener.class,
@@ -103,22 +111,31 @@ public class EnvironmentFromFile
                     "cancelOperation"
             ));
 
-            Box labeledSpinner = new Box(X_AXIS);
-            labeledSpinner.add(energyAmountLabel);
-            labeledSpinner.add(defaultEnergy);
+            Box labeledEnergyField = new Box(X_AXIS);
+            labeledEnergyField.add(energyAmountLabel);
+            labeledEnergyField.add(defaultEnergy);
+
+            Box labeledDropperField = new Box(X_AXIS);
+            labeledDropperField.add(dropperStepLabel);
+            labeledDropperField.add(dropperStep);
 
             Box top = new Box(Y_AXIS);
             top.add(chooseFile);
             top.add(path);
-            top.add(labeledSpinner);
+            top.add(labeledEnergyField);
+            top.add(labeledDropperField);
 
             Box commands = new Box(X_AXIS);
             commands.add(accept);
             commands.add(cancel);
 
-            setLayout(new BorderLayout());
-            add(top, BorderLayout.CENTER);
-            add(commands, BorderLayout.SOUTH);
+            JPanel content = new JPanel(new BorderLayout());
+            content.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+
+            content.add(top, BorderLayout.CENTER);
+            content.add(commands, BorderLayout.SOUTH);
+
+            setContentPane(content);
 
             pack();
         }
@@ -145,6 +162,7 @@ public class EnvironmentFromFile
                 Dimension imageDimension = new Dimension(inputImage.getWidth(), inputImage.getHeight());
                 Environment imageEnvironment = new Environment(imageDimension);
                 Double resourceEnergyAmount = (Double) defaultEnergy.getValue();
+                Integer dropStep = (Integer) dropperStep.getValue();
 
                 FieldsConfiguration resourceConfiguration = new FieldsConfiguration(
                         new StateFieldMould<Double>(
@@ -152,8 +170,8 @@ public class EnvironmentFromFile
                                 StandardProvider(resourceEnergyAmount))
                 );
 
-                for (int i = 0; i < imageDimension.getWidth(); i++)
-                    for (int j = 0; j < imageDimension.getHeight(); j++) {
+                for (int i = 0; i < imageDimension.getWidth(); i+= dropStep)
+                    for (int j = 0; j < imageDimension.getHeight(); j+= dropStep) {
                         resourceConfiguration.updateMould(new StateFieldMould(
                                 AGENT_LOCATION,
                                 StandardProvider(

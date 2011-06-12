@@ -54,7 +54,7 @@ public class GraphicEnvironment
 
     private double lineWidthLinear = 1.0;
     private double lineWidthExponential = 0.0;
-    private double ratio = 0.5;
+    private double genotypeInfluence = 10000;
 
     private int options =
             BOUNDS_OPTION
@@ -182,17 +182,24 @@ public class GraphicEnvironment
                 Color genotypeColor = monster.getGene(CreatureConstants.CREATURE_NATURAL_COLOR, Color.class);
                 Color phenotypeColor = monster.getColor();
 
-                Color expressedColor = new Color(
-                        (int) (genotypeColor.getRed() * ratio + phenotypeColor.getRed() * (1.0 - ratio)),
-                        (int) (genotypeColor.getGreen() * ratio + phenotypeColor.getGreen() * (1.0 - ratio)),
-                        (int) (genotypeColor.getBlue() * ratio + phenotypeColor.getBlue() * (1.0 - ratio))
+                Double genotypeInfluence = this.genotypeInfluence;
+                Double phenotypeInfluence = monster.getEnergy();
+
+                Color complexion = new Color(
+                        (int) ((genotypeColor.getRed() * genotypeInfluence + phenotypeColor.getRed() * phenotypeInfluence)
+                                / (phenotypeInfluence + genotypeInfluence)),
+                        (int) ((genotypeColor.getGreen() * genotypeInfluence + phenotypeColor.getGreen() * phenotypeInfluence)
+                                / (phenotypeInfluence + genotypeInfluence)),
+                        (int) ((genotypeColor.getBlue() * genotypeInfluence + phenotypeColor.getBlue() * phenotypeInfluence)
+                                / (phenotypeInfluence + genotypeInfluence))
                 );
+
 
                 g2d.setPaint(new RadialGradientPaint(
                         center,
                         (float) radius,
                         new float[]{0.0f, 1.0f},
-                        new Color[]{expressedColor, currentBackground}
+                        new Color[]{complexion, currentBackground}
                 ));
                 g2d.fillOval(
                         (int) (center.getX() - radius),
@@ -211,7 +218,6 @@ public class GraphicEnvironment
                 Color resourceColor = resource.getGene(RESOURCE_NATURAL_COLOR, Color.class);
                 Point2D center = internalMouseMonitor.environmentToPanel(resource.getLocation());
                 double radius = 5.0;
-//                        internalMouseMonitor.environmentToPanel(AGENT_RADIUS);
                 g.setColor(resourceColor);
                 g.fillOval(
                         (int) (center.getX() - radius),
@@ -231,12 +237,29 @@ public class GraphicEnvironment
 
         Color genotypeColor = graphicalLine.getGenotypeColor();
         Color phenotypeColor = graphicalLine.getPhenotypeColor();
+        Double power = graphicalLine.getPower();
 
-        Color expressedColor = new Color(
-                (int) (genotypeColor.getRed() * ratio + phenotypeColor.getRed() * (1.0 - ratio)),
-                (int) (genotypeColor.getGreen() * ratio + phenotypeColor.getGreen() * (1.0 - ratio)),
-                (int) (genotypeColor.getBlue() * ratio + phenotypeColor.getBlue() * (1.0 - ratio))
+        Double genotypeInfluence = this.genotypeInfluence;
+        Double phenotypeInfluence = power;
+
+        Color complexion = new Color(
+                (int) ((genotypeColor.getRed() * genotypeInfluence + phenotypeColor.getRed() * phenotypeInfluence)
+                        / (phenotypeInfluence + genotypeInfluence)),
+                (int) ((genotypeColor.getGreen() * genotypeInfluence + phenotypeColor.getGreen() * phenotypeInfluence)
+                        / (phenotypeInfluence + genotypeInfluence)),
+                (int) ((genotypeColor.getBlue() * genotypeInfluence + phenotypeColor.getBlue() * phenotypeInfluence)
+                        / (phenotypeInfluence + genotypeInfluence))
         );
+        System.out.println(String.format(
+                "power %s%n" +
+                        "genotype %s (influence %s)%n" +
+                        "phenotype %s (influence %s)%n" +
+                        "complexion %s%n",
+                power,
+                genotypeColor, genotypeInfluence,
+                phenotypeColor, phenotypeInfluence,
+                complexion
+        ));
 
         double strokeWidth =
                 lineWidthLinear * Math.pow(graphicalLine.getPower(), lineWidthExponential);
@@ -247,7 +270,7 @@ public class GraphicEnvironment
                 BasicStroke.JOIN_ROUND
         ));
 
-        g2d.setColor(expressedColor);
+        g2d.setColor(complexion);
 
         g2d.drawLine(
                 (int) start.getX(),
@@ -383,7 +406,7 @@ public class GraphicEnvironment
     }
 
     public void changeRatio(double newRatio) {
-        ratio = newRatio;
+        genotypeInfluence = newRatio;
         repaintEnvironment();
     }
 

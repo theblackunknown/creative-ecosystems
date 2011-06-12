@@ -15,10 +15,14 @@ public final class RangeModels {
 
     //Domain : [|0,POS_INF|]
     public static SpinnerNumberModel generatePositiveIntegerModel() {
+        return generateIntegerModel(0,Integer.MAX_VALUE);
+    }
+
+    public static SpinnerNumberModel generateIntegerModel(int min, int max) {
         return new SpinnerNumberModel(
-                0,
-                0,
-                Integer.MAX_VALUE,
+                min,
+                min,
+                max,
                 1);
     }
 
