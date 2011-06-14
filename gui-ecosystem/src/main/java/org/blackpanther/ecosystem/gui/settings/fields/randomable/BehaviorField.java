@@ -30,7 +30,7 @@ public class BehaviorField
     }
 
     @Override
-    protected JComponent getMainComponent() {
+    public JComponent getMainComponent() {
         return behaviorSelector;
     }
 
@@ -53,7 +53,9 @@ public class BehaviorField
     public FieldMould<BehaviorManager> toMould() {
         return new StateFieldMould<BehaviorManager>(
                 behaviorSelector.getName(),
-                new org.blackpanther.ecosystem.factory.generator.provided.BehaviorProvider((BehaviorManager) behaviorSelector.getSelectedItem())
+                isRandomized()
+                        ? org.blackpanther.ecosystem.factory.generator.random.BehaviorProvider.getInstance()
+                        : new org.blackpanther.ecosystem.factory.generator.provided.BehaviorProvider(getValue())
         );
     }
 }

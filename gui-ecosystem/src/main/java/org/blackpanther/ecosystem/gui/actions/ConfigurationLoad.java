@@ -2,6 +2,7 @@ package org.blackpanther.ecosystem.gui.actions;
 
 import org.blackpanther.ecosystem.Configuration;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
+import org.blackpanther.ecosystem.gui.WorldFrame;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,6 +13,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Properties;
 
+import static org.blackpanther.ecosystem.ApplicationConstants.LINE_OBSTRUCTION_OPTION;
+import static org.blackpanther.ecosystem.ApplicationConstants.PERLIN_NOISE_OPTION;
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
@@ -43,20 +46,6 @@ public class ConfigurationLoad
                 ? ((Component) e.getSource()).getParent()
                 : null;
 
-        boolean checkNeeded = Monitor.dumpCurrentEnvironment() != null;
-
-        if (checkNeeded) {
-            int returnVal = JOptionPane.showConfirmDialog(parent,
-                    "Current environment will be lost !",
-                    "Warning before loading external conf",
-                    JOptionPane.YES_NO_OPTION);
-
-            if (returnVal != JOptionPane.OK_OPTION) {
-                JOptionPane.showMessageDialog(parent, "Loading aborted");
-                return;
-            }
-        }
-
         switch (fc.showOpenDialog(parent)) {
             case JFileChooser.APPROVE_OPTION:
                 File selectedFile = fc.getSelectedFile();
@@ -68,8 +57,13 @@ public class ConfigurationLoad
                     Properties environmentProperties = (Properties) os.readObject();
                     FieldsConfiguration agentConfiguration = (FieldsConfiguration) os.readObject();
                     os.close();
-                    Monitor.resetEnvironment();
                     Configuration.Configuration.loadConfiguration(environmentProperties);
+                    WorldFrame.getInstance().updateCheckBoxMenuItem(
+                            LINE_OBSTRUCTION_OPTION,
+                            Configuration.Configuration.getParameter(LINE_OBSTRUCTION_OPTION, Boolean.class));
+                    WorldFrame.getInstance().updateCheckBoxMenuItem(
+                            PERLIN_NOISE_OPTION,
+                            Configuration.Configuration.getParameter(PERLIN_NOISE_OPTION, Boolean.class));
                     Monitor.updateSettingFields(agentConfiguration);
                     JOptionPane.showMessageDialog(
                             parent,

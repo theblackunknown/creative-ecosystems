@@ -9,7 +9,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.blackpanther.ecosystem.factory.fields.FieldsConfiguration.checkAgentConfiguration;
 import static org.blackpanther.ecosystem.helper.Helper.require;
 
 /**
@@ -28,15 +27,16 @@ public abstract class Agent
     /**
      * Serializable identifier
      */
-    private static final Long serialVersionUID = 3L;
+
+    private static final long serialVersionUID = 6L;
     private static long idGenerator = 0;
 
     /*=========================================
      *                 GENOTYPE
      *=========================================
      */
-    protected Map<String, Object> genotype = new HashMap<String, Object>(AGENT_GENOTYPE.length);
-    protected Map<String, Boolean> mutableTable = new HashMap<String, Boolean>(AGENT_GENOTYPE.length);
+    protected Map<String, Object> genotype = new HashMap<String, Object>();
+    protected Map<String, Boolean> mutableTable = new HashMap<String, Boolean>();
 
     /*=========================================
      *                 PHENOTYPE
@@ -53,15 +53,8 @@ public abstract class Agent
     private Long id = ++idGenerator;
 
     protected Agent(FieldsConfiguration config) {
-        checkAgentConfiguration(config);
-
         for (String stateTrait : BUILD_PROVIDED_AGENT_STATE)
             currentState.put(stateTrait, config.getValue(stateTrait));
-
-        for (String genotypeTrait : AGENT_GENOTYPE) {
-            genotype.put(genotypeTrait, config.getValue(genotypeTrait));
-            mutableTable.put(genotypeTrait, config.isMutable(Agent.class, genotypeTrait));
-        }
     }
 
     abstract public void update(final Environment env);
@@ -130,9 +123,8 @@ public abstract class Agent
         return mutableTable.get(genotypeTrait);
     }
 
-    public double getEnergy() {
-        return getState(AGENT_ENERGY, Double.class);
-    }
+    abstract public double getEnergy();
+
 
     /**
      * Get current agent's location in its environment
@@ -151,19 +143,19 @@ public abstract class Agent
      */
 
     public void setLocation(double abscissa, double ordinate) {
-        getState(AGENT_LOCATION, Point2D.class).setLocation(abscissa, ordinate);
+        currentState.put(AGENT_LOCATION, new Point2D.Double(abscissa, ordinate));
     }
 
-    public void setEnergy(Double energy) {
-        currentState.put(AGENT_ENERGY, energy < 0.0
-                ? 0.0
-                : energy);
-    }
+    abstract public void setEnergy(Double energy);
 
     @Override
-    public Agent clone(){
+    public Agent clone() {
         try {
-            return (Agent) super.clone();
+            Agent copy = (Agent) super.clone();
+            copy.currentState = new HashMap<String, Object>(this.currentState);
+            copy.genotype = new HashMap<String, Object>(this.genotype);
+            copy.mutableTable = new HashMap<String, Boolean>(this.mutableTable);
+            return copy;
         } catch (CloneNotSupportedException e) {
             throw new Error(e);
         }

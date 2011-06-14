@@ -2,7 +2,10 @@ package org.blackpanther.ecosystem.gui.settings;
 
 import org.blackpanther.ecosystem.factory.fields.FieldMould;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
+import org.blackpanther.ecosystem.factory.fields.GeneFieldMould;
 import org.blackpanther.ecosystem.gui.settings.fields.SettingField;
+import org.blackpanther.ecosystem.gui.settings.fields.mutable.Mutable;
+import org.blackpanther.ecosystem.gui.settings.fields.randomable.RandomSettingField;
 
 import javax.swing.*;
 import java.util.ArrayList;
@@ -43,14 +46,26 @@ public abstract class AgentParameterPanel
 
     @SuppressWarnings("unchecked")
     public void updateInformation(FieldsConfiguration information) {
-        for(Map.Entry<String,SettingField> entry : parameters.entrySet())
-            entry.getValue().setValue(
+        for (Map.Entry<String, SettingField> entry : parameters.entrySet()) {
+            SettingField field = entry.getValue();
+            FieldMould incomingMould = information.getField(entry.getKey());
+            if( incomingMould instanceof GeneFieldMould) {
+                GeneFieldMould geneMould = (GeneFieldMould) incomingMould;
+                Mutable geneField = (Mutable) field;
+                geneField.setMutable(
+                        geneMould.isMutable());
+            }
+            RandomSettingField randomField = (RandomSettingField) field;
+            randomField.setRandomized(
+                    incomingMould.isRandomized());
+            field.setValue(
                     information.getValue(entry.getKey()));
+        }
     }
 
     public Collection<FieldMould> getMoulds() {
         Collection<FieldMould> moulds = new ArrayList<FieldMould>(parameters.size());
-        for(SettingField field : parameters.values())
+        for (SettingField field : parameters.values())
             moulds.add(field.toMould());
         return moulds;
     }

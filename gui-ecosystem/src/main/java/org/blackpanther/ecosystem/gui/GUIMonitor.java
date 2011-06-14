@@ -4,13 +4,11 @@ import org.blackpanther.ecosystem.Environment;
 import org.blackpanther.ecosystem.agent.Creature;
 import org.blackpanther.ecosystem.agent.Resource;
 import org.blackpanther.ecosystem.factory.fields.FieldsConfiguration;
-import org.blackpanther.ecosystem.gui.actions.EnvironmentSave;
 import org.blackpanther.ecosystem.gui.actions.EnvironmentSaveBackup;
 import org.blackpanther.ecosystem.gui.commands.EnvironmentCommands;
 import org.blackpanther.ecosystem.gui.lightweight.EnvironmentInformation;
 import org.blackpanther.ecosystem.gui.settings.EnvironmentBoard;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
@@ -73,7 +71,7 @@ public enum GUIMonitor {
         environmentCommandsPanel.environmentSet();
     }
 
-    public void updateSettingFields(FieldsConfiguration configuration){
+    public void updateSettingFields(FieldsConfiguration configuration) {
         require(environmentBoard != null);
         environmentBoard.updateInformation(Configuration);
         environmentBoard.updateInformation(configuration);
@@ -88,13 +86,10 @@ public enum GUIMonitor {
         require(environmentCommandsPanel != null);
         environmentBoard.updateInformation(EnvironmentInformation.dump(env, state));
         switch (state) {
-            case RUNNING:
-                break;
             case PAUSED:
-                drawPanel.stopSimulation();
-                break;
             case FROZEN:
-                environmentCommandsPanel.environmentFrozen();
+                environmentCommandsPanel.notifyPause();
+                drawPanel.stopSimulation();
                 break;
         }
     }
@@ -205,28 +200,6 @@ public enum GUIMonitor {
         drawPanel.setDropMode(mode);
     }
 
-    /**
-     * delegator to disable commands' option button
-     */
-    public void disableOptionButton(int option) {
-        require(environmentCommandsPanel != null);
-        environmentCommandsPanel.disableOptionButton(option);
-    }
-
-    private void proposeSaveEnvironment(Environment backup) {
-        if (backup != null)
-            switch (JOptionPane.showConfirmDialog(
-                    null,
-                    "Would you like to save initial environment state ?",
-                    "Save this environment's configuration",
-                    JOptionPane.YES_NO_OPTION)) {
-                case JOptionPane.OK_OPTION:
-                    backup.clearAllExternalsListeners();
-                    EnvironmentSave.getInstance().save(backup);
-                    break;
-            }
-    }
-
     public void addCreatures(Collection<Creature> creatures) {
         require(drawPanel != null);
         drawPanel.addCreatures(creatures);
@@ -237,9 +210,9 @@ public enum GUIMonitor {
         drawPanel.addResources(creatures);
     }
 
-    public void makeBackup() {
+    public void makeBackup(Environment env) {
         EnvironmentSaveBackup.getInstance().backup(
-                drawPanel.dumpCurrentEnvironment(),
+                env,
                 Configuration,
                 environmentBoard.createConfiguration()
         );
@@ -247,5 +220,17 @@ public enum GUIMonitor {
 
     public FieldsConfiguration dumpFieldsConfiguration() {
         return environmentBoard.createConfiguration();
+    }
+
+    public void updateLineWidthLinear(double value) {
+        drawPanel.changeLineWidthLinear(value);
+    }
+
+    public void updateLineWidthExponential(double value) {
+        drawPanel.changeLineWidthExponential(value);
+    }
+
+    public void changeColorRatio(double v) {
+        drawPanel.changeRatio(v);
     }
 }

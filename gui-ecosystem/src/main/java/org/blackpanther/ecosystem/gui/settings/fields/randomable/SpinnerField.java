@@ -1,11 +1,16 @@
 package org.blackpanther.ecosystem.gui.settings.fields.randomable;
 
-import org.blackpanther.ecosystem.Configuration;
 import org.blackpanther.ecosystem.factory.fields.FieldMould;
 import org.blackpanther.ecosystem.factory.fields.StateFieldMould;
+import org.blackpanther.ecosystem.factory.generator.ValueProvider;
+import org.blackpanther.ecosystem.math.Geometry;
 
 import javax.swing.*;
-import java.awt.*;
+
+import static org.blackpanther.ecosystem.ApplicationConstants.*;
+import static org.blackpanther.ecosystem.Configuration.Configuration;
+import static org.blackpanther.ecosystem.agent.CreatureConstants.*;
+import static org.blackpanther.ecosystem.agent.ResourceConstants.RESOURCE_ENERGY;
 
 /**
  * @author MACHIZAUD Andréa
@@ -14,14 +19,10 @@ import java.awt.*;
 public class SpinnerField
         extends RandomSettingField<Double> {
 
-    private JSpinner valueSelector;
-    private double min;
-    private double max;
+    protected JSpinner valueSelector;
 
-    public SpinnerField(String name, SpinnerModel model, double min, double max) {
+    public SpinnerField(String name, SpinnerModel model) {
         super(name);
-        this.min = min;
-        this.max = max;
         valueSelector.setModel(model);
     }
 
@@ -33,7 +34,7 @@ public class SpinnerField
     }
 
     @Override
-    protected JComponent getMainComponent() {
+    public JComponent getMainComponent() {
         return valueSelector;
     }
 
@@ -46,18 +47,50 @@ public class SpinnerField
     public Double getValue() {
         if (!isRandomized())
             return (Double) valueSelector.getValue();
-        else
+        else {
+            SpinnerNumberModel model = (SpinnerNumberModel) valueSelector.getModel();
+            Double min = (Double) model.getMinimum();
+            Double max = (Double) model.getMaximum();
             return min
-                    + Configuration.Configuration.getRandom().nextDouble() * (max - min);
+                    + Configuration.getRandom().nextDouble() * (max - min);
+        }
     }
 
     @Override
     public FieldMould<Double> toMould() {
         return new StateFieldMould<Double>(
                 valueSelector.getName(),
-                isRandomized()
-                        ? new org.blackpanther.ecosystem.factory.generator.random.DoubleProvider(min,max)
-                        : new org.blackpanther.ecosystem.factory.generator.provided.DoubleProvider((Double) valueSelector.getValue())
+                generateValueProvider()
         );
+    }
+
+    private ValueProvider<Double> generateValueProvider() {
+        if (!isRandomized())
+            return new org.blackpanther.ecosystem.factory.generator.provided.DoubleProvider((Double) valueSelector.getValue());
+        else if (valueSelector.getName().equals(CREATURE_ORIENTATION_LAUNCHER)) {
+            return new org.blackpanther.ecosystem.factory.generator.random.DoubleProvider(-Math.PI, Math.PI);
+        } else if (valueSelector.getName().equals(CREATURE_ORIENTATION)) {
+            return new org.blackpanther.ecosystem.factory.generator.random.DoubleProvider(0.0, Geometry.PI_2);
+        } else if (valueSelector.getName().equals(CREATURE_SPEED)
+                || valueSelector.getName().equals(CREATURE_SPEED_LAUNCHER)) {
+            return new org.blackpanther.ecosystem.factory.generator.random.DoubleProvider(0.0,
+                    Configuration.getParameter(SPEED_THRESHOLD, Double.class));
+        } else if (valueSelector.getName().equals(CREATURE_ENERGY)
+                || valueSelector.getName().equals(RESOURCE_ENERGY)
+                || valueSelector.getName().equals(CREATURE_FECUNDATION_COST)) {
+            return new org.blackpanther.ecosystem.factory.generator.random.DoubleProvider(0.0,
+                    Configuration.getParameter(ENERGY_AMOUNT_THRESHOLD, Double.class));
+        } else if (valueSelector.getName().equals(CREATURE_SENSOR_RADIUS)) {
+            return new org.blackpanther.ecosystem.factory.generator.random.DoubleProvider(0.0,
+                    Configuration.getParameter(SENSOR_THRESHOLD, Double.class));
+        } else if (valueSelector.getName().equals(CREATURE_SENSOR_RADIUS)) {
+            return new org.blackpanther.ecosystem.factory.generator.random.DoubleProvider(0.0,
+                    Configuration.getParameter(SENSOR_THRESHOLD, Double.class));
+        } else if (valueSelector.getName().equals(CREATURE_CURVATURE)) {
+            return new org.blackpanther.ecosystem.factory.generator.random.DoubleProvider(
+                    -Configuration.getParameter(CURVATURE_THRESHOLD, Double.class),
+                    Configuration.getParameter(CURVATURE_THRESHOLD, Double.class));
+        } else
+            throw new IllegalStateException("unknown properties : " + valueSelector.getName());
     }
 }

@@ -9,6 +9,9 @@ import java.awt.geom.Point2D;
 import java.net.URL;
 import java.util.Arrays;
 
+import static java.lang.Math.PI;
+import static org.blackpanther.ecosystem.math.Geometry.PI_2;
+
 /**
  * Tools method to help to design others classes
  *
@@ -19,21 +22,20 @@ public final class Helper {
 
     static {
         Arrays.sort(AgentConstants.AGENT_STATE);
-        Arrays.sort(AgentConstants.AGENT_GENOTYPE);
         Arrays.sort(CreatureConstants.CREATURE_STATE);
         Arrays.sort(CreatureConstants.CREATURE_GENOTYPE);
     }
 
     public static boolean isGene(String trait) {
         return Arrays.binarySearch(CreatureConstants.CREATURE_GENOTYPE, trait) >= 0
-                    || Arrays.binarySearch(AgentConstants.AGENT_GENOTYPE, trait) >= 0;
+                || Arrays.binarySearch(ResourceConstants.RESOURCE_GENOTYPE, trait) >= 0;
     }
 
     public static boolean isGene(Class species, String trait) {
-        if (species.equals(Agent.class) || species.equals(Resource.class))
-            return Arrays.binarySearch(AgentConstants.AGENT_GENOTYPE, trait) >= 0;
-        else if (species.equals(Creature.class))
+        if (species.equals(Creature.class))
             return Arrays.binarySearch(CreatureConstants.CREATURE_GENOTYPE, trait) >= 0;
+        else if (species.equals(Resource.class))
+            return Arrays.binarySearch(ResourceConstants.RESOURCE_GENOTYPE, trait) >= 0;
         else
             throw new IllegalArgumentException("Unknown species : " + species);
     }
@@ -119,6 +121,32 @@ public final class Helper {
             return 0.0;
         else
             return speed;
+    }
+
+    public static Double normalizeRelativeAngle(
+            double absoluteReferenceAngle,
+            double absoluteTargetAngle) {
+
+        double alpha = (absoluteReferenceAngle % PI_2);
+        double beta = (absoluteTargetAngle % PI_2);
+        double resourceRelativeOrientation = beta + alpha;
+        if (resourceRelativeOrientation > PI_2)
+            resourceRelativeOrientation -= PI_2;
+        else if (resourceRelativeOrientation < 0.0)
+            resourceRelativeOrientation += PI_2;
+
+        String format = String.format(
+                "old orientation : %.2fPI%n " +
+                        "resource orientation : %.2fPI%n " +
+                        "raw diff orientation : %.2fPI%n " +
+                        "resource relative orientation : %.2fPI%n ",
+                alpha / PI,
+                beta / PI,
+                (beta + alpha) / PI,
+                resourceRelativeOrientation / PI
+        );
+
+        return (resourceRelativeOrientation) % PI_2;
     }
 
     public static URL getURL(String imagePath) {

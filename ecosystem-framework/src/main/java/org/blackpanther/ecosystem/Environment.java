@@ -15,8 +15,11 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import static org.blackpanther.ecosystem.ApplicationConstants.LINE_OBSTRUCTION_OPTION;
+import static org.blackpanther.ecosystem.Configuration.Configuration;
 import static org.blackpanther.ecosystem.SensorTarget.detected;
-import static org.blackpanther.ecosystem.helper.Helper.*;
+import static org.blackpanther.ecosystem.helper.Helper.EPSILON;
+import static org.blackpanther.ecosystem.helper.Helper.computeOrientation;
 import static org.blackpanther.ecosystem.math.Geometry.getIntersection;
 
 /**
@@ -46,7 +49,7 @@ public class Environment
                     Environment.class.getCanonicalName()
             );
 
-    private static final Long serialVersionUID = 1L;
+    private static final long serialVersionUID = 5L;
 
     private static long idGenerator = 0L;
     private static int AREA_COLUMN_NUMBER = 50;
@@ -72,7 +75,7 @@ public class Environment
     /**
      * Population
      */
-    protected Collection<Creature> creaturePool = new ArrayList<Creature>();
+    protected List<Creature> creaturePool = new ArrayList<Creature>();
     private Collection<Resource> resourcePool = new ArrayList<Resource>();
 
     /*
@@ -80,11 +83,6 @@ public class Environment
      *                       MISCELLANEOUS
      *=========================================================================
      */
-
-    /**
-     * Mark whether this environment has been frozen or not
-     */
-    private boolean endReached;
     /**
      * Component that can monitor an environment
      *
@@ -282,8 +280,6 @@ public class Environment
      * </p>
      */
     public final void runNextCycle() {
-        require(!endReached, "This environment has been frozen");
-
         if (timetracker == 0)
             getEventSupport().fireEvolutionEvent(EvolutionEvent.Type.STARTED);
 
@@ -300,17 +296,17 @@ public class Environment
         ));
         totalComparison = 0;
 
+        //update timeline
+        logger.info(String.format(
+                "%s 's cycle %d ended, %d agents remaining",
+                this,
+                timetracker,
+                creaturePool.size()));
+        timetracker++;
+        getEventSupport().fireEvolutionEvent(EvolutionEvent.Type.CYCLE_END);
+
         if (creaturePool.size() == 0) {
             endThisWorld();
-        } else {
-            //update timeline
-            logger.info(String.format(
-                    "%s 's cycle %d ended, %d agents remaining",
-                    this,
-                    timetracker,
-                    creaturePool.size()));
-            timetracker++;
-            getEventSupport().fireEvolutionEvent(EvolutionEvent.Type.CYCLE_END);
         }
     }
 
@@ -322,14 +318,14 @@ public class Environment
 
         //update all agents
         //if they die, they are simply not kept in the next creaturePool
-        Iterator<Creature> poolIterator = creaturePool.iterator();
-        while (poolIterator.hasNext()) {
-            Creature monster = poolIterator.next();
+        for (Creature monster : creaturePool) {
             monster.update(this);
-            if (!monster.isAlive()) {
-                poolIterator.remove();
-            }
         }
+        for (int i = 0; i < creaturePool.size(); )
+            if (!creaturePool.get(i).isAlive())
+                creaturePool.remove(i);
+            else
+                i++;
 
         creaturePool.addAll(nextGenerationBuffer);
         nextGenerationBuffer.clear();
@@ -340,11 +336,8 @@ public class Environment
      * and freeze its state
      */
     public final void endThisWorld() {
-        endReached = true;
-        logger.info(String.format("The evolution's game ended. %s's statistics[%d cycle]", this, timetracker));
+        logger.info(String.format("The evolution's game paused. %s's statistics[%d cycle]", this, timetracker));
         getEventSupport().fireEvolutionEvent(EvolutionEvent.Type.ENDED);
-        creaturePool.clear();
-        nextGenerationBuffer.clear();
     }
 
     @Override
@@ -352,12 +345,6 @@ public class Environment
         return String.format("Environment#%s", Long.toHexString(id));
     }
 
-    /**
-     * FIXME Didn't work
-     *
-     * @return
-     * @throws CloneNotSupportedException
-     */
     @Override
     public Environment clone() {
         Environment copy = new Environment(getBounds().getWidth(), getBounds().getHeight());
@@ -528,21 +515,26 @@ public class Environment
                 throw new RuntimeException("Border detection failed");
             }
 
-            for (Line2D historyLine : internalDrawHistory) {
-                //check if this line can cross the history line before computing intersection (compute is cheaper)
-                if (!TraceHandler.canCross(agentLine, historyLine)) {
-                    Point2D intersection = getIntersection(historyLine, agentLine);
-                    if (intersection != null
-                            //Intersection with the line's start is not an intersection
-                            && !intersection.equals(from)) {
-                        Line2D realLine = TraceHandler.trace(from, intersection, that);
-                        //We add a drawn line from agent's old location till intersection
-                        internalDrawHistory.add(realLine);
-                        getEventSupport().fireLineEvent(LineEvent.Type.ADDED, realLine);
-                        //Yes, unfortunately, the agent died - this is Sparta here dude
-                        return true;
+            //no intersection can happen with this option
+            if (Configuration.getParameter(LINE_OBSTRUCTION_OPTION, Boolean.class)) {
+
+                for (Line2D historyLine : internalDrawHistory) {
+                    //check if this line can cross the history line before computing intersection (compute is cheaper)
+                    if (!TraceHandler.canCross(agentLine, historyLine)) {
+                        Point2D intersection = getIntersection(historyLine, agentLine);
+                        if (intersection != null
+                                //Intersection with the line's start is not an intersection
+                                && !intersection.equals(from)) {
+                            Line2D realLine = TraceHandler.trace(from, intersection, that);
+                            //We add a drawn line from agent's old location till intersection
+                            internalDrawHistory.add(realLine);
+                            getEventSupport().fireLineEvent(LineEvent.Type.ADDED, realLine);
+                            //Yes, unfortunately, the agent died - this is Sparta here dude
+                            return true;
+                        }
                     }
                 }
+
             }
 
             //Everything went better than expected

@@ -5,13 +5,13 @@ import org.blackpanther.ecosystem.math.Geometry;
 
 import java.awt.*;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import static org.blackpanther.ecosystem.agent.AgentConstants.AGENT_GENOTYPE;
-import static org.blackpanther.ecosystem.agent.AgentConstants.BUILD_PROVIDED_AGENT_STATE;
 import static org.blackpanther.ecosystem.agent.CreatureConstants.*;
+import static org.blackpanther.ecosystem.agent.ResourceConstants.*;
 import static org.blackpanther.ecosystem.factory.generator.StandardProvider.StandardProvider;
 import static org.blackpanther.ecosystem.helper.Helper.isGene;
 
@@ -21,6 +21,8 @@ import static org.blackpanther.ecosystem.helper.Helper.isGene;
  */
 public class FieldsConfiguration
         implements Serializable, Cloneable {
+
+    private static final long serialVersionUID = 1L;
 
     public static final String[] UNBOUNDED_FIELDS = new String[]{
             CREATURE_CURVATURE,
@@ -32,11 +34,13 @@ public class FieldsConfiguration
     };
 
     public static final String[] POSITIVE_FIELDS = new String[]{
-            AGENT_ENERGY,
+            CREATURE_ENERGY,
+            RESOURCE_ENERGY,
             CREATURE_SPEED,
             CREATURE_SPEED_LAUNCHER,
             CREATURE_FECUNDATION_COST,
             CREATURE_SENSOR_RADIUS,
+            CREATURE_CONSUMMATION_RADIUS,
     };
 
     public static final String[] PROBABILITY_FIELDS = new String[]{
@@ -51,13 +55,23 @@ public class FieldsConfiguration
     };
 
     public static final String[] COLOR_FIELDS = new String[]{
-            AGENT_NATURAL_COLOR,
+            CREATURE_NATURAL_COLOR,
+            RESOURCE_NATURAL_COLOR,
             CREATURE_COLOR
     };
 
     public static final String[] BEHAVIOR_FIELDS = new String[]{
             CREATURE_BEHAVIOR
     };
+
+    static {
+        Arrays.sort(UNBOUNDED_FIELDS);
+        Arrays.sort(ANGLE_FIELDS);
+        Arrays.sort(POSITIVE_FIELDS);
+        Arrays.sort(PROBABILITY_FIELDS);
+        Arrays.sort(COLOR_FIELDS);
+        Arrays.sort(BEHAVIOR_FIELDS);
+    }
 
     private Map<String, FieldMould> wrappedFieldProvider = new HashMap<String, FieldMould>();
 
@@ -149,6 +163,10 @@ public class FieldsConfiguration
         return mould.getValue();
     }
 
+    public FieldMould getField(String traitName) {
+        return wrappedFieldProvider.get(traitName);
+    }
+
     public boolean isMutable(Class species, String trait) {
         isGene(species, trait);
         try {
@@ -159,20 +177,16 @@ public class FieldsConfiguration
         }
     }
 
-    public static void checkAgentConfiguration(FieldsConfiguration configuration) {
-        for (String stateTrait : BUILD_PROVIDED_AGENT_STATE)
+    public static void checkResourceConfiguration(FieldsConfiguration configuration) {
+        for (String stateTrait : BUILD_PROVIDED_RESOURCE_STATE)
             if (!configuration.wrappedFieldProvider.containsKey(stateTrait))
-                throw new IllegalStateException("Given configuration is incomplete to build an agent : " +
+                throw new IllegalStateException("Given configuration is incomplete to build a resource : " +
                         "missing trait '" + stateTrait + "'");
 
-        for (String genotypeTrait : AGENT_GENOTYPE)
+        for (String genotypeTrait : RESOURCE_GENOTYPE)
             if (!configuration.wrappedFieldProvider.containsKey(genotypeTrait))
-                throw new IllegalStateException("Given configuration is incomplete to build an agent : " +
+                throw new IllegalStateException("Given configuration is incomplete to build a resource : " +
                         "missing trait '" + genotypeTrait + "'");
-    }
-
-    public static void checkResourceConfiguration(FieldsConfiguration configuration) {
-        checkAgentConfiguration(configuration);
     }
 
     public static void checkCreatureConfiguration(FieldsConfiguration configuration) {

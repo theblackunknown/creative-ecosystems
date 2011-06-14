@@ -85,6 +85,11 @@ public class Creature
                             SETTERS
     =========================================================================*/
 
+    @Override
+    public double getEnergy() {
+        return getState(CREATURE_ENERGY, Double.class);
+    }
+
     public Color getColor() {
         return getState(CREATURE_COLOR, Color.class);
     }
@@ -190,6 +195,13 @@ public class Creature
     /*=========================================================================
                             GETTERS
     =========================================================================*/
+
+    @Override
+    public void setEnergy(Double energy) {
+        currentState.put(CREATURE_ENERGY, energy < 10e-2
+                ? 0.0
+                : energy);
+    }
 
     public void setColor(int red, int green, int blue) {
         currentState.put(CREATURE_COLOR, new Color(

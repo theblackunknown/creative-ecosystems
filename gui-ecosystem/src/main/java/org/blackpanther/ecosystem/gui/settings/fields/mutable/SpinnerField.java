@@ -1,5 +1,8 @@
 package org.blackpanther.ecosystem.gui.settings.fields.mutable;
 
+import org.blackpanther.ecosystem.factory.fields.FieldMould;
+import org.blackpanther.ecosystem.factory.fields.GeneFieldMould;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -17,8 +20,8 @@ public class SpinnerField
 
     private JCheckBox mutable;
 
-    public SpinnerField(String name, SpinnerModel model, double min, double max) {
-        super(name, model, min, max);
+    public SpinnerField(String name, SpinnerModel model) {
+        super(name, model);
     }
 
     @Override
@@ -51,5 +54,24 @@ public class SpinnerField
     @Override
     public boolean isMutable() {
         return mutable.isSelected();
+    }
+
+    @Override
+    public void setMutable(boolean mutable) {
+        this.mutable.setSelected(mutable);
+    }
+
+    @Override
+    public FieldMould<Double> toMould() {
+        SpinnerNumberModel model = (SpinnerNumberModel) valueSelector.getModel();
+        Double min = (Double) model.getMinimum();
+        Double max = (Double) model.getMaximum();
+        return new GeneFieldMould<Double>(
+                getMainComponent().getName(),
+                isRandomized()
+                        ? new org.blackpanther.ecosystem.factory.generator.random.DoubleProvider(min, max)
+                        : new org.blackpanther.ecosystem.factory.generator.provided.DoubleProvider(getValue()),
+                isMutable()
+        );
     }
 }

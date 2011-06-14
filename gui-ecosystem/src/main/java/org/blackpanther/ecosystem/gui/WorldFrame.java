@@ -11,6 +11,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 
+import static org.blackpanther.ecosystem.Configuration.*;
 import static org.blackpanther.ecosystem.gui.GUIMonitor.Monitor;
 
 /**
@@ -22,6 +23,7 @@ public class WorldFrame
 
     public static final String ICON_PATH = "org/blackpanther/black-cat-icon.png";
     public static final Image APPLICATION_ICON = fetchApplicationIcon();
+    private JCheckBox[] options;
 
     //Set UI Manager
     static {
@@ -50,8 +52,6 @@ public class WorldFrame
         setTitle("GUI Ecosystem Evolution Visualizer");
         if (APPLICATION_ICON != null)
             setIconImage(APPLICATION_ICON);
-
-        setJMenuBar(buildMenuBar());
 
         GraphicEnvironment graphicEnvironment =
                 new GraphicEnvironment();
@@ -89,6 +89,8 @@ public class WorldFrame
         pack();
         setExtendedState(MAXIMIZED_BOTH);
 
+        setJMenuBar(buildMenuBar());
+
         Monitor.resetEnvironment();
     }
 
@@ -114,19 +116,54 @@ public class WorldFrame
         environment.add(EnvironmentSaveBackup.getInstance());
         environment.addSeparator();
         environment.add(EnvironmentLoad.getInstance());
+        environment.add(EnvironmentFromFile.getInstance());
         environment.addSeparator();
         environment.add(SaveImageAction.getInstance());
 
-        painting.add(ToggleBounds.getInstance());
-        painting.add(ToggleCreatures.getInstance());
-        painting.add(ToggleResources.getInstance());
-        painting.add(ToggleFancyLines.getInstance());
+        JCheckBox[] togglers = new JCheckBox[5];
+        for (int i = 0; i < togglers.length; i++) {
+            togglers[i] = new JCheckBox();
+            togglers[i].setSelected(true);
+        }
 
+        togglers[0].setAction(ToggleBounds.getInstance());
+        togglers[1].setAction(ToggleCreatures.getInstance());
+        togglers[2].setAction(ToggleResources.getInstance());
+        togglers[3].setAction(ToggleLineObstruction.getInstance());
+        togglers[4].setAction(TogglePerlinNoise.getInstance());
+
+        //change whether option is activated or not
+        togglers[3].setSelected(
+                Configuration.getParameter(LINE_OBSTRUCTION_OPTION, Boolean.class));
+        togglers[4].setSelected(
+                Configuration.getParameter(PERLIN_NOISE_OPTION, Boolean.class));
+
+        //keep a reference to them
+        options = new JCheckBox[]{
+                togglers[3],
+                togglers[4]
+        };
+
+        painting.add(togglers[0]);//bounds
+        painting.add(togglers[1]);//creatures
+        painting.add(togglers[2]);//resources
+        painting.addSeparator();
+        painting.add(togglers[3]);//line obstruction
+        painting.add(togglers[4]);//perlin noise
+        painting.addSeparator();
+        painting.add(ChangeBackgroundColor.getInstance());
 
         menuBar.add(environment);
         menuBar.add(painting);
 
         return menuBar;
+    }
+
+    public void updateCheckBoxMenuItem(String checkboxName, boolean activated) {
+        if (checkboxName.equals(LINE_OBSTRUCTION_OPTION))
+            options[0].setSelected(activated);
+        else if (checkboxName.equals(PERLIN_NOISE_OPTION))
+            options[1].setSelected(activated);
     }
 
     /**

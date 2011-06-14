@@ -12,7 +12,7 @@ import java.awt.*;
 public class ColorProvider
         extends RandomProvider<Color> {
 
-    private ColorProvider(){}
+    public ColorProvider(){}
 
     private static class ColorProviderHolder {
         private static final ColorProvider instance =

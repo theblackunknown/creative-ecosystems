@@ -1,5 +1,8 @@
 package org.blackpanther.ecosystem.gui.settings.fields.mutable;
 
+import org.blackpanther.ecosystem.factory.fields.FieldMould;
+import org.blackpanther.ecosystem.factory.fields.GeneFieldMould;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -51,5 +54,21 @@ public class ColorField
     @Override
     public boolean isMutable() {
         return mutable.isSelected();
+    }
+
+    @Override
+    public void setMutable(boolean mutable) {
+        this.mutable.setSelected(mutable);
+    }
+
+    @Override
+    public FieldMould<Color> toMould() {
+        return new GeneFieldMould<Color>(
+                getMainComponent().getName(),
+                isRandomized()
+                        ? org.blackpanther.ecosystem.factory.generator.random.ColorProvider.getInstance()
+                        : new org.blackpanther.ecosystem.factory.generator.provided.ColorProvider(getValue()),
+                isMutable()
+        );
     }
 }

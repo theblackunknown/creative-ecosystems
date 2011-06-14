@@ -48,7 +48,7 @@
         <dependency>
             <artifactId>ecosystem-framework</artifactId>
             <groupId>org.blackpanther</groupId>
-            <version>0.3</version>
+            <version>1.0-alpha</version>
         </dependency>
     </dependencies>
 

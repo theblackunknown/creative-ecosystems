@@ -2,7 +2,7 @@ package org.blackpanther.ecosystem.gui.settings.fields.mutable;
 
 import org.blackpanther.ecosystem.behaviour.BehaviorManager;
 import org.blackpanther.ecosystem.factory.fields.FieldMould;
-import org.blackpanther.ecosystem.factory.fields.StateFieldMould;
+import org.blackpanther.ecosystem.factory.fields.GeneFieldMould;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,7 +22,7 @@ public class BehaviorField
     private JCheckBox mutable;
 
     public BehaviorField(String name, BehaviorManager[] behaviors) {
-        super(name,behaviors);
+        super(name, behaviors);
     }
 
     @Override
@@ -55,5 +55,21 @@ public class BehaviorField
     @Override
     public boolean isMutable() {
         return mutable.isSelected();
+    }
+
+    @Override
+    public void setMutable(boolean mutable) {
+        this.mutable.setSelected(mutable);
+    }
+
+    @Override
+    public FieldMould<BehaviorManager> toMould() {
+        return new GeneFieldMould<BehaviorManager>(
+                getMainComponent().getName(),
+                isRandomized()
+                ? org.blackpanther.ecosystem.factory.generator.random.BehaviorProvider.getInstance()
+                : new org.blackpanther.ecosystem.factory.generator.provided.BehaviorProvider(getValue()),
+                isMutable()
+        );
     }
 }

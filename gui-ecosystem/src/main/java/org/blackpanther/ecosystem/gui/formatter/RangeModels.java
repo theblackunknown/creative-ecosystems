@@ -10,37 +10,43 @@ import javax.swing.*;
  */
 public final class RangeModels {
 
-    private RangeModels(){}
+    private RangeModels() {
+    }
 
     //Domain : [|0,POS_INF|]
-    public static SpinnerModel generatePositiveIntegerModel() {
+    public static SpinnerNumberModel generatePositiveIntegerModel() {
+        return generateIntegerModel(0,Integer.MAX_VALUE);
+    }
+
+    public static SpinnerNumberModel generateIntegerModel(int min, int max) {
         return new SpinnerNumberModel(
-                0,
-                0,
-                Integer.MAX_VALUE,
+                min,
+                min,
+                max,
                 1);
     }
 
-    // Domain : Real
-    public static SpinnerModel generateDoubleModel() {
-        return new SpinnerNumberModel(
-                0.0,
-                null,
-                null,
-                1.0);
+    //Domain : [|0,POS_INF|]
+    public static SpinnerNumberModel generatePositiveDoubleModel() {
+        return generateDoubleModel(0.0, Double.MAX_VALUE);
     }
 
-    // Domain : [0.0,POS_INF]
-    public static SpinnerModel generatePositiveDoubleModel() {
+    //Domain : [|0,POS_INF|]
+    public static SpinnerNumberModel generateDoubleModel() {
+        return generateDoubleModel(null, null);
+    }
+
+    // Domain : Real
+    public static SpinnerNumberModel generateDoubleModel(Double min, Double max) {
         return new SpinnerNumberModel(
                 0.0,
-                0.0,
-                null,
+                min == null ? -Double.MAX_VALUE : min,
+                max == null ?  Double.MAX_VALUE : max,
                 1.0);
     }
 
     // Domain : [0.0,1.0]
-    public static SpinnerModel generatePercentageModel() {
+    public static SpinnerNumberModel generatePercentageModel() {
         return new SpinnerNumberModel(
                 0.0,
                 0.0,
@@ -49,7 +55,7 @@ public final class RangeModels {
     }
 
     // Domain : [0.0,2PI]
-    public static SpinnerModel generateAngleModel() {
+    public static SpinnerNumberModel generateAngleModel() {
         return new SpinnerNumberModel(
                 0.0,
                 0.0,

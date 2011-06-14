@@ -14,14 +14,15 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Random;
 import java.util.logging.Logger;
 
 import static java.lang.Math.*;
-import static org.blackpanther.ecosystem.agent.Agent.*;
 import static org.blackpanther.ecosystem.Configuration.*;
+import static org.blackpanther.ecosystem.agent.Agent.*;
+import static org.blackpanther.ecosystem.agent.ResourceConstants.RESOURCE_NATURAL_COLOR;
 import static org.blackpanther.ecosystem.factory.generator.StandardProvider.StandardProvider;
 import static org.blackpanther.ecosystem.helper.Helper.*;
+import static org.blackpanther.ecosystem.helper.PerlinNoiseHelper.coherentNoise;
 import static org.blackpanther.ecosystem.math.Geometry.PI_2;
 
 /**
@@ -74,6 +75,9 @@ public class DraughtsmanBehaviour
         move(env, agent);
         //Step 4 - grow up
         growUp(env, agent);
+
+        if (agent.isAlive() && agent.getEnergy() < 10e-1)
+            agent.detachFromEnvironment(env);
     }
 
     protected void react(Environment env, Creature that, SenseResult analysis) {
@@ -84,16 +88,17 @@ public class DraughtsmanBehaviour
 
             //check if we can still move and reach resource
             double resourceDistance = that.getLocation().distance(closestResource.getTarget().getLocation());
-            if (resourceDistance < Configuration.getParameter(CONSUMMATION_RADIUS, Double.class)) {
+            if (resourceDistance < that.getGene(CREATURE_CONSUMMATION_RADIUS, Double.class)) {
+                Resource res = closestResource.getTarget();
                 //we eat it
                 that.setEnergy(that.getEnergy() + closestResource.getTarget().getEnergy());
                 that.setColor(
-                        (that.getColor().getRed()
-                                + closestResource.getTarget().getGene(AGENT_NATURAL_COLOR, Color.class).getRed()) / 2,
-                        (that.getColor().getGreen()
-                                + closestResource.getTarget().getGene(AGENT_NATURAL_COLOR, Color.class).getGreen()) / 2,
-                        (that.getColor().getBlue()
-                                + closestResource.getTarget().getGene(AGENT_NATURAL_COLOR, Color.class).getBlue()) / 2
+                        (int) ((that.getColor().getRed() * that.getEnergy() + res.getGene(RESOURCE_NATURAL_COLOR, Color.class).getRed() * res.getEnergy())
+                                / (that.getEnergy() + res.getEnergy())),
+                        (int) ((that.getColor().getGreen() * that.getEnergy() + res.getGene(RESOURCE_NATURAL_COLOR, Color.class).getGreen() * res.getEnergy())
+                                / (that.getEnergy() + res.getEnergy())),
+                        (int) ((that.getColor().getBlue() * that.getEnergy() + res.getGene(RESOURCE_NATURAL_COLOR, Color.class).getBlue() * res.getEnergy())
+                                / (that.getEnergy() + res.getEnergy()))
                 );
 
                 closestResource.getTarget().detachFromEnvironment(env);
@@ -174,12 +179,12 @@ public class DraughtsmanBehaviour
             logger.finer(that + " is still alive.");
 
             //Step 4 - Irrationality effect, influence the current curvature
-            if (Configuration.getRandom().nextDouble() <= that.getIrrationality()) {
+            if (randomValue(that) <= that.getIrrationality()) {
                 //Irrationality is the rate but also the DEGREE OF CHANGE
                 double oldCurvature = that.getCurvature();
                 that.setCurvature(
                         that.getCurvature() + (
-                                Configuration.getRandom().nextGaussian() * that.getIrrationality()
+                                randomValue(that, -1.0, 1.0) * that.getIrrationality()
                         )
                 );
                 logger.finer(String.format("Changed %s 's curvature from %s to %s",
@@ -205,10 +210,10 @@ public class DraughtsmanBehaviour
         //check if the environment can hold more agents
         if (env.getCreaturePool().size() < Configuration.getParameter(MAX_AGENT_NUMBER, Integer.class)) {
 
-            Random applicationRandom = Configuration.getRandom();
-            if (applicationRandom.nextDouble() < that.getFecundityRate()
+            if (randomValue(that) < that.getFecundityRate()
                     && that.getEnergy() >= that.getGene(CREATURE_FECUNDATION_COST, Double.class)) {
 
+                //Step 2 - loss of energy
                 //Create child
                 Creature child = new Creature(
                         generateConfigurationFromParent(that));
@@ -216,7 +221,7 @@ public class DraughtsmanBehaviour
                 //Step 2 - loss of energy
                 that.setEnergy(
                         that.getEnergy() *
-                                (1 - that.getGene(CREATURE_FECUNDATION_LOSS, Double.class))
+                                (1.0 - that.getGene(CREATURE_FECUNDATION_LOSS, Double.class))
                 );
 
                 //Add into environment
@@ -227,154 +232,8 @@ public class DraughtsmanBehaviour
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private FieldsConfiguration generateConfigurationFromParent(Creature parent) {
-        return new FieldsConfiguration(
-                        new StateFieldMould(CREATURE_COLOR, StandardProvider(
-                                parent.getColor()
-                        )),
-                        new StateFieldMould(AGENT_LOCATION, StandardProvider(
-                                parent.getLocation()
-                        )),
-                        new StateFieldMould(AGENT_ENERGY, StandardProvider(
-                                parent.getEnergy() * parent.getGene(CREATURE_FECUNDATION_LOSS, Double.class)
-                        )),
-                        new StateFieldMould(CREATURE_CURVATURE, StandardProvider(
-                                parent.getCurvature()
-                        )),
-                        new StateFieldMould(CREATURE_ORIENTATION, StandardProvider(
-                                parent.getGene(CREATURE_ORIENTATION_LAUNCHER, Double.class)
-                        )),
-                        new StateFieldMould(CREATURE_SPEED, StandardProvider(
-                                parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class)
-                        )),
-                        new GeneFieldMould(AGENT_NATURAL_COLOR, StandardProvider(
-                                parent.isMutable(AGENT_NATURAL_COLOR)
-                                        ? mutate(
-                                        parent.getMutationRate(),
-                                        parent.getColor())
-                                        : parent.getGene(AGENT_NATURAL_COLOR, Color.class)),
-                                parent.isMutable(AGENT_NATURAL_COLOR)
-                        ),
-                        new GeneFieldMould(CREATURE_MOVEMENT_COST, StandardProvider(
-                                parent.getGene(CREATURE_MOVEMENT_COST, Double.class)),
-                                false
-                        ),
-                        new GeneFieldMould(CREATURE_FECUNDATION_COST, StandardProvider(
-                                parent.getGene(CREATURE_FECUNDATION_COST, Double.class)),
-                                false
-                        ),
-                        new GeneFieldMould(CREATURE_FECUNDATION_LOSS, StandardProvider(
-                                parent.isMutable(CREATURE_FECUNDATION_LOSS)
-                                        ? normalizeProbability(mutate(
-                                        parent.getMutationRate(),
-                                        parent.getGene(CREATURE_FECUNDATION_LOSS, Double.class),
-                                        Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
-                                                * Configuration.getRandom().nextGaussian()))
-                                        : parent.getGene(CREATURE_FECUNDATION_LOSS, Double.class)),
-                                parent.isMutable(CREATURE_FECUNDATION_LOSS)
-                        ),
-                        new GeneFieldMould(CREATURE_GREED, StandardProvider(
-                                parent.isMutable(CREATURE_GREED)
-                                        ? normalizeProbability(mutate(
-                                        parent.getMutationRate(),
-                                        parent.getGene(CREATURE_GREED, Double.class),
-                                        Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
-                                                * Configuration.getRandom().nextGaussian()))
-                                        : parent.getGene(CREATURE_GREED, Double.class)),
-                                parent.isMutable(CREATURE_GREED)
-                        ),
-                        new GeneFieldMould(CREATURE_FLEE, StandardProvider(
-                                parent.isMutable(CREATURE_FLEE)
-                                        ? normalizeProbability(mutate(
-                                        parent.getMutationRate(),
-                                        parent.getGene(CREATURE_FLEE, Double.class),
-                                        Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
-                                                * Configuration.getRandom().nextGaussian()))
-                                        : parent.getGene(CREATURE_FLEE, Double.class)),
-                                parent.isMutable(CREATURE_FLEE)
-                        ),
-                        new GeneFieldMould(CREATURE_SENSOR_RADIUS, StandardProvider(
-                                parent.isMutable(CREATURE_SENSOR_RADIUS)
-                                        ? normalizeProbability(mutate(
-                                        parent.getMutationRate(),
-                                        parent.getGene(CREATURE_SENSOR_RADIUS, Double.class),
-                                        Configuration.getParameter(SPEED_VARIATION, Double.class)
-                                                * Configuration.getRandom().nextGaussian()))
-                                        : parent.getGene(CREATURE_SENSOR_RADIUS, Double.class)),
-                                parent.isMutable(CREATURE_SENSOR_RADIUS)
-                        ),
-                        new GeneFieldMould(CREATURE_IRRATIONALITY, StandardProvider(
-                                parent.isMutable(CREATURE_IRRATIONALITY)
-                                        ? normalizeProbability(mutate(
-                                        parent.getMutationRate(),
-                                        parent.getGene(CREATURE_IRRATIONALITY, Double.class),
-                                        Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
-                                                * Configuration.getRandom().nextGaussian()))
-                                        : parent.getGene(CREATURE_IRRATIONALITY, Double.class)),
-                                parent.isMutable(CREATURE_IRRATIONALITY)
-                        ),
-                        new GeneFieldMould(CREATURE_MORTALITY, StandardProvider(
-                                parent.isMutable(CREATURE_MORTALITY)
-                                        ? normalizeProbability(mutate(
-                                        parent.getMutationRate(),
-                                        parent.getGene(CREATURE_MORTALITY, Double.class),
-                                        Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
-                                                * Configuration.getRandom().nextGaussian()))
-                                        : parent.getGene(CREATURE_MORTALITY, Double.class)),
-                                parent.isMutable(CREATURE_MORTALITY)
-                        ),
-                        new GeneFieldMould(CREATURE_FECUNDITY, StandardProvider(
-                                parent.isMutable(CREATURE_FECUNDITY)
-                                        ? normalizeProbability(mutate(
-                                        parent.getMutationRate(),
-                                        parent.getGene(CREATURE_FECUNDITY, Double.class),
-                                        Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
-                                                * Configuration.getRandom().nextGaussian()))
-                                        : parent.getGene(CREATURE_FECUNDITY, Double.class)),
-                                parent.isMutable(CREATURE_FECUNDITY)
-                        ),
-                        new GeneFieldMould(CREATURE_MUTATION, StandardProvider(
-                                parent.isMutable(CREATURE_MUTATION)
-                                        ? normalizeProbability(mutate(
-                                        parent.getMutationRate(),
-                                        parent.getGene(CREATURE_MUTATION, Double.class),
-                                        Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
-                                                * Configuration.getRandom().nextGaussian()))
-                                        : parent.getGene(CREATURE_MUTATION, Double.class)),
-                                parent.isMutable(CREATURE_MUTATION)
-                        ),
-                        new GeneFieldMould(CREATURE_ORIENTATION_LAUNCHER, StandardProvider(
-                                parent.isMutable(CREATURE_ORIENTATION_LAUNCHER)
-                                        ? normalizeProbability(mutate(
-                                        parent.getMutationRate(),
-                                        parent.getGene(CREATURE_ORIENTATION_LAUNCHER, Double.class),
-                                        Configuration.getParameter(ANGLE_VARIATION, Double.class)
-                                                * Configuration.getRandom().nextGaussian()))
-                                        : parent.getGene(CREATURE_ORIENTATION_LAUNCHER, Double.class)),
-                                parent.isMutable(CREATURE_ORIENTATION_LAUNCHER)
-                        ),
-                        new GeneFieldMould(CREATURE_SPEED_LAUNCHER, StandardProvider(
-                                parent.isMutable(CREATURE_SPEED_LAUNCHER)
-                                        ? normalizeProbability(mutate(
-                                        parent.getMutationRate(),
-                                        parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class),
-                                        Configuration.getParameter(SPEED_VARIATION, Double.class)
-                                                * Configuration.getRandom().nextGaussian()))
-                                        : parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class)),
-                                parent.isMutable(CREATURE_SPEED_LAUNCHER)
-                        ),
-                        new GeneFieldMould(CREATURE_BEHAVIOR, StandardProvider(
-                                parent.getGene(CREATURE_BEHAVIOR, BehaviorManager.class)),
-                                false
-                        )
-                );
-    }
-
     protected void growUp(Environment env, Creature that) {
-        double randomValue = Configuration.getRandom()
-                .nextDouble();
-        //TODO update phenotype death's chance according to age and mortality rate
+        double randomValue = randomValue(that);
         double deathChance = that.getMortalityRate();
         logger.finer(String.format("[Random mortality's value = %f, death's chance = %f]", randomValue, deathChance));
         if (randomValue < deathChance) {
@@ -386,13 +245,179 @@ public class DraughtsmanBehaviour
         }
     }
 
+    private static double randomValue(Creature that) {
+        return randomValue(that, 0.0, 1.0);
+    }
+
+    private static double randomValue(Creature that, double min, double max) {
+        if (Configuration.getParameter(PERLIN_NOISE_OPTION, Boolean.class)) {
+            return min + coherentNoise(that.getLocation()) * (max - min);
+        } else {
+            return min + Configuration.getRandom().nextDouble() * (max - min);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private FieldsConfiguration generateConfigurationFromParent(Creature parent) {
+        return new FieldsConfiguration(
+                new StateFieldMould(CREATURE_COLOR, StandardProvider(
+                        parent.getColor()
+                )),
+                new StateFieldMould(AGENT_LOCATION, StandardProvider(
+                        parent.getLocation()
+                )),
+                new StateFieldMould(CREATURE_ENERGY, StandardProvider(
+                        parent.getEnergy() * parent.getGene(CREATURE_FECUNDATION_LOSS, Double.class)
+                )),
+                new StateFieldMould(CREATURE_CURVATURE, StandardProvider(
+                        parent.getCurvature()
+                )),
+                new StateFieldMould(CREATURE_ORIENTATION, StandardProvider(
+                        normalizeRelativeAngle(
+                                parent.getOrientation(),
+                                parent.getGene(CREATURE_ORIENTATION_LAUNCHER, Double.class))
+                )),
+                new StateFieldMould(CREATURE_SPEED, StandardProvider(
+                        parent.getSpeed() * (1.0 + parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class))
+                )),
+                new GeneFieldMould(CREATURE_NATURAL_COLOR, StandardProvider(
+                        parent.isMutable(CREATURE_NATURAL_COLOR)
+                                ? mutate(
+                                parent,
+                                parent.getGene(CREATURE_NATURAL_COLOR, Color.class))
+                                : parent.getGene(CREATURE_NATURAL_COLOR, Color.class)),
+                        parent.isMutable(CREATURE_NATURAL_COLOR)
+                ),
+                new GeneFieldMould(CREATURE_MOVEMENT_COST, StandardProvider(
+                        parent.getGene(CREATURE_MOVEMENT_COST, Double.class)),
+                        false
+                ),
+                new GeneFieldMould(CREATURE_FECUNDATION_COST, StandardProvider(
+                        parent.getGene(CREATURE_FECUNDATION_COST, Double.class)),
+                        false
+                ),
+                new GeneFieldMould(CREATURE_FECUNDATION_LOSS, StandardProvider(
+                        parent.isMutable(CREATURE_FECUNDATION_LOSS)
+                                ? normalizeProbability(mutate(
+                                parent,
+                                parent.getGene(CREATURE_FECUNDATION_LOSS, Double.class),
+                                Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
+                                        * randomValue(parent, -1.0, 1.0)))
+                                : parent.getGene(CREATURE_FECUNDATION_LOSS, Double.class)),
+                        parent.isMutable(CREATURE_FECUNDATION_LOSS)
+                ),
+                new GeneFieldMould(CREATURE_GREED, StandardProvider(
+                        parent.isMutable(CREATURE_GREED)
+                                ? normalizeProbability(mutate(
+                                parent,
+                                parent.getGene(CREATURE_GREED, Double.class),
+                                Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
+                                        * randomValue(parent, -1.0, 1.0)))
+                                : parent.getGene(CREATURE_GREED, Double.class)),
+                        parent.isMutable(CREATURE_GREED)
+                ),
+                new GeneFieldMould(CREATURE_FLEE, StandardProvider(
+                        parent.isMutable(CREATURE_FLEE)
+                                ? normalizeProbability(mutate(
+                                parent,
+                                parent.getGene(CREATURE_FLEE, Double.class),
+                                Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
+                                        * randomValue(parent, -1.0, 1.0)))
+                                : parent.getGene(CREATURE_FLEE, Double.class)),
+                        parent.isMutable(CREATURE_FLEE)
+                ),
+                new GeneFieldMould(CREATURE_SENSOR_RADIUS, StandardProvider(
+                        parent.isMutable(CREATURE_SENSOR_RADIUS)
+                                ? normalizeProbability(mutate(
+                                parent,
+                                parent.getGene(CREATURE_SENSOR_RADIUS, Double.class),
+                                Configuration.getParameter(SPEED_VARIATION, Double.class)
+                                        * randomValue(parent, -1.0, 1.0)))
+                                : parent.getGene(CREATURE_SENSOR_RADIUS, Double.class)),
+                        parent.isMutable(CREATURE_SENSOR_RADIUS)
+                ),
+                new GeneFieldMould(CREATURE_CONSUMMATION_RADIUS, StandardProvider(
+                        parent.isMutable(CREATURE_CONSUMMATION_RADIUS)
+                                ? normalizeProbability(mutate(
+                                parent,
+                                parent.getGene(CREATURE_CONSUMMATION_RADIUS, Double.class),
+                                Configuration.getParameter(SPEED_VARIATION, Double.class)
+                                        * randomValue(parent, -1.0, 1.0)))
+                                : parent.getGene(CREATURE_CONSUMMATION_RADIUS, Double.class)),
+                        parent.isMutable(CREATURE_CONSUMMATION_RADIUS)
+                ),
+                new GeneFieldMould(CREATURE_IRRATIONALITY, StandardProvider(
+                        parent.isMutable(CREATURE_IRRATIONALITY)
+                                ? normalizeProbability(mutate(
+                                parent,
+                                parent.getGene(CREATURE_IRRATIONALITY, Double.class),
+                                Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
+                                        * randomValue(parent, -1.0, 1.0)))
+                                : parent.getGene(CREATURE_IRRATIONALITY, Double.class)),
+                        parent.isMutable(CREATURE_IRRATIONALITY)
+                ),
+                new GeneFieldMould(CREATURE_MORTALITY, StandardProvider(
+                        parent.isMutable(CREATURE_MORTALITY)
+                                ? normalizeProbability(mutate(
+                                parent,
+                                parent.getGene(CREATURE_MORTALITY, Double.class),
+                                Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
+                                        * randomValue(parent, -1.0, 1.0)))
+                                : parent.getGene(CREATURE_MORTALITY, Double.class)),
+                        parent.isMutable(CREATURE_MORTALITY)
+                ),
+                new GeneFieldMould(CREATURE_FECUNDITY, StandardProvider(
+                        parent.isMutable(CREATURE_FECUNDITY)
+                                ? normalizeProbability(mutate(
+                                parent,
+                                parent.getGene(CREATURE_FECUNDITY, Double.class),
+                                Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
+                                        * randomValue(parent, -1.0, 1.0)))
+                                : parent.getGene(CREATURE_FECUNDITY, Double.class)),
+                        parent.isMutable(CREATURE_FECUNDITY)
+                ),
+                new GeneFieldMould(CREATURE_MUTATION, StandardProvider(
+                        parent.isMutable(CREATURE_MUTATION)
+                                ? normalizeProbability(mutate(
+                                parent,
+                                parent.getGene(CREATURE_MUTATION, Double.class),
+                                Configuration.getParameter(PROBABILITY_VARIATION, Double.class)
+                                        * randomValue(parent, -1.0, 1.0)))
+                                : parent.getGene(CREATURE_MUTATION, Double.class)),
+                        parent.isMutable(CREATURE_MUTATION)
+                ),
+                new GeneFieldMould(CREATURE_ORIENTATION_LAUNCHER, StandardProvider(
+                        parent.isMutable(CREATURE_ORIENTATION_LAUNCHER)
+                                ? normalizeAngle(mutate(
+                                parent,
+                                parent.getGene(CREATURE_ORIENTATION_LAUNCHER, Double.class),
+                                Configuration.getParameter(ANGLE_VARIATION, Double.class)
+                                        * randomValue(parent, -1.0, 1.0)))
+                                : parent.getGene(CREATURE_ORIENTATION_LAUNCHER, Double.class)),
+                        parent.isMutable(CREATURE_ORIENTATION_LAUNCHER)
+                ),
+                new GeneFieldMould(CREATURE_SPEED_LAUNCHER, StandardProvider(
+                        parent.isMutable(CREATURE_SPEED_LAUNCHER)
+                                ? normalizePositiveDouble(mutate(
+                                parent,
+                                parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class),
+                                randomValue(parent, -1.0, 1.0)))
+                                : parent.getGene(CREATURE_SPEED_LAUNCHER, Double.class)),
+                        parent.isMutable(CREATURE_SPEED_LAUNCHER)
+                ),
+                new GeneFieldMould(CREATURE_BEHAVIOR, StandardProvider(
+                        parent.getGene(CREATURE_BEHAVIOR, BehaviorManager.class)),
+                        false
+                )
+        );
+    }
+
     private static Double mutate(
-            Double mutationRate,
+            Creature parent,
             Double normalValue,
             Double mutationVariation
     ) {
-        if (Configuration.getRandom()
-                .nextDouble() <= mutationRate) {
+        if (randomValue(parent) <= parent.getGene(CREATURE_MUTATION, Double.class)) {
             return normalValue + mutationVariation;
         } else {
             return normalValue;
@@ -400,12 +425,11 @@ public class DraughtsmanBehaviour
     }
 
     private static Double mutate(
-            Double mutationRate,
+            Creature parent,
             Integer normalValue,
             Double mutationVariation
     ) {
-        if (Configuration.getRandom()
-                .nextDouble() <= mutationRate) {
+        if (randomValue(parent) <= parent.getGene(CREATURE_MUTATION, Double.class)) {
             return normalValue + mutationVariation;
         } else {
             return (double) normalValue;
@@ -413,28 +437,28 @@ public class DraughtsmanBehaviour
     }
 
     private static Color mutate(
-            Double mutationRate,
+            Creature parent,
             Color normalValue
     ) {
         return new Color(
                 normalizeColor(mutate(
-                        mutationRate,
+                        parent,
                         normalValue.getRed(),
-                        Configuration.getParameter(COLOR_VARIATION, Double.class)
-                                * Configuration.getRandom().nextGaussian()
+                        Configuration.getParameter(COLOR_VARIATION, Integer.class)
+                                * randomValue(parent, -1.0, 1.0)
                 )),
                 normalizeColor(mutate(
-                        mutationRate,
+                        parent,
                         normalValue.getGreen(),
-                        Configuration.getParameter(COLOR_VARIATION, Double.class)
-                                * Configuration.getRandom().nextGaussian()
+                        Configuration.getParameter(COLOR_VARIATION, Integer.class)
+                                * randomValue(parent, -1.0, 1.0)
 
                 )),
                 normalizeColor(mutate(
-                        mutationRate,
+                        parent,
                         normalValue.getBlue(),
-                        Configuration.getParameter(COLOR_VARIATION, Double.class)
-                                * Configuration.getRandom().nextGaussian()
+                        Configuration.getParameter(COLOR_VARIATION, Integer.class)
+                                * (1 - 2 * randomValue(parent))
 
                 ))
         );
@@ -450,23 +474,6 @@ public class DraughtsmanBehaviour
                 double distance = source.distance(res.getTarget().getLocation());
                 if (distance < closestDistance) {
                     closest = res;
-                    closestDistance = distance;
-                }
-            }
-            return closest;
-        } else return null;
-    }
-
-    protected static SensorTarget<Creature> getClosestCreature(Point2D source, Collection<SensorTarget<Creature>> monsters) {
-        Iterator<SensorTarget<Creature>> it = monsters.iterator();
-        if (it.hasNext()) {
-            SensorTarget<Creature> closest = it.next();
-            double closestDistance = source.distance(closest.getTarget().getLocation());
-            while (it.hasNext()) {
-                SensorTarget<Creature> monster = it.next();
-                double distance = source.distance(monster.getTarget().getLocation());
-                if (distance < closestDistance) {
-                    closest = monster;
                     closestDistance = distance;
                 }
             }

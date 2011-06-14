@@ -1,0 +1,18 @@
+\beamer@endinputifotherversion {3.10pt}
+\select@language {french}
+\beamer@sectionintoc {1}{Introduction}{3}{0}{1}
+\beamer@subsectionintoc {1}{1}{Artificial Life}{3}{0}{1}
+\beamer@subsectionintoc {1}{2}{Ecosystem Art}{4}{0}{1}
+\beamer@sectionintoc {2}{Model}{5}{0}{2}
+\beamer@subsectionintoc {2}{1}{General Principle}{5}{0}{2}
+\beamer@subsectionintoc {2}{2}{Phenotype}{6}{0}{2}
+\beamer@subsectionintoc {2}{3}{Genotype}{7}{0}{2}
+\beamer@subsectionintoc {2}{4}{Behavior}{8}{0}{2}
+\beamer@subsectionintoc {2}{5}{Coloration}{9}{0}{2}
+\beamer@sectionintoc {3}{Experiments}{10}{0}{3}
+\beamer@subsectionintoc {3}{1}{Basic Experiment}{10}{0}{3}
+\beamer@sectionintoc {4}{Discussion}{11}{0}{4}
+\beamer@subsectionintoc {4}{1}{Coloration}{11}{0}{4}
+\beamer@sectionintoc {5}{Conclusion}{12}{0}{5}
+\beamer@subsectionintoc {5}{1}{Conclusion}{12}{0}{5}
+\beamer@subsectionintoc {5}{2}{Extending Works}{13}{0}{5}

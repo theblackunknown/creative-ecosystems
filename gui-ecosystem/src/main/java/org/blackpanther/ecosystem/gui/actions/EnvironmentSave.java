@@ -43,12 +43,14 @@ public class EnvironmentSave
 
     public void save(Component parent, Environment env) {
         Monitor.pauseEvolution();
-        if (env == null)
+        if (env == null) {
             JOptionPane.showMessageDialog(
                     parent,
                     "No environment set yet",
                     "Save operation",
                     JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         switch (fc.showSaveDialog(parent)) {
             case JFileChooser.APPROVE_OPTION:

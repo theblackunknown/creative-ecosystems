@@ -1,10 +1,11 @@
 package org.blackpanther.ecosystem.gui.commands;
 
 import org.blackpanther.ecosystem.gui.GraphicEnvironment;
-import org.blackpanther.ecosystem.gui.WorldFrame;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.beans.EventHandler;
@@ -28,7 +29,6 @@ public class EnvironmentCommands
     private JToggleButton noAction;
     private JToggleButton paintAgent;
     private JToggleButton paintResource;
-    private JCheckBox drawCreatures;
 
     public EnvironmentCommands() {
         super();
@@ -37,14 +37,14 @@ public class EnvironmentCommands
 
         JButton resetEnvironment = new JButton("Generate new environment");
         evolutionFlowButton = new JButton(NO_ENVIRONMENT);
-        JCheckBox drawBounds = new JCheckBox("Paint bounds", true);
-        JCheckBox drawResources = new JCheckBox("Paint resources", true);
-        drawCreatures = new JCheckBox("Paint agents", true);
-        JButton backgroundColor = new JButton("Choose background color");
 
         noAction = new JToggleButton("No action");
         paintAgent = new JToggleButton("Agent dropper");
         paintResource = new JToggleButton("Resource dropper");
+
+        JSlider lineWidthLinear = new JSlider(1, 10, 1);
+        JSlider lineWidthExponential = new JSlider(0, 10, 0);
+        JSlider colorBlender = new JSlider(0, 1000000, 10000);
 
         ActionListener toggleListener = EventHandler.create(
                 ActionListener.class,
@@ -52,6 +52,26 @@ public class EnvironmentCommands
                 "updateDropMode",
                 "source"
         );
+
+        lineWidthLinear.addChangeListener(EventHandler.create(
+                ChangeListener.class,
+                this,
+                "updateLineWidthLinear",
+                ""
+        ));
+
+        lineWidthExponential.addChangeListener(EventHandler.create(
+                ChangeListener.class,
+                this,
+                "updateLineWidthExponential",
+                ""
+        ));
+        colorBlender.addChangeListener(EventHandler.create(
+                ChangeListener.class,
+                this,
+                "updateColorRatio",
+                ""
+        ));
 
         noAction.setSelected(true);
         noAction.addActionListener(toggleListener);
@@ -74,29 +94,6 @@ public class EnvironmentCommands
                 "interceptEnvironmentEvolutionFlow",
                 "source.text"
         ));
-        drawBounds.addActionListener(EventHandler.create(
-                ActionListener.class,
-                Monitor,
-                "paintBounds",
-                "source.selected"
-        ));
-        drawResources.addActionListener(EventHandler.create(
-                ActionListener.class,
-                Monitor,
-                "paintResources",
-                "source.selected"
-        ));
-        drawCreatures.addActionListener(EventHandler.create(
-                ActionListener.class,
-                Monitor,
-                "paintCreatures",
-                "source.selected"
-        ));
-        backgroundColor.addActionListener(EventHandler.create(
-                ActionListener.class,
-                this,
-                "notifyBackgroundColorChanged"
-        ));
 
         add(noAction);
         add(paintAgent);
@@ -105,15 +102,34 @@ public class EnvironmentCommands
         add(resetEnvironment);
         add(evolutionFlowButton);
         add(Box.createVerticalStrut(40));
-        add(drawBounds);
-        add(drawResources);
-        add(drawCreatures);
-        add(Box.createVerticalStrut(40));
-        add(backgroundColor);
+        add(lineWidthLinear);
+        add(lineWidthExponential);
+        add(colorBlender);
 
         setBorder(
                 BorderFactory.createEtchedBorder(EtchedBorder.RAISED)
         );
+    }
+
+    public void updateLineWidthLinear(ChangeEvent e) {
+        JSlider source = (JSlider) e.getSource();
+        if (!source.getValueIsAdjusting()) {
+            Monitor.updateLineWidthLinear(source.getValue());
+        }
+    }
+
+    public void updateLineWidthExponential(ChangeEvent e) {
+        JSlider source = (JSlider) e.getSource();
+        if (!source.getValueIsAdjusting()) {
+            Monitor.updateLineWidthExponential(source.getValue() / 10.0);
+        }
+    }
+
+    public void updateColorRatio(ChangeEvent e) {
+        JSlider source = (JSlider) e.getSource();
+        if (!source.getValueIsAdjusting()) {
+            Monitor.changeColorRatio(source.getValue() / 100.0);
+        }
     }
 
     public void updateDropMode(JToggleButton button) {
@@ -148,7 +164,6 @@ public class EnvironmentCommands
     public void environmentSet() {
         evolutionFlowButton.setText(START_ENVIRONMENT);
         evolutionFlowButton.setEnabled(true);
-        drawCreatures.setEnabled(true);
     }
 
     public void environmentUnset() {
@@ -164,25 +179,6 @@ public class EnvironmentCommands
     public void notifyPause() {
         if (evolutionFlowButton.getText().equals(STOP_ENVIRONMENT)) {
             evolutionFlowButton.setText(START_ENVIRONMENT);
-        }
-    }
-
-    public void notifyBackgroundColorChanged() {
-        Color selectedColor = JColorChooser.showDialog(
-                WorldFrame.getInstance(),
-                "Choose agent identifier",
-                Color.LIGHT_GRAY);
-        if (selectedColor != null) {
-            Monitor.setBackgroundColor(selectedColor);
-        }
-    }
-
-    public void disableOptionButton(int option) {
-        switch (option) {
-            case GraphicEnvironment.CREATURE_OPTION:
-                drawCreatures.setSelected(false);
-                drawCreatures.setEnabled(false);
-                break;
         }
     }
 }

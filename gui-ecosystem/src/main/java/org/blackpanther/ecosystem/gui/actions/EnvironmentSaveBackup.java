@@ -44,9 +44,9 @@ public class EnvironmentSaveBackup
             Environment environment,
             Configuration applicationConfiguration,
             FieldsConfiguration parametersConfiguration) {
-        this.backupEnvironment = environment.clone();
+        this.backupEnvironment = environment;
         this.backupApplicationConfiguration = applicationConfiguration.textCopy();
-        this.backupParametersConfiguration = parametersConfiguration.clone();
+        this.backupParametersConfiguration = parametersConfiguration;
     }
 
     @Override

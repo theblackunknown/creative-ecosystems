@@ -37,7 +37,7 @@ public abstract class SettingField<T>
         ), constraints);
     }
 
-    abstract protected JComponent getMainComponent();
+    public abstract JComponent getMainComponent();
 
     abstract public void setValue(T newValue);
 

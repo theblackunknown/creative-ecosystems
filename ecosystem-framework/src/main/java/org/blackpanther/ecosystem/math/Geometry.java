@@ -1,6 +1,5 @@
 package org.blackpanther.ecosystem.math;
 
-import java.awt.*;
 import java.awt.geom.Dimension2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
@@ -58,7 +57,7 @@ public final class Geometry {
 
 
         //No intersection
-        if (Math.abs(denominator) <= COMPARISON_THRESHOLD) { //HELP double are never equal to 0.0
+        if (Math.abs(denominator) <= COMPARISON_THRESHOLD) { //HELP doubles are never equal to 0.0
             return null;
         }
         //intersection
