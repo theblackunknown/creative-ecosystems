@@ -1,6 +1,9 @@
 application-signer
 bump-version
 target/
+documentations
+
+README.markdown
 
 *.iml
 *.ipr
