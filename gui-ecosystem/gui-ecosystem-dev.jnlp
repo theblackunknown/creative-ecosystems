@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jnlp
         spec="1.0+"
-        codebase="https://github.com/blackpanther/creative-ecosystems/raw/devel/gui-ecosystem/"
+        codebase="https://github.com/theblackunknown/creative-ecosystems/raw/devel/gui-ecosystem/"
         href="gui-ecosystem-dev.jnlp">
     <information>
         <title>GUI Ecosystem</title>
         <vendor>MACHIZAUD Andréa</vendor>
-        <homepage>https://github.com/blackpanther/creative-ecosystems/tree/devel</homepage>
+        <homepage>https://github.com/theblackunknown/creative-ecosystems/tree/devel</homepage>
         <description>GUI to visualize evolution fo draugthsman's ecosystem</description>
         <icon
                 href="src/main/resources/org/blackpanther/black-cat-icon.png"
