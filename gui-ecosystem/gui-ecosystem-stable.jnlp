@@ -2,7 +2,7 @@
 <jnlp
         spec="1.0+"
         codebase="https://raw.githubusercontent.com/theblackunknown/creative-ecosystems/master/gui-ecosystem/"
-        href="gui-ecosystem-dev.jnlp">
+        href="gui-ecosystem-stable.jnlp">
     <information>
         <title>GUI Ecosystem</title>
         <vendor>MACHIZAUD Andréa</vendor>
