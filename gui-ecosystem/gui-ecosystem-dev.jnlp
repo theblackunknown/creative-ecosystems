@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jnlp
         spec="1.0+"
-        codebase="https://github.com/blackpanther/creative-ecosystems/raw/devel/gui-ecosystem/"
+        codebase="https://raw.githubusercontent.com/theblackunknown/creative-ecosystems/master/gui-ecosystem/"
         href="gui-ecosystem-dev.jnlp">
     <information>
         <title>GUI Ecosystem</title>
